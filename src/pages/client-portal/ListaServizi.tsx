@@ -5,12 +5,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Download, CalendarDays, Pencil, XCircle, Info } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Search, Download, CalendarDays, Pencil, XCircle, Info, ChevronRight, MapPin, Clock, Users, Car } from "lucide-react";
 import { toast } from "sonner";
 
 type Servizio = {
@@ -19,6 +19,8 @@ type Servizio = {
   ora_inizio: string | null;
   citta: string | null;
   contatto: string | null;
+  telefono_contatto: string | null;
+  email_contatto: string | null;
   n_passeggeri: number | null;
   n_bagagli: number | null;
   tipologia: string | null;
@@ -31,10 +33,12 @@ type Servizio = {
   info_autista: string | null;
   veicolo_tipo: string | null;
   tipo_pagamento: string | null;
+  prezzo: number | null;
   centro_costo: string | null;
   stato: string;
   codice: string | null;
   note: string | null;
+  accessori: string | null;
 };
 
 function canModify(s: Servizio): boolean {
@@ -42,33 +46,49 @@ function canModify(s: Servizio): boolean {
   if (!s.ora_inizio || !s.data_servizio) return true;
   const serviceDate = new Date(`${s.data_servizio}T${s.ora_inizio}`);
   const now = new Date();
-  const diffMs = serviceDate.getTime() - now.getTime();
-  const diffH = diffMs / (1000 * 60 * 60);
-  return diffH > 12;
+  return (serviceDate.getTime() - now.getTime()) / (1000 * 60 * 60) > 12;
 }
 
 function buildTipoServizio(s: Servizio): string {
   const parts: string[] = [];
   if (s.transfer_tipo) parts.push(`Transfer: ${s.transfer_tipo}`);
-  if (s.disposizione_oraria) parts.push(`Disposizione: ${s.disposizione_oraria}`);
+  if (s.disposizione_oraria) parts.push(`Disp.: ${s.disposizione_oraria}`);
   if (s.tour_tipo) parts.push(`Tour: ${s.tour_tipo}`);
   if (parts.length === 0 && s.tipologia) return s.tipologia;
   return parts.join(" / ") || "—";
 }
 
+function buildTipoShort(s: Servizio): string {
+  if (s.tour_tipo) return "Tour";
+  if (s.transfer_tipo && s.disposizione_oraria) return "Transfer + Disp.";
+  if (s.transfer_tipo) return "Transfer";
+  if (s.disposizione_oraria) return "Disposizione";
+  return s.tipologia ?? "—";
+}
+
 const pagamentoLabel: Record<string, string> = {
   fattura: "Fattura",
   contante: "Contante",
-  carta_credito: "C.Credito",
+  carta_credito: "C. Credito",
 };
 
-const statoLabel: Record<string, string> = {
-  nuovo: "Nuovo",
-  confermato: "Confermato",
-  in_corso: "In corso",
-  completato: "Completato",
-  annullato: "Annullato",
+const statoConfig: Record<string, { label: string; className: string }> = {
+  nuovo: { label: "Nuovo", className: "bg-blue-100 text-blue-700 border-blue-200" },
+  confermato: { label: "Confermato", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  in_corso: { label: "In corso", className: "bg-amber-100 text-amber-700 border-amber-200" },
+  completato: { label: "Completato", className: "bg-green-100 text-green-700 border-green-200" },
+  annullato: { label: "Annullato", className: "bg-destructive/10 text-destructive border-destructive/20" },
 };
+
+function DetailRow({ label, value }: { label: string; value: string | null | undefined }) {
+  if (!value) return null;
+  return (
+    <div className="flex justify-between items-start py-2">
+      <span className="text-xs text-muted-foreground font-medium shrink-0">{label}</span>
+      <span className="text-sm text-right ml-4">{value}</span>
+    </div>
+  );
+}
 
 export default function ListaServizi() {
   const { user } = useAuth();
@@ -77,8 +97,13 @@ export default function ListaServizi() {
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+
+  // Detail sheet
+  const [selected, setSelected] = useState<Servizio | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+
+  // Edit
   const [editOpen, setEditOpen] = useState(false);
-  const [editing, setEditing] = useState<Servizio | null>(null);
   const [editForm, setEditForm] = useState({ luogo_inizio: "", luogo_fine: "", itinerario: "", info_autista: "", note: "" });
 
   const loadServizi = async () => {
@@ -88,7 +113,6 @@ export default function ListaServizi() {
       .select("id")
       .eq("auth_user_id", user.id)
       .single();
-
     if (!client) return;
 
     let query = supabase
@@ -113,8 +137,13 @@ export default function ListaServizi() {
     (s.codice ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
+  const openDetail = (s: Servizio) => {
+    setSelected(s);
+    setDetailOpen(true);
+  };
+
   const openEdit = (s: Servizio) => {
-    setEditing(s);
+    setSelected(s);
     setEditForm({
       luogo_inizio: s.luogo_inizio ?? "",
       luogo_fine: s.luogo_fine ?? "",
@@ -122,11 +151,12 @@ export default function ListaServizi() {
       info_autista: s.info_autista ?? "",
       note: s.note ?? "",
     });
+    setDetailOpen(false);
     setEditOpen(true);
   };
 
   const handleSaveEdit = async () => {
-    if (!editing) return;
+    if (!selected) return;
     const { error } = await supabase
       .from("servizi")
       .update({
@@ -136,8 +166,7 @@ export default function ListaServizi() {
         info_autista: editForm.info_autista || null,
         note: editForm.note || null,
       } as any)
-      .eq("id", editing.id);
-
+      .eq("id", selected.id);
     if (error) {
       toast.error("Errore nel salvataggio");
     } else {
@@ -152,8 +181,7 @@ export default function ListaServizi() {
       toast.error("Non è possibile annullare: mancano meno di 12 ore al servizio");
       return;
     }
-    const ok = window.confirm("Sei sicuro di voler annullare questo servizio?");
-    if (!ok) return;
+    if (!window.confirm("Sei sicuro di voler annullare questo servizio?")) return;
     const { error } = await supabase
       .from("servizi")
       .update({ stato: "annullato" } as any)
@@ -162,6 +190,7 @@ export default function ListaServizi() {
       toast.error("Errore nell'annullamento");
     } else {
       toast.success("Servizio annullato");
+      setDetailOpen(false);
       loadServizi();
     }
   };
@@ -172,7 +201,7 @@ export default function ListaServizi() {
       s.citta ?? "", s.data_servizio, s.ora_inizio ?? "", s.contatto ?? "", s.n_passeggeri ?? "",
       s.n_bagagli ?? "", buildTipoServizio(s), s.luogo_inizio ?? "", s.itinerario ?? "",
       s.luogo_fine ?? "", s.veicolo_tipo ?? "", pagamentoLabel[s.tipo_pagamento ?? ""] ?? "",
-      s.centro_costo ?? "", statoLabel[s.stato] ?? s.stato
+      s.centro_costo ?? "", statoConfig[s.stato]?.label ?? s.stato
     ]);
     const csv = [headers.join(";"), ...rows.map(r => r.join(";"))].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -183,141 +212,194 @@ export default function ListaServizi() {
     a.click();
   };
 
+  const formatDate = (d: string) => new Date(d).toLocaleDateString("it-IT", { day: "2-digit", month: "short", year: "numeric" });
+
   return (
     <ClientPortalLayout>
       <div className="space-y-5">
         <h1 className="font-display text-2xl font-bold">Lista Servizi</h1>
 
         {/* Info */}
-        <Card className="rounded-xl border-primary/20 bg-primary/5 shadow-none">
-          <CardContent className="p-4 text-sm text-muted-foreground space-y-1">
-            <div className="flex items-start gap-2">
-              <Info className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-              <div className="space-y-0.5 text-xs">
-                <p><strong>Modifica e Annulla:</strong> fino a 12 ore prima dell'orario del servizio.</p>
-                <p><strong>Valutazione:</strong> trascorso l'orario potete darci la valutazione del servizio erogato.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex items-start gap-2.5 p-3 rounded-lg bg-primary/5 border border-primary/10">
+          <Info className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            <strong>Modifica e annulla:</strong> fino a 12 ore prima dell'orario del servizio. Clicca su un servizio per i dettagli.
+          </p>
+        </div>
 
         {/* Filtri */}
         <Card className="rounded-xl border-border/50 shadow-sm">
           <CardContent className="p-4">
-            <p className="text-sm font-semibold text-muted-foreground mb-3">Zona Ricerca</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Periodo da</label>
-                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="rounded-lg h-9" />
+                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Da</label>
+                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="rounded-lg h-9 text-sm" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Periodo a</label>
-                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="rounded-lg h-9" />
+                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">A</label>
+                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="rounded-lg h-9 text-sm" />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Passeggero / Codice</label>
+                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Cerca</label>
                 <div className="relative">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Cerca..." className="pl-8 rounded-lg h-9" />
+                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Passeggero, città..." className="pl-8 rounded-lg h-9 text-sm" />
                 </div>
               </div>
               <div className="flex items-end">
-                <Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={exportExcel}>
-                  <Download className="h-3.5 w-3.5" /> Esporta CSV
+                <Button variant="outline" size="sm" className="gap-1.5 rounded-lg w-full h-9 text-xs" onClick={exportExcel}>
+                  <Download className="h-3.5 w-3.5" /> Esporta
                 </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Tabella */}
-        <Card className="rounded-xl border-border/50 shadow-sm">
-          <CardContent className="p-0">
-            {loading ? (
-              <div className="p-6 space-y-3">
-                {[1, 2, 3].map((i) => <div key={i} className="h-10 rounded-lg bg-muted animate-pulse" />)}
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="py-16 text-center">
-                <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/40" />
-                <p className="mt-3 text-sm text-muted-foreground">Nessun servizio trovato</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/30">
-                      <TableHead>Città</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Passeggero</TableHead>
-                      <TableHead>N.P</TableHead>
-                      <TableHead>N.bg</TableHead>
-                      <TableHead>T.serv</TableHead>
-                      <TableHead>Luogo inizio</TableHead>
-                      <TableHead>Itinerario</TableHead>
-                      <TableHead>Luogo fine</TableHead>
-                      <TableHead>Veicolo</TableHead>
-                      <TableHead>T.P</TableHead>
-                      <TableHead>C. Costo</TableHead>
-                      <TableHead>Stato</TableHead>
-                      <TableHead className="text-right">Azioni</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((s) => {
-                      const editable = canModify(s);
-                      return (
-                        <TableRow key={s.id}>
-                          <TableCell>{s.citta ?? "—"}</TableCell>
-                          <TableCell className="whitespace-nowrap">
-                            {new Date(s.data_servizio).toLocaleDateString("it-IT")}
-                            {s.ora_inizio && <span className="text-muted-foreground ml-1 text-xs">{s.ora_inizio}</span>}
-                          </TableCell>
-                          <TableCell>{s.contatto ?? "—"}</TableCell>
-                          <TableCell>{s.n_passeggeri ?? 0}</TableCell>
-                          <TableCell>{s.n_bagagli ?? 0}</TableCell>
-                          <TableCell className="text-xs max-w-[160px]">{buildTipoServizio(s)}</TableCell>
-                          <TableCell>{s.luogo_inizio ?? "—"}</TableCell>
-                          <TableCell>{s.itinerario ?? "—"}</TableCell>
-                          <TableCell>{s.luogo_fine ?? "—"}</TableCell>
-                          <TableCell className="text-xs">{s.veicolo_tipo ?? "—"}</TableCell>
-                          <TableCell className="text-xs">{pagamentoLabel[s.tipo_pagamento ?? ""] ?? "—"}</TableCell>
-                          <TableCell className="text-xs">{s.centro_costo ?? "—"}</TableCell>
-                          <TableCell>
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                              s.stato === "annullato" ? "bg-destructive/10 text-destructive" :
-                              s.stato === "completato" ? "bg-green-100 text-green-700" :
-                              "bg-muted"
-                            }`}>
-                              {statoLabel[s.stato] ?? s.stato}
+        {/* Lista cards */}
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-20 text-center">
+            <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/30" />
+            <p className="mt-3 text-sm text-muted-foreground">Nessun servizio trovato</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {filtered.map((s) => {
+              const stato = statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" };
+              return (
+                <Card
+                  key={s.id}
+                  className="rounded-xl border-border/50 shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group"
+                  onClick={() => openDetail(s)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      {/* Date block */}
+                      <div className="shrink-0 text-center min-w-[56px]">
+                        <div className="text-lg font-bold leading-tight">{new Date(s.data_servizio).getDate()}</div>
+                        <div className="text-[10px] font-medium text-muted-foreground uppercase">
+                          {new Date(s.data_servizio).toLocaleDateString("it-IT", { month: "short" })}
+                        </div>
+                        {s.ora_inizio && (
+                          <div className="text-[10px] text-muted-foreground mt-0.5">{s.ora_inizio}</div>
+                        )}
+                      </div>
+
+                      <Separator orientation="vertical" className="h-12" />
+
+                      {/* Main info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-sm truncate">{s.contatto ?? "—"}</span>
+                          <Badge variant="outline" className={`text-[10px] px-1.5 py-0 shrink-0 ${stato.className}`}>
+                            {stato.label}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          {s.citta && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />{s.citta}
                             </span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              {editable && (
-                                <>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(s)}>
-                                    <Pencil className="h-3.5 w-3.5 text-primary" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCancel(s)}>
-                                    <XCircle className="h-3.5 w-3.5 text-destructive" />
-                                  </Button>
-                                </>
-                              )}
-                              {!editable && s.stato !== "annullato" && (
-                                <span className="text-[10px] text-muted-foreground">Non modificabile</span>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <Car className="h-3 w-3" />{buildTipoShort(s)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />{s.n_passeggeri ?? 1}
+                          </span>
+                        </div>
+                      </div>
+
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors shrink-0" />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Detail Dialog */}
+        <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+          <DialogContent className="sm:max-w-lg rounded-xl p-0 gap-0 overflow-hidden">
+            {selected && (() => {
+              const stato = statoConfig[selected.stato] ?? { label: selected.stato, className: "bg-muted" };
+              const editable = canModify(selected);
+              return (
+                <>
+                  {/* Header */}
+                  <div className="p-5 pb-3">
+                    <DialogHeader>
+                      <div className="flex items-center justify-between">
+                        <DialogTitle className="text-lg">{selected.contatto ?? "Servizio"}</DialogTitle>
+                        <Badge variant="outline" className={`text-xs ${stato.className}`}>{stato.label}</Badge>
+                      </div>
+                    </DialogHeader>
+                    <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" /> {formatDate(selected.data_servizio)}</span>
+                      {selected.ora_inizio && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {selected.ora_inizio}</span>}
+                      {selected.citta && <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {selected.citta}</span>}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Details */}
+                  <div className="p-5 space-y-1 max-h-[50vh] overflow-y-auto">
+                    <DetailRow label="Tipo servizio" value={buildTipoServizio(selected)} />
+                    <DetailRow label="Veicolo" value={selected.veicolo_tipo} />
+                    <DetailRow label="N. passeggeri" value={String(selected.n_passeggeri ?? 1)} />
+                    <DetailRow label="N. bagagli" value={String(selected.n_bagagli ?? 0)} />
+                    <DetailRow label="Telefono" value={selected.telefono_contatto} />
+                    <DetailRow label="Email" value={selected.email_contatto} />
+
+                    <Separator className="my-2" />
+
+                    <DetailRow label="Luogo inizio" value={selected.luogo_inizio} />
+                    <DetailRow label="Luogo fine" value={selected.luogo_fine} />
+                    <DetailRow label="Itinerario" value={selected.itinerario} />
+                    <DetailRow label="Info autista" value={selected.info_autista} />
+
+                    <Separator className="my-2" />
+
+                    <DetailRow label="Tipo pagamento" value={pagamentoLabel[selected.tipo_pagamento ?? ""] ?? selected.tipo_pagamento} />
+                    <DetailRow label="Prezzo" value={selected.prezzo != null ? `€ ${selected.prezzo.toFixed(2)}` : null} />
+                    <DetailRow label="Centro di costo" value={selected.centro_costo} />
+                    <DetailRow label="Accessori" value={selected.accessori} />
+                    <DetailRow label="Note" value={selected.note} />
+                    <DetailRow label="Codice" value={selected.codice} />
+                  </div>
+
+                  {/* Actions */}
+                  {editable && (
+                    <>
+                      <Separator />
+                      <div className="p-4 flex gap-2">
+                        <Button variant="outline" className="flex-1 rounded-lg h-10 gap-2 text-sm" onClick={() => openEdit(selected)}>
+                          <Pencil className="h-3.5 w-3.5" /> Modifica
+                        </Button>
+                        <Button variant="outline" className="flex-1 rounded-lg h-10 gap-2 text-sm text-destructive hover:text-destructive hover:bg-destructive/5" onClick={() => handleCancel(selected)}>
+                          <XCircle className="h-3.5 w-3.5" /> Annulla servizio
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                  {!editable && selected.stato !== "annullato" && (
+                    <>
+                      <Separator />
+                      <div className="p-4 text-center text-xs text-muted-foreground">
+                        Non più modificabile (meno di 12 ore al servizio)
+                      </div>
+                    </>
+                  )}
+                </>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Dialog */}
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
