@@ -82,8 +82,12 @@ export default function Clients() {
 
   const handleSave = async () => {
     if (!form.company.trim()) { toast.error("La società è obbligatoria"); return; }
+    if (!editing && form.email.trim() && !form.password_cliente.trim()) {
+      toast.error("Inserisci una password per creare l'account cliente");
+      return;
+    }
     const payload = {
-      name: form.company.trim(), // name = company as primary identifier
+      name: form.company.trim(),
       email: toNull(form.email), company: toNull(form.company), phone: toNull(form.phone), notes: toNull(form.notes),
       societa_fattura: toNull(form.societa_fattura), sede_legale: toNull(form.sede_legale),
       codice_fiscale: toNull(form.codice_fiscale), p_iva: toNull(form.p_iva),
@@ -99,12 +103,25 @@ export default function Clients() {
       if (error) { toast.error(error.message); return; }
       toast.success("Cliente aggiornato");
     } else {
-      const { error } = await supabase.from("clients").insert({
+      const { data: inserted, error } = await supabase.from("clients").insert({
         ...payload,
         org_id: "00000000-0000-0000-0000-000000000001", created_by: user?.id,
-      } as any);
+      } as any).select("id").single();
       if (error) { toast.error(error.message); return; }
-      toast.success("Cliente creato");
+
+      // Create auth account if email and password provided
+      if (form.email.trim() && form.password_cliente.trim() && inserted) {
+        const { data: fnData, error: fnError } = await supabase.functions.invoke("create-client-account", {
+          body: { email: form.email.trim(), password: form.password_cliente.trim(), client_id: inserted.id },
+        });
+        if (fnError || fnData?.error) {
+          toast.warning("Cliente creato, ma errore nella creazione account: " + (fnData?.error || fnError?.message));
+        } else {
+          toast.success("Cliente e account creati con successo!");
+        }
+      } else {
+        toast.success("Cliente creato");
+      }
     }
     setDialogOpen(false);
     load();
