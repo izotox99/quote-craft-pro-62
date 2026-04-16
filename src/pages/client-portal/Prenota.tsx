@@ -40,10 +40,11 @@ const DISPOSIZIONE_OPZIONI = [
 ];
 
 const TOUR_OPZIONI = [
-  "Half Day Roma",
+  "Da Civitavecchia Full Day",
+  "Full Day Fuori Roma",
   "Full Day Roma",
   "Half Day Fuori Roma",
-  "Full Day Fuori Roma",
+  "Half Day Roma",
 ];
 
 const PAGAMENTO_OPZIONI = [
