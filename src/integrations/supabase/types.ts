@@ -626,6 +626,7 @@ export type Database = {
         Row: {
           accessori: string | null
           autista_id: string | null
+          centro_costo: string | null
           citta: string | null
           client_id: string | null
           codice: string | null
@@ -636,6 +637,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           data_servizio: string
+          disposizione_oraria: string | null
+          email_contatto: string | null
           foglio: string | null
           fornitore_cs_id: string | null
           id: string
@@ -647,16 +650,23 @@ export type Database = {
           n_bagagli: number | null
           n_passeggeri: number | null
           note: string | null
+          ora_inizio: string | null
           org_id: string
+          prezzo: number | null
           stato: Database["public"]["Enums"]["servizio_stato"]
           telefono_contatto: string | null
+          tipo_pagamento: string | null
           tipologia: Database["public"]["Enums"]["servizio_tipologia"] | null
+          tour_tipo: string | null
+          transfer_tipo: string | null
           updated_at: string
           veicolo_id: string | null
+          veicolo_tipo: string | null
         }
         Insert: {
           accessori?: string | null
           autista_id?: string | null
+          centro_costo?: string | null
           citta?: string | null
           client_id?: string | null
           codice?: string | null
@@ -667,6 +677,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_servizio?: string
+          disposizione_oraria?: string | null
+          email_contatto?: string | null
           foglio?: string | null
           fornitore_cs_id?: string | null
           id?: string
@@ -678,16 +690,23 @@ export type Database = {
           n_bagagli?: number | null
           n_passeggeri?: number | null
           note?: string | null
+          ora_inizio?: string | null
           org_id?: string
+          prezzo?: number | null
           stato?: Database["public"]["Enums"]["servizio_stato"]
           telefono_contatto?: string | null
+          tipo_pagamento?: string | null
           tipologia?: Database["public"]["Enums"]["servizio_tipologia"] | null
+          tour_tipo?: string | null
+          transfer_tipo?: string | null
           updated_at?: string
           veicolo_id?: string | null
+          veicolo_tipo?: string | null
         }
         Update: {
           accessori?: string | null
           autista_id?: string | null
+          centro_costo?: string | null
           citta?: string | null
           client_id?: string | null
           codice?: string | null
@@ -698,6 +717,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           data_servizio?: string
+          disposizione_oraria?: string | null
+          email_contatto?: string | null
           foglio?: string | null
           fornitore_cs_id?: string | null
           id?: string
@@ -709,12 +730,18 @@ export type Database = {
           n_bagagli?: number | null
           n_passeggeri?: number | null
           note?: string | null
+          ora_inizio?: string | null
           org_id?: string
+          prezzo?: number | null
           stato?: Database["public"]["Enums"]["servizio_stato"]
           telefono_contatto?: string | null
+          tipo_pagamento?: string | null
           tipologia?: Database["public"]["Enums"]["servizio_tipologia"] | null
+          tour_tipo?: string | null
+          transfer_tipo?: string | null
           updated_at?: string
           veicolo_id?: string | null
+          veicolo_tipo?: string | null
         }
         Relationships: [
           {
