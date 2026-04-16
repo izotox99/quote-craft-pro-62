@@ -635,7 +635,7 @@ export default function Servizi() {
                       {s.citta && <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">{s.citta}</Badge>}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {s.contatto || "—"} · {s.telefono_contatto || ""} · {tipologiaLabels[s.tipologia || ""] || s.tipologia || "—"}
+                      {s.contatto || "—"} · {s.telefono_contatto || ""} · {buildTServ(s)}
                     </p>
                   </div>
                   {/* Right */}
