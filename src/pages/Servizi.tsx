@@ -441,6 +441,148 @@ export default function Servizi() {
           </Dialog>
         </div>
 
+        {/* Quick day chips + collapsible filters */}
+        <Card>
+          <CardContent className="py-4 space-y-3">
+            {/* Day chips row */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Nuovi:</span>
+              {quickDayOptions.map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => handleQuickDay(opt.key)}
+                  className={`
+                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all
+                    ${quickDay === opt.key
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                    }
+                  `}
+                >
+                  {opt.label}
+                  {quickDayCounts[opt.key] > 0 && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center ${
+                      quickDay === opt.key ? "bg-primary-foreground/20" : "bg-primary/10 text-primary"
+                    }`}>
+                      {quickDayCounts[opt.key]}
+                    </span>
+                  )}
+                </button>
+              ))}
+
+              <div className="ml-auto flex items-center gap-2">
+                {(quickDay || hasActiveFilters) && (
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground" onClick={() => { resetAllFilters(); setTimeout(() => loadServizi(), 0); }}>
+                    <X className="h-3 w-3" /> Reset
+                  </Button>
+                )}
+                <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                      <SlidersHorizontal className="h-3.5 w-3.5" />
+                      Filtri avanzati
+                      <ChevronDown className={`h-3 w-3 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                </Collapsible>
+              </div>
+            </div>
+
+            {/* Collapsible advanced filters */}
+            <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <CollapsibleContent>
+                <div className="pt-3 border-t border-border/50 space-y-3">
+                  <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Dal</Label>
+                      <Input type="date" value={filterDal} onChange={e => setFilterDal(e.target.value)} className="h-9" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Al</Label>
+                      <Input type="date" value={filterAl} onChange={e => setFilterAl(e.target.value)} className="h-9" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Stato</Label>
+                      <Select value={filterStato} onValueChange={setFilterStato}>
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tutti</SelectItem>
+                          {Object.entries(statusLabels).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Tipologia</Label>
+                      <Select value={filterTipologia} onValueChange={setFilterTipologia}>
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tutte</SelectItem>
+                          {Object.entries(tipologiaLabels).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Targa</Label>
+                      <Input value={filterTarga} onChange={e => setFilterTarga(e.target.value)} className="h-9" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Contatto</Label>
+                      <Input value={filterContatto} onChange={e => setFilterContatto(e.target.value)} className="h-9" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Società Cliente</Label>
+                      <Select value={filterCliente} onValueChange={setFilterCliente}>
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tutte</SelectItem>
+                          {clients.map(c => (
+                            <SelectItem key={c.id} value={c.id}>{c.company || c.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Autista</Label>
+                      <Select value={filterAutista} onValueChange={setFilterAutista}>
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tutti</SelectItem>
+                          {autisti.map(a => (
+                            <SelectItem key={a.id} value={a.id}>{a.cognome} {a.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Fornitore CS</Label>
+                      <Select value={filterFornitore} onValueChange={setFilterFornitore}>
+                        <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Tutti</SelectItem>
+                          {fornitori.map(f => (
+                            <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Codice</Label>
+                      <Input value={filterCodice} onChange={e => setFilterCodice(e.target.value)} className="h-9" />
+                    </div>
+                  </div>
+                  <Button onClick={handleSearch} size="sm" className="gap-2">
+                    <Search className="h-3.5 w-3.5" /> Cerca
+                  </Button>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </CardContent>
+        </Card>
+
         {/* Services Table */}
         <Card>
           <CardContent className="p-0">
