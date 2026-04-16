@@ -47,6 +47,45 @@ export type Database = {
         }
         Relationships: []
       }
+      autisti: {
+        Row: {
+          cognome: string
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          note: string | null
+          org_id: string
+          patente: string | null
+          telefono: string | null
+          updated_at: string
+        }
+        Insert: {
+          cognome: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          note?: string | null
+          org_id?: string
+          patente?: string | null
+          telefono?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cognome?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          note?: string | null
+          org_id?: string
+          patente?: string | null
+          telefono?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clients: {
         Row: {
           company: string | null
@@ -122,6 +161,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      fornitori_cs: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          note: string | null
+          org_id: string
+          telefono: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          note?: string | null
+          org_id?: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          note?: string | null
+          org_id?: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       line_items: {
         Row: {
@@ -437,6 +509,131 @@ export type Database = {
           },
         ]
       }
+      servizi: {
+        Row: {
+          accessori: string | null
+          autista_id: string | null
+          citta: string | null
+          client_id: string | null
+          codice: string | null
+          contatto: string | null
+          costo_autista: number | null
+          costo_commissione: number | null
+          costo_cs: number | null
+          created_at: string
+          created_by: string | null
+          data_servizio: string
+          foglio: string | null
+          fornitore_cs_id: string | null
+          id: string
+          incasso: number | null
+          info_autista: string | null
+          itinerario: string | null
+          luogo_fine: string | null
+          luogo_inizio: string | null
+          n_bagagli: number | null
+          n_passeggeri: number | null
+          note: string | null
+          org_id: string
+          stato: Database["public"]["Enums"]["servizio_stato"]
+          telefono_contatto: string | null
+          tipologia: Database["public"]["Enums"]["servizio_tipologia"] | null
+          updated_at: string
+          veicolo_id: string | null
+        }
+        Insert: {
+          accessori?: string | null
+          autista_id?: string | null
+          citta?: string | null
+          client_id?: string | null
+          codice?: string | null
+          contatto?: string | null
+          costo_autista?: number | null
+          costo_commissione?: number | null
+          costo_cs?: number | null
+          created_at?: string
+          created_by?: string | null
+          data_servizio?: string
+          foglio?: string | null
+          fornitore_cs_id?: string | null
+          id?: string
+          incasso?: number | null
+          info_autista?: string | null
+          itinerario?: string | null
+          luogo_fine?: string | null
+          luogo_inizio?: string | null
+          n_bagagli?: number | null
+          n_passeggeri?: number | null
+          note?: string | null
+          org_id?: string
+          stato?: Database["public"]["Enums"]["servizio_stato"]
+          telefono_contatto?: string | null
+          tipologia?: Database["public"]["Enums"]["servizio_tipologia"] | null
+          updated_at?: string
+          veicolo_id?: string | null
+        }
+        Update: {
+          accessori?: string | null
+          autista_id?: string | null
+          citta?: string | null
+          client_id?: string | null
+          codice?: string | null
+          contatto?: string | null
+          costo_autista?: number | null
+          costo_commissione?: number | null
+          costo_cs?: number | null
+          created_at?: string
+          created_by?: string | null
+          data_servizio?: string
+          foglio?: string | null
+          fornitore_cs_id?: string | null
+          id?: string
+          incasso?: number | null
+          info_autista?: string | null
+          itinerario?: string | null
+          luogo_fine?: string | null
+          luogo_inizio?: string | null
+          n_bagagli?: number | null
+          n_passeggeri?: number | null
+          note?: string | null
+          org_id?: string
+          stato?: Database["public"]["Enums"]["servizio_stato"]
+          telefono_contatto?: string | null
+          tipologia?: Database["public"]["Enums"]["servizio_tipologia"] | null
+          updated_at?: string
+          veicolo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servizi_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_fornitore_cs_id_fkey"
+            columns: ["fornitore_cs_id"]
+            isOneToOne: false
+            referencedRelation: "fornitori_cs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_veicolo_id_fkey"
+            columns: ["veicolo_id"]
+            isOneToOne: false
+            referencedRelation: "veicoli"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       templates: {
         Row: {
           category: Database["public"]["Enums"]["template_category"]
@@ -505,6 +702,48 @@ export type Database = {
         }
         Relationships: []
       }
+      veicoli: {
+        Row: {
+          colore: string | null
+          created_at: string
+          id: string
+          marca: string | null
+          modello: string | null
+          note: string | null
+          org_id: string
+          posti: number | null
+          targa: string
+          tipo_macchina: string | null
+          updated_at: string
+        }
+        Insert: {
+          colore?: string | null
+          created_at?: string
+          id?: string
+          marca?: string | null
+          modello?: string | null
+          note?: string | null
+          org_id?: string
+          posti?: number | null
+          targa: string
+          tipo_macchina?: string | null
+          updated_at?: string
+        }
+        Update: {
+          colore?: string | null
+          created_at?: string
+          id?: string
+          marca?: string | null
+          modello?: string | null
+          note?: string | null
+          org_id?: string
+          posti?: number | null
+          targa?: string
+          tipo_macchina?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -527,6 +766,18 @@ export type Database = {
     Enums: {
       app_role: "admin" | "manager" | "agent"
       proposal_status: "draft" | "sent" | "viewed" | "accepted" | "rejected"
+      servizio_stato:
+        | "nuovo"
+        | "confermato"
+        | "in_corso"
+        | "completato"
+        | "annullato"
+      servizio_tipologia:
+        | "transfer"
+        | "disposizione"
+        | "tour"
+        | "evento"
+        | "altro"
       template_category:
         | "web_design"
         | "consulting"
@@ -662,6 +913,20 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "manager", "agent"],
       proposal_status: ["draft", "sent", "viewed", "accepted", "rejected"],
+      servizio_stato: [
+        "nuovo",
+        "confermato",
+        "in_corso",
+        "completato",
+        "annullato",
+      ],
+      servizio_tipologia: [
+        "transfer",
+        "disposizione",
+        "tour",
+        "evento",
+        "altro",
+      ],
       template_category: [
         "web_design",
         "consulting",
