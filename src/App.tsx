@@ -11,15 +11,13 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
+import Servizi from "./pages/Servizi";
 import Clients from "./pages/Clients";
-import Templates from "./pages/Templates";
-import Proposals from "./pages/Proposals";
-import ProposalBuilder from "./pages/ProposalBuilder";
-import ProposalDetail from "./pages/ProposalDetail";
 import ClientDetail from "./pages/ClientDetail";
+import Veicoli from "./pages/Veicoli";
+import Autisti from "./pages/Autisti";
+import FornitoriCS from "./pages/FornitoriCS";
 import Settings from "./pages/Settings";
-import PublicProposal from "./pages/PublicProposal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,16 +35,13 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Servizi /></ProtectedRoute>} />
             <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
             <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
-            <Route path="/templates" element={<ProtectedRoute><Templates /></ProtectedRoute>} />
-            <Route path="/proposals" element={<ProtectedRoute><Proposals /></ProtectedRoute>} />
-            <Route path="/proposals/new" element={<ProtectedRoute><ProposalBuilder /></ProtectedRoute>} />
-            <Route path="/proposals/:id" element={<ProtectedRoute><ProposalDetail /></ProtectedRoute>} />
-            <Route path="/proposals/:id/edit" element={<ProtectedRoute><ProposalBuilder /></ProtectedRoute>} />
+            <Route path="/veicoli" element={<ProtectedRoute><Veicoli /></ProtectedRoute>} />
+            <Route path="/autisti" element={<ProtectedRoute><Autisti /></ProtectedRoute>} />
+            <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/p/:shareId" element={<PublicProposal />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
