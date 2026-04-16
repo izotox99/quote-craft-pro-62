@@ -110,6 +110,18 @@ export default function Prenota() {
 
   const set = (field: string, value: string) => setForm(p => ({ ...p, [field]: value }));
 
+  const handleUtenzaSelect = (utenzaId: string) => {
+    const u = utenze.find(u => u.id === utenzaId);
+    if (u) {
+      setForm(p => ({
+        ...p,
+        contatto: `${u.nome} ${u.cognome}`,
+        telefono_contatto: u.cellulare ?? "",
+        email_contatto: u.email,
+      }));
+    }
+  };
+
   // Logic: Tour esclude Transfer/Disposizione. Transfer richiede Disposizione.
   const hasTour = !!form.tour_tipo;
   const hasTransfer = !!form.transfer_tipo;
