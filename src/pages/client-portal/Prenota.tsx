@@ -209,7 +209,13 @@ export default function Prenota() {
             <CardContent className="p-5">
               <div className="flex items-center gap-3">
                 <Label className="text-sm font-semibold whitespace-nowrap">Città di Servizio <span className="text-destructive">*</span></Label>
-                <Input value={form.citta} onChange={(e) => set("citta", e.target.value)} placeholder="Roma" className="rounded-lg h-10 max-w-xs" />
+                <Select value={form.citta} onValueChange={(v) => set("citta", v)}>
+                  <SelectTrigger className="rounded-lg h-10 max-w-xs"><SelectValue placeholder="Seleziona città" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Roma">Roma</SelectItem>
+                    <SelectItem value="Napoli">Napoli</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
