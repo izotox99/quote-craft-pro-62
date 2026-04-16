@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PlusCircle, Search, Download, FileText } from "lucide-react";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
+import { it as itLocale } from "date-fns/locale";
 
 type Servizio = {
   id: string;
@@ -208,9 +209,83 @@ export default function Servizi() {
 
   const nuoviCount = servizi.filter(s => s.stato === "nuovo").length;
 
+  // Quick day filters for "Nuovi" services
+  const [quickDay, setQuickDay] = useState<string | null>(null);
+  const quickDayOptions = useMemo(() => {
+    const today = new Date();
+    return [
+      { key: "oggi", label: "Nuovi Oggi", date: format(today, "yyyy-MM-dd") },
+      { key: "domani", label: "Nuovi Domani", date: format(addDays(today, 1), "yyyy-MM-dd") },
+      { key: "day2", label: format(addDays(today, 2), "EEE dd/MM", { locale: itLocale }), date: format(addDays(today, 2), "yyyy-MM-dd") },
+      { key: "day3", label: format(addDays(today, 3), "EEE dd/MM", { locale: itLocale }), date: format(addDays(today, 3), "yyyy-MM-dd") },
+    ];
+  }, []);
+
+  const quickDayCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const opt of quickDayOptions) {
+      counts[opt.key] = servizi.filter(s => s.stato === "nuovo" && s.data_servizio === opt.date).length;
+    }
+    return counts;
+  }, [servizi, quickDayOptions]);
+
+  const handleQuickDay = (key: string) => {
+    const opt = quickDayOptions.find(o => o.key === key);
+    if (!opt) return;
+    if (quickDay === key) {
+      setQuickDay(null);
+      return;
+    }
+    setQuickDay(key);
+    setFilterDal(opt.date);
+    setFilterAl(opt.date);
+    setFilterStato("nuovo");
+    setFilterTipologia("all");
+    setFilterTarga("");
+    setFilterContatto("");
+    setFilterCliente("all");
+    setFilterAutista("all");
+    setFilterFornitore("all");
+    setFilterCodice("");
+  };
+
+  // Auto-search when quickDay changes
+  useEffect(() => {
+    if (quickDay !== null && user) {
+      loadServizi();
+    }
+  }, [quickDay]);
+
   return (
     <DashboardLayout>
       <div className="space-y-4">
+        {/* Quick day filter chips */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm font-semibold text-foreground mr-1">Nuovi Servizi:</span>
+          {quickDayOptions.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => handleQuickDay(opt.key)}
+              className={`
+                inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all
+                ${quickDay === opt.key
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                }
+              `}
+            >
+              {opt.label}
+              {quickDayCounts[opt.key] > 0 && (
+                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
+                  quickDay === opt.key ? "bg-primary-foreground/20" : "bg-primary/10 text-primary"
+                }`}>
+                  {quickDayCounts[opt.key]}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
         {/* Filters */}
         <Card>
           <CardContent className="pt-6">
