@@ -583,83 +583,124 @@ export default function Servizi() {
           </CardContent>
         </Card>
 
-        {/* Services Table */}
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Città</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Società</TableHead>
-                    <TableHead>Contatto</TableHead>
-                    <TableHead>Telefono</TableHead>
-                    <TableHead>N.P</TableHead>
-                    <TableHead>N.B</TableHead>
-                    <TableHead>Luogo Inizio</TableHead>
-                    <TableHead>Itinerario</TableHead>
-                    <TableHead>Luogo Fine</TableHead>
-                    <TableHead>Info Autista</TableHead>
-                    <TableHead>Accessori</TableHead>
-                    <TableHead>Veicolo</TableHead>
-                    <TableHead>Targa</TableHead>
-                    <TableHead>Inc €</TableHead>
-                    <TableHead>CS €</TableHead>
-                    <TableHead>Aut €</TableHead>
-                    <TableHead>Com €</TableHead>
-                    <TableHead>Codice</TableHead>
-                    <TableHead>Stato</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={20} className="text-center py-8 text-muted-foreground">
-                        Caricamento...
-                      </TableCell>
-                    </TableRow>
-                  ) : servizi.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={20} className="text-center py-8 text-muted-foreground">
-                        Nessun servizio trovato
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    servizi.map((s) => (
-                      <TableRow key={s.id} className="text-xs">
-                        <TableCell>{s.citta || ""}</TableCell>
-                        <TableCell className="whitespace-nowrap">{format(new Date(s.data_servizio), "dd/MM/yyyy")}</TableCell>
-                        <TableCell>{s.clients?.company || s.clients?.name || ""}</TableCell>
-                        <TableCell>{s.contatto || ""}</TableCell>
-                        <TableCell>{s.telefono_contatto || ""}</TableCell>
-                        <TableCell>{s.n_passeggeri}</TableCell>
-                        <TableCell>{s.n_bagagli}</TableCell>
-                        <TableCell>{s.luogo_inizio || ""}</TableCell>
-                        <TableCell>{s.itinerario || ""}</TableCell>
-                        <TableCell>{s.luogo_fine || ""}</TableCell>
-                        <TableCell>{s.info_autista || ""}</TableCell>
-                        <TableCell>{s.accessori || ""}</TableCell>
-                        <TableCell>{s.veicoli?.tipo_macchina || ""}</TableCell>
-                        <TableCell>{s.veicoli?.targa || ""}</TableCell>
-                        <TableCell>{Number(s.incasso || 0).toFixed(0)}</TableCell>
-                        <TableCell>{Number(s.costo_cs || 0).toFixed(0)}</TableCell>
-                        <TableCell>{Number(s.costo_autista || 0).toFixed(0)}</TableCell>
-                        <TableCell>{Number(s.costo_commissione || 0).toFixed(0)}</TableCell>
-                        <TableCell>{s.codice || ""}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={statusColors[s.stato] || ""}>
-                            {statusLabels[s.stato] || s.stato}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+        {/* Services list */}
+        <div className="space-y-2">
+          {loading ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />)}
             </div>
-          </CardContent>
-        </Card>
+          ) : servizi.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <p className="text-sm text-muted-foreground">Nessun servizio trovato</p>
+              </CardContent>
+            </Card>
+          ) : (
+            servizi.map((s) => (
+              <Card
+                key={s.id}
+                className="cursor-pointer hover:shadow-md transition-all hover:border-primary/30 group"
+                onClick={() => setDetailServizio(s)}
+              >
+                <CardContent className="p-4 flex items-center gap-4">
+                  {/* Date */}
+                  <div className="flex flex-col items-center justify-center w-12 shrink-0">
+                    <span className="text-[10px] text-muted-foreground uppercase">{format(new Date(s.data_servizio), "MMM", { locale: itLocale })}</span>
+                    <span className="text-lg font-bold text-foreground leading-none">{format(new Date(s.data_servizio), "dd")}</span>
+                  </div>
+                  <Separator orientation="vertical" className="h-10" />
+                  {/* Main */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-sm text-card-foreground truncate">{s.clients?.company || s.clients?.name || "—"}</p>
+                      {s.citta && <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">{s.citta}</Badge>}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {s.contatto || "—"} · {s.telefono_contatto || ""} · {tipologiaLabels[s.tipologia || ""] || s.tipologia || "—"}
+                    </p>
+                  </div>
+                  {/* Right */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
+                      <Users className="h-3.5 w-3.5" /> {s.n_passeggeri ?? 0}
+                    </div>
+                    <Badge variant="outline" className={statusColors[s.stato] || ""}>
+                      {statusLabels[s.stato] || s.stato}
+                    </Badge>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Detail dialog */}
+        <Dialog open={!!detailServizio} onOpenChange={o => !o && setDetailServizio(null)}>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+            {detailServizio && (() => {
+              const s = detailServizio;
+              const DetailRow = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) => {
+                if (!value) return null;
+                return (
+                  <div className="flex items-start gap-3 py-1.5">
+                    <Icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[11px] text-muted-foreground">{label}</p>
+                      <p className="text-sm font-medium text-foreground">{value}</p>
+                    </div>
+                  </div>
+                );
+              };
+              return (
+                <>
+                  <DialogHeader>
+                    <DialogTitle className="text-base">
+                      {format(new Date(s.data_servizio), "EEEE dd MMMM yyyy", { locale: itLocale })}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    <Badge variant="outline" className={statusColors[s.stato] || ""}>{statusLabels[s.stato] || s.stato}</Badge>
+                    {s.tipologia && <Badge variant="outline">{tipologiaLabels[s.tipologia] || s.tipologia}</Badge>}
+                    {s.citta && <Badge variant="outline">{s.citta}</Badge>}
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="space-y-0">
+                    <DetailRow icon={Users} label="Società" value={s.clients?.company || s.clients?.name} />
+                    <DetailRow icon={Phone} label="Contatto" value={s.contatto} />
+                    <DetailRow icon={Phone} label="Telefono" value={s.telefono_contatto} />
+                    <DetailRow icon={Users} label="Passeggeri / Bagagli" value={`${s.n_passeggeri ?? 0} pax · ${s.n_bagagli ?? 0} bag`} />
+                    <DetailRow icon={MapPin} label="Luogo Inizio" value={s.luogo_inizio} />
+                    <DetailRow icon={Route} label="Itinerario" value={s.itinerario} />
+                    <DetailRow icon={MapPin} label="Luogo Fine" value={s.luogo_fine} />
+                    <DetailRow icon={Info} label="Info Autista" value={s.info_autista} />
+                    <DetailRow icon={Luggage} label="Accessori" value={s.accessori} />
+                    <DetailRow icon={Car} label="Veicolo" value={s.veicoli ? `${s.veicoli.tipo_macchina || ""} — ${s.veicoli.targa}` : null} />
+                    <DetailRow icon={Users} label="Autista" value={s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : null} />
+                    <DetailRow icon={Users} label="Fornitore CS" value={s.fornitori_cs?.nome} />
+                    {(s.incasso || s.costo_cs || s.costo_autista || s.costo_commissione) && (
+                      <>
+                        <Separator className="my-2" />
+                        <DetailRow icon={CreditCard} label="Incasso" value={s.incasso ? `€ ${s.incasso}` : null} />
+                        <DetailRow icon={CreditCard} label="Costo CS" value={s.costo_cs ? `€ ${s.costo_cs}` : null} />
+                        <DetailRow icon={CreditCard} label="Costo Autista" value={s.costo_autista ? `€ ${s.costo_autista}` : null} />
+                        <DetailRow icon={CreditCard} label="Commissione" value={s.costo_commissione ? `€ ${s.costo_commissione}` : null} />
+                      </>
+                    )}
+                    {(s.codice || s.foglio || s.note) && (
+                      <>
+                        <Separator className="my-2" />
+                        <DetailRow icon={Info} label="Codice" value={s.codice} />
+                        <DetailRow icon={Info} label="Foglio" value={s.foglio} />
+                        <DetailRow icon={Info} label="Note" value={s.note} />
+                      </>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
