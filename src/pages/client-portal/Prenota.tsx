@@ -58,6 +58,7 @@ export default function Prenota() {
   const [clientId, setClientId] = useState<string | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [utenze, setUtenze] = useState<{ id: string; nome: string; cognome: string; cellulare: string | null; email: string }[]>([]);
 
   const empty = {
     data_servizio: "",
@@ -95,12 +96,31 @@ export default function Prenota() {
       if (data) {
         setClientId(data.id);
         setOrgId(data.org_id);
+        // Load utenze for this client
+        const { data: utenzeData } = await supabase
+          .from("client_utenze")
+          .select("id, nome, cognome, cellulare, email")
+          .eq("parent_client_id", data.id)
+          .eq("attivo", true);
+        setUtenze(utenzeData ?? []);
       }
     };
     load();
   }, [user]);
 
   const set = (field: string, value: string) => setForm(p => ({ ...p, [field]: value }));
+
+  const handleUtenzaSelect = (utenzaId: string) => {
+    const u = utenze.find(u => u.id === utenzaId);
+    if (u) {
+      setForm(p => ({
+        ...p,
+        contatto: `${u.nome} ${u.cognome}`,
+        telefono_contatto: u.cellulare ?? "",
+        email_contatto: u.email,
+      }));
+    }
+  };
 
   // Logic: Tour esclude Transfer/Disposizione. Transfer richiede Disposizione.
   const hasTour = !!form.tour_tipo;
@@ -236,7 +256,18 @@ export default function Prenota() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Passeggero <span className="text-destructive">*</span></Label>
-                  <Input value={form.contatto} onChange={(e) => set("contatto", e.target.value)} placeholder="Nome passeggero" className="rounded-lg h-10" />
+                  {utenze.length > 0 ? (
+                    <Select onValueChange={handleUtenzaSelect}>
+                      <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona utenza" /></SelectTrigger>
+                      <SelectContent>
+                        {utenze.map(u => (
+                          <SelectItem key={u.id} value={u.id}>{u.nome} {u.cognome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input value={form.contatto} onChange={(e) => set("contatto", e.target.value)} placeholder="Nome passeggero" className="rounded-lg h-10" />
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Telefono</Label>
