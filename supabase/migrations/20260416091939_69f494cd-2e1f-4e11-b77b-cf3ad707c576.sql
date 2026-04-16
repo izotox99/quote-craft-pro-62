@@ -1,0 +1,20 @@
+
+ALTER TABLE public.clients
+  ADD COLUMN IF NOT EXISTS societa_fattura text,
+  ADD COLUMN IF NOT EXISTS sede_legale text,
+  ADD COLUMN IF NOT EXISTS codice_fiscale text,
+  ADD COLUMN IF NOT EXISTS p_iva text,
+  ADD COLUMN IF NOT EXISTS nome_rappresentante text,
+  ADD COLUMN IF NOT EXISTS cognome_rappresentante text,
+  ADD COLUMN IF NOT EXISTS cap text,
+  ADD COLUMN IF NOT EXISTS provincia text,
+  ADD COLUMN IF NOT EXISTS citta text,
+  ADD COLUMN IF NOT EXISTS nazione text,
+  ADD COLUMN IF NOT EXISTS telefono_urg1 text,
+  ADD COLUMN IF NOT EXISTS telefono_urg1_nota text,
+  ADD COLUMN IF NOT EXISTS telefono_urg2 text,
+  ADD COLUMN IF NOT EXISTS telefono_urg2_nota text,
+  ADD COLUMN IF NOT EXISTS telefono_urg3 text,
+  ADD COLUMN IF NOT EXISTS telefono_urg3_nota text,
+  ADD COLUMN IF NOT EXISTS fax text,
+  ADD COLUMN IF NOT EXISTS password_cliente text;
