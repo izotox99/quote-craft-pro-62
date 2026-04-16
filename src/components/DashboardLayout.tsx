@@ -60,7 +60,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <FileText className="h-4.5 w-4.5 text-primary-foreground" />
               </div>
               <span className="text-lg font-bold font-display text-foreground hidden sm:block tracking-tight">
-                {organization?.name ?? "NCC Manager"}
+                Dashboard Aziendale
               </span>
             </Link>
           </div>
