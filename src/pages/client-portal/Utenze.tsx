@@ -24,6 +24,8 @@ interface Utenza {
   attivo: boolean;
 }
 
+const emptyForm = { nome: "", cognome: "", cellulare: "", email: "", password: "", tipo: "singolo" as "singolo" | "gruppo" };
+
 export default function Utenze() {
   const { user } = useAuth();
   const [clientId, setClientId] = useState<string | null>(null);
@@ -31,14 +33,8 @@ export default function Utenze() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({
-    nome: "",
-    cognome: "",
-    cellulare: "",
-    email: "",
-    password: "",
-    tipo: "singolo" as "singolo" | "gruppo",
-  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
     const load = async () => {
@@ -66,29 +62,61 @@ export default function Utenze() {
     if (data) setUtenze(data as Utenza[]);
   };
 
+  const openAdd = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setDialogOpen(true);
+  };
+
+  const openEdit = (u: Utenza) => {
+    setEditingId(u.id);
+    setForm({ nome: u.nome, cognome: u.cognome, cellulare: u.cellulare || "", email: u.email, password: u.password, tipo: u.tipo });
+    setDialogOpen(true);
+  };
+
   const handleSubmit = async () => {
     if (!clientId) return;
-    if (!form.nome || !form.email || !form.password) {
+    if (!form.nome || !form.email || (!editingId && !form.password)) {
       toast.error("Compila i campi obbligatori");
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("client_utenze").insert({
-      parent_client_id: clientId,
-      nome: form.nome,
-      cognome: form.cognome,
-      cellulare: form.cellulare || null,
-      email: form.email,
-      password: form.password,
-      tipo: form.tipo,
-    });
-    if (error) {
-      toast.error("Errore durante il salvataggio");
+
+    if (editingId) {
+      const updateData: any = {
+        nome: form.nome,
+        cognome: form.cognome,
+        cellulare: form.cellulare || null,
+        email: form.email,
+        tipo: form.tipo,
+      };
+      if (form.password) updateData.password = form.password;
+
+      const { error } = await supabase.from("client_utenze").update(updateData).eq("id", editingId);
+      if (error) {
+        toast.error("Errore durante il salvataggio");
+      } else {
+        toast.success("Utenza aggiornata");
+        setDialogOpen(false);
+        await fetchUtenze(clientId);
+      }
     } else {
-      toast.success("Utenza aggiunta");
-      setForm({ nome: "", cognome: "", cellulare: "", email: "", password: "", tipo: "singolo" });
-      setDialogOpen(false);
-      await fetchUtenze(clientId);
+      const { error } = await supabase.from("client_utenze").insert({
+        parent_client_id: clientId,
+        nome: form.nome,
+        cognome: form.cognome,
+        cellulare: form.cellulare || null,
+        email: form.email,
+        password: form.password,
+        tipo: form.tipo,
+      });
+      if (error) {
+        toast.error("Errore durante il salvataggio");
+      } else {
+        toast.success("Utenza aggiunta");
+        setDialogOpen(false);
+        await fetchUtenze(clientId);
+      }
     }
     setSaving(false);
   };
@@ -125,65 +153,63 @@ export default function Utenze() {
               Gestisci gli accessi dei tuoi collaboratori al portale.
             </p>
           </div>
-
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1.5">
-                <Plus className="h-4 w-4" />
-                Aggiungi
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Aggiungi Utenza</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label>Nome *</Label>
-                    <Input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>Cognome</Label>
-                    <Input value={form.cognome} onChange={e => setForm({ ...form, cognome: e.target.value })} />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Cellulare</Label>
-                  <Input value={form.cellulare} onChange={e => setForm({ ...form, cellulare: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Email *</Label>
-                  <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Password *</Label>
-                  <Input value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Tipo</Label>
-                  <Select value={form.tipo} onValueChange={(v: "singolo" | "gruppo") => setForm({ ...form, tipo: v })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="singolo">Per singolo</SelectItem>
-                      <SelectItem value="gruppo">Per gruppo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    {form.tipo === "singolo"
-                      ? "L'utente potrà gestire le richieste solo per se stesso."
-                      : "L'utente potrà gestire le richieste per sé e per le altre persone autorizzate."}
-                  </p>
-                </div>
-                <Button onClick={handleSubmit} disabled={saving} className="w-full">
-                  {saving ? "Salvataggio..." : "Aggiungi"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button size="sm" className="gap-1.5" onClick={openAdd}>
+            <Plus className="h-4 w-4" />
+            Aggiungi
+          </Button>
         </div>
+
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>{editingId ? "Modifica Utenza" : "Aggiungi Utenza"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Nome *</Label>
+                  <Input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Cognome</Label>
+                  <Input value={form.cognome} onChange={e => setForm({ ...form, cognome: e.target.value })} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Cellulare</Label>
+                <Input value={form.cellulare} onChange={e => setForm({ ...form, cellulare: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Email *</Label>
+                <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{editingId ? "Password (lascia vuoto per non cambiare)" : "Password *"}</Label>
+                <Input value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder={editingId ? "••••••••" : ""} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Tipo</Label>
+                <Select value={form.tipo} onValueChange={(v: "singolo" | "gruppo") => setForm({ ...form, tipo: v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="singolo">Per singolo</SelectItem>
+                    <SelectItem value="gruppo">Per gruppo</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  {form.tipo === "singolo"
+                    ? "L'utente potrà gestire le richieste solo per se stesso."
+                    : "L'utente potrà gestire le richieste per sé e per le altre persone autorizzate."}
+                </p>
+              </div>
+              <Button onClick={handleSubmit} disabled={saving} className="w-full">
+                {saving ? "Salvataggio..." : editingId ? "Salva modifiche" : "Aggiungi"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Card className="rounded-xl border-border/50 shadow-sm">
           <CardContent className="p-0">
@@ -197,13 +223,13 @@ export default function Utenze() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Società</TableHead>
+                    <TableHead>Rappresentante</TableHead>
                     <TableHead>Cellulare</TableHead>
                     <TableHead>Login</TableHead>
                     <TableHead>Password</TableHead>
                     <TableHead>Stato</TableHead>
                     <TableHead>Tipo</TableHead>
-                    <TableHead className="w-10" />
+                    <TableHead className="w-20" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -229,14 +255,24 @@ export default function Utenze() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(u.id)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => openEdit(u)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(u.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
