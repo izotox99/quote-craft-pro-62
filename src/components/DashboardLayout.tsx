@@ -6,14 +6,15 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { FileText, LayoutDashboard, Users, FolderOpen, PlusCircle, Settings, LogOut, User, ClipboardList, Menu } from "lucide-react";
+import { FileText, LayoutDashboard, Users, Car, UserCheck, Truck, Settings, LogOut, User, Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { to: "/proposals", icon: ClipboardList, label: "Proposals" },
-  { to: "/clients", icon: Users, label: "Clients" },
-  { to: "/templates", icon: FolderOpen, label: "Templates" },
+  { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
+  { to: "/clients", icon: Users, label: "Clienti" },
+  { to: "/veicoli", icon: Car, label: "Mezzi" },
+  { to: "/autisti", icon: UserCheck, label: "Autisti" },
+  { to: "/fornitori", icon: Truck, label: "Fornitori CS" },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -120,13 +121,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               );
             })}
             <div className="my-2 border-t border-border" />
-            <Button className="w-full justify-start gap-3 h-12" onClick={() => { setMobileOpen(false); navigate("/proposals/new"); }}>
-              <PlusCircle className="h-5 w-5" />
-              New Proposal
-            </Button>
             <Button variant="ghost" className="w-full justify-start gap-3 h-12" onClick={() => { setMobileOpen(false); navigate("/settings"); }}>
               <Settings className="h-5 w-5" />
-              Settings
+              Impostazioni
             </Button>
           </nav>
         </SheetContent>
