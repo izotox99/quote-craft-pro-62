@@ -88,39 +88,93 @@ export type Database = {
       }
       clients: {
         Row: {
+          cap: string | null
+          citta: string | null
+          codice_fiscale: string | null
+          cognome_rappresentante: string | null
           company: string | null
           created_at: string
           created_by: string | null
           email: string | null
+          fax: string | null
           id: string
           name: string
+          nazione: string | null
+          nome_rappresentante: string | null
           notes: string | null
           org_id: string | null
+          p_iva: string | null
+          password_cliente: string | null
           phone: string | null
+          provincia: string | null
+          sede_legale: string | null
+          societa_fattura: string | null
+          telefono_urg1: string | null
+          telefono_urg1_nota: string | null
+          telefono_urg2: string | null
+          telefono_urg2_nota: string | null
+          telefono_urg3: string | null
+          telefono_urg3_nota: string | null
           updated_at: string
         }
         Insert: {
+          cap?: string | null
+          citta?: string | null
+          codice_fiscale?: string | null
+          cognome_rappresentante?: string | null
           company?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          fax?: string | null
           id?: string
           name: string
+          nazione?: string | null
+          nome_rappresentante?: string | null
           notes?: string | null
           org_id?: string | null
+          p_iva?: string | null
+          password_cliente?: string | null
           phone?: string | null
+          provincia?: string | null
+          sede_legale?: string | null
+          societa_fattura?: string | null
+          telefono_urg1?: string | null
+          telefono_urg1_nota?: string | null
+          telefono_urg2?: string | null
+          telefono_urg2_nota?: string | null
+          telefono_urg3?: string | null
+          telefono_urg3_nota?: string | null
           updated_at?: string
         }
         Update: {
+          cap?: string | null
+          citta?: string | null
+          codice_fiscale?: string | null
+          cognome_rappresentante?: string | null
           company?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
+          fax?: string | null
           id?: string
           name?: string
+          nazione?: string | null
+          nome_rappresentante?: string | null
           notes?: string | null
           org_id?: string | null
+          p_iva?: string | null
+          password_cliente?: string | null
           phone?: string | null
+          provincia?: string | null
+          sede_legale?: string | null
+          societa_fattura?: string | null
+          telefono_urg1?: string | null
+          telefono_urg1_nota?: string | null
+          telefono_urg2?: string | null
+          telefono_urg2_nota?: string | null
+          telefono_urg3?: string | null
+          telefono_urg3_nota?: string | null
           updated_at?: string
         }
         Relationships: [
