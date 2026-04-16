@@ -88,6 +88,7 @@ export type Database = {
       }
       clients: {
         Row: {
+          auth_user_id: string | null
           cap: string | null
           citta: string | null
           codice_fiscale: string | null
@@ -97,6 +98,7 @@ export type Database = {
           created_by: string | null
           email: string | null
           fax: string | null
+          gdpr_accepted_at: string | null
           id: string
           name: string
           nazione: string | null
@@ -118,6 +120,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auth_user_id?: string | null
           cap?: string | null
           citta?: string | null
           codice_fiscale?: string | null
@@ -127,6 +130,7 @@ export type Database = {
           created_by?: string | null
           email?: string | null
           fax?: string | null
+          gdpr_accepted_at?: string | null
           id?: string
           name: string
           nazione?: string | null
@@ -148,6 +152,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auth_user_id?: string | null
           cap?: string | null
           citta?: string | null
           codice_fiscale?: string | null
@@ -157,6 +162,7 @@ export type Database = {
           created_by?: string | null
           email?: string | null
           fax?: string | null
+          gdpr_accepted_at?: string | null
           id?: string
           name?: string
           nazione?: string | null
@@ -803,6 +809,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_client_org_id: { Args: { _user_id: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -812,6 +819,7 @@ export type Database = {
         Returns: boolean
       }
       hash_share_password: { Args: { _password: string }; Returns: string }
+      is_client_user: { Args: { _user_id: string }; Returns: boolean }
       verify_share_password: {
         Args: { _password: string; _share_id: string }
         Returns: boolean
