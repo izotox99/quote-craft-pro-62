@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -233,11 +234,11 @@ export default function ListaServizi() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="space-y-1">
                 <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Da</label>
-                <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="rounded-lg h-9 text-sm" />
+                <DatePicker value={dateFrom} onChange={setDateFrom} placeholder="Data inizio" className="h-9 text-sm" />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">A</label>
-                <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="rounded-lg h-9 text-sm" />
+                <DatePicker value={dateTo} onChange={setDateTo} placeholder="Data fine" className="h-9 text-sm" />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Cerca</label>

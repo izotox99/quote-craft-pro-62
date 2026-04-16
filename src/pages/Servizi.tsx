@@ -3,6 +3,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -316,7 +317,7 @@ export default function Servizi() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
                   <Label>Data Servizio</Label>
-                  <Input type="date" value={form.data_servizio} onChange={e => setForm({ ...form, data_servizio: e.target.value })} />
+                  <DatePicker value={form.data_servizio} onChange={(v) => setForm({ ...form, data_servizio: v })} />
                 </div>
                 <div className="space-y-1">
                   <Label>Città</Label>
@@ -514,11 +515,11 @@ export default function Servizi() {
                   <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Dal</Label>
-                      <Input type="date" value={filterDal} onChange={e => setFilterDal(e.target.value)} className="h-9" />
+                      <DatePicker value={filterDal} onChange={setFilterDal} placeholder="Data inizio" className="h-9" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Al</Label>
-                      <Input type="date" value={filterAl} onChange={e => setFilterAl(e.target.value)} className="h-9" />
+                      <DatePicker value={filterAl} onChange={setFilterAl} placeholder="Data fine" className="h-9" />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Stato</Label>
