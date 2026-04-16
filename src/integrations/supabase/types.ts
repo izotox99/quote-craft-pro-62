@@ -86,6 +86,59 @@ export type Database = {
         }
         Relationships: []
       }
+      client_utenze: {
+        Row: {
+          attivo: boolean
+          auth_user_id: string | null
+          cellulare: string | null
+          cognome: string
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          parent_client_id: string
+          password: string
+          tipo: Database["public"]["Enums"]["utenza_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          attivo?: boolean
+          auth_user_id?: string | null
+          cellulare?: string | null
+          cognome: string
+          created_at?: string
+          email: string
+          id?: string
+          nome: string
+          parent_client_id: string
+          password: string
+          tipo?: Database["public"]["Enums"]["utenza_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          attivo?: boolean
+          auth_user_id?: string | null
+          cellulare?: string | null
+          cognome?: string
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          parent_client_id?: string
+          password?: string
+          tipo?: Database["public"]["Enums"]["utenza_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_utenze_parent_client_id_fkey"
+            columns: ["parent_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           auth_user_id: string | null
@@ -846,6 +899,7 @@ export type Database = {
         | "development"
         | "marketing"
         | "general"
+      utenza_tipo: "singolo" | "gruppo"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -996,6 +1050,7 @@ export const Constants = {
         "marketing",
         "general",
       ],
+      utenza_tipo: ["singolo", "gruppo"],
     },
   },
 } as const
