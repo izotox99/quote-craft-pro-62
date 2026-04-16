@@ -32,6 +32,7 @@ export default function Landing() {
             <span className="font-display text-lg font-bold text-foreground">NCC Manager</span>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => navigate("/client-login")}>Area Clienti</Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>Accedi</Button>
             <Button size="sm" onClick={() => navigate("/signup")}>Registrati</Button>
           </div>
