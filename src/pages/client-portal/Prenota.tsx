@@ -24,13 +24,14 @@ const VEICOLI_DISPONIBILI = [
 ];
 
 const TRANSFER_OPZIONI = [
+  "Da / Per altro Luogo",
   "Da Aeroporto",
-  "Per Aeroporto",
+  "Da Civitavecchia",
   "Da Stazione",
+  "Interno Città",
+  "Per Aeroporto",
+  "Per Civitavecchia",
   "Per Stazione",
-  "Da Hotel",
-  "Per Hotel",
-  "Altro",
 ];
 
 const DISPOSIZIONE_OPZIONI = [
