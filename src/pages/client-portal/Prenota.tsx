@@ -96,6 +96,13 @@ export default function Prenota() {
       if (data) {
         setClientId(data.id);
         setOrgId(data.org_id);
+        // Load utenze for this client
+        const { data: utenzeData } = await supabase
+          .from("client_utenze")
+          .select("id, nome, cognome, cellulare, email")
+          .eq("parent_client_id", data.id)
+          .eq("attivo", true);
+        setUtenze(utenzeData ?? []);
       }
     };
     load();
