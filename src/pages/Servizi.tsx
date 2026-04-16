@@ -83,6 +83,15 @@ const tipologiaLabels: Record<string, string> = {
   altro: "Altro",
 };
 
+function buildTServ(s: Servizio): string {
+  const parts: string[] = [];
+  if (s.transfer_tipo) parts.push(`Transfer: ${s.transfer_tipo}`);
+  if (s.disposizione_oraria) parts.push(`Disp: ${s.disposizione_oraria}`);
+  if (s.tour_tipo) parts.push(`Tour: ${s.tour_tipo}`);
+  if (parts.length === 0 && s.tipologia) parts.push(tipologiaLabels[s.tipologia] || s.tipologia);
+  return parts.join(" · ") || "—";
+}
+
 export default function Servizi() {
   const { user } = useAuth();
   const [servizi, setServizi] = useState<Servizio[]>([]);
