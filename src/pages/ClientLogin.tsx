@@ -96,7 +96,7 @@ export default function ClientLogin() {
           </form>
           <div className="mt-6 text-center">
             <a href="/login" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              Sei una società? Accedi qui
+              Sei una società di NCC? Accedi qui
             </a>
           </div>
         </CardContent>
