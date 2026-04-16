@@ -14,6 +14,13 @@ import ResetPassword from "./pages/ResetPassword";
 import Servizi from "./pages/Servizi";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
+import ClientiTariffari from "./pages/ClientiTariffari";
+import ClientiValutazione from "./pages/ClientiValutazione";
+import ClientiAccessori from "./pages/ClientiAccessori";
+import ClientiRappresentante from "./pages/ClientiRappresentante";
+import ClientiNote from "./pages/ClientiNote";
+import ClientiInAttesa from "./pages/ClientiInAttesa";
+import Preventivi from "./pages/Preventivi";
 import Veicoli from "./pages/Veicoli";
 import Autisti from "./pages/Autisti";
 import FornitoriCS from "./pages/FornitoriCS";
@@ -38,6 +45,13 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><Servizi /></ProtectedRoute>} />
             <Route path="/clients" element={<ProtectedRoute><Clients /></ProtectedRoute>} />
             <Route path="/clients/:id" element={<ProtectedRoute><ClientDetail /></ProtectedRoute>} />
+            <Route path="/clients/tariffari" element={<ProtectedRoute><ClientiTariffari /></ProtectedRoute>} />
+            <Route path="/clients/valutazione" element={<ProtectedRoute><ClientiValutazione /></ProtectedRoute>} />
+            <Route path="/clients/accessori" element={<ProtectedRoute><ClientiAccessori /></ProtectedRoute>} />
+            <Route path="/clients/rappresentante" element={<ProtectedRoute><ClientiRappresentante /></ProtectedRoute>} />
+            <Route path="/clients/note" element={<ProtectedRoute><ClientiNote /></ProtectedRoute>} />
+            <Route path="/clients/in-attesa" element={<ProtectedRoute><ClientiInAttesa /></ProtectedRoute>} />
+            <Route path="/clients/preventivi" element={<ProtectedRoute><Preventivi /></ProtectedRoute>} />
             <Route path="/veicoli" element={<ProtectedRoute><Veicoli /></ProtectedRoute>} />
             <Route path="/autisti" element={<ProtectedRoute><Autisti /></ProtectedRoute>} />
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
