@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProtectedClientRoute } from "@/components/ProtectedClientRoute";
 
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -26,6 +27,15 @@ import Autisti from "./pages/Autisti";
 import FornitoriCS from "./pages/FornitoriCS";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+
+// Client portal
+import ClientLogin from "./pages/ClientLogin";
+import ClientGdpr from "./pages/ClientGdpr";
+import ListaServizi from "./pages/client-portal/ListaServizi";
+import Prenota from "./pages/client-portal/Prenota";
+import Utenze from "./pages/client-portal/Utenze";
+import Tariffario from "./pages/client-portal/Tariffario";
+import Fatture from "./pages/client-portal/Fatture";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +66,16 @@ const App = () => (
             <Route path="/autisti" element={<ProtectedRoute><Autisti /></ProtectedRoute>} />
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+
+            {/* Client portal */}
+            <Route path="/client-login" element={<ClientLogin />} />
+            <Route path="/client-portal/gdpr" element={<ClientGdpr />} />
+            <Route path="/client-portal" element={<ProtectedClientRoute><ListaServizi /></ProtectedClientRoute>} />
+            <Route path="/client-portal/prenota" element={<ProtectedClientRoute><Prenota /></ProtectedClientRoute>} />
+            <Route path="/client-portal/utenze" element={<ProtectedClientRoute><Utenze /></ProtectedClientRoute>} />
+            <Route path="/client-portal/tariffario" element={<ProtectedClientRoute><Tariffario /></ProtectedClientRoute>} />
+            <Route path="/client-portal/fatture" element={<ProtectedClientRoute><Fatture /></ProtectedClientRoute>} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
