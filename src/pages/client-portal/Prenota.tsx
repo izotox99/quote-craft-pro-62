@@ -58,6 +58,7 @@ export default function Prenota() {
   const [clientId, setClientId] = useState<string | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [utenze, setUtenze] = useState<{ id: string; nome: string; cognome: string; cellulare: string | null; email: string }[]>([]);
 
   const empty = {
     data_servizio: "",
