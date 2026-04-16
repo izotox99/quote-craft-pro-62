@@ -83,6 +83,7 @@ export default function Servizi() {
   const [fornitori, setFornitori] = useState<Fornitore[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
 
   // Filters
   const [filterDal, setFilterDal] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"));
