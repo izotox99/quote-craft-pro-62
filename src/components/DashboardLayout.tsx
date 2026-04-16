@@ -150,7 +150,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
                 <FileText className="h-4.5 w-4.5 text-primary-foreground" />
               </div>
-              {organization?.name ?? "NCC Manager"}
+              Dashboard Aziendale
             </SheetTitle>
           </SheetHeader>
           <nav className="flex flex-col gap-0.5 p-4">
