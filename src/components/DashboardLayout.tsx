@@ -80,11 +80,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <div className="px-2 py-1.5 text-xs text-muted-foreground truncate">{user?.email}</div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/settings")}>
-                  <Settings className="mr-2 h-4 w-4" /> Settings
+                  <Settings className="mr-2 h-4 w-4" /> Impostazioni
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" /> Sign out
+                  <LogOut className="mr-2 h-4 w-4" /> Esci
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
