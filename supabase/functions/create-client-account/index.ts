@@ -47,36 +47,50 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create auth user with auto-confirm
-    const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    });
+    let authUserId: string;
 
-    if (createError) {
-      return new Response(JSON.stringify({ error: createError.message }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Check if user already exists
+    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === email);
+
+    if (existingUser) {
+      // User exists — just link to client record
+      authUserId = existingUser.id;
+    } else {
+      // Create new auth user
+      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
       });
+
+      if (createError) {
+        return new Response(JSON.stringify({ error: createError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      authUserId = newUser.user.id;
     }
 
     // Link auth user to client record
     const { error: updateError } = await supabaseAdmin
       .from("clients")
-      .update({ auth_user_id: newUser.user.id })
+      .update({ auth_user_id: authUserId })
       .eq("id", client_id);
 
     if (updateError) {
-      // Rollback: delete the created auth user
-      await supabaseAdmin.auth.admin.deleteUser(newUser.user.id);
+      // Rollback only if we just created the user
+      if (!existingUser) {
+        await supabaseAdmin.auth.admin.deleteUser(authUserId);
+      }
       return new Response(JSON.stringify({ error: updateError.message }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ success: true, user_id: newUser.user.id }), {
+    return new Response(JSON.stringify({ success: true, user_id: authUserId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
