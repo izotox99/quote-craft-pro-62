@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "sonner";
 import { CalendarPlus, Send, Info } from "lucide-react";
 
@@ -248,11 +250,11 @@ export default function Prenota() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Data <span className="text-destructive">*</span></Label>
-                  <Input type="date" value={form.data_servizio} onChange={(e) => set("data_servizio", e.target.value)} className="rounded-lg h-10" />
+                  <DatePicker value={form.data_servizio} onChange={(v) => set("data_servizio", v)} placeholder="Seleziona data" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Ora inizio <span className="text-destructive">*</span></Label>
-                  <Input type="time" value={form.ora_inizio} onChange={(e) => set("ora_inizio", e.target.value)} className="rounded-lg h-10" />
+                  <TimePicker value={form.ora_inizio} onChange={(v) => set("ora_inizio", v)} placeholder="Seleziona ora" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Passeggero <span className="text-destructive">*</span></Label>
