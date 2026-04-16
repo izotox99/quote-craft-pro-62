@@ -256,7 +256,18 @@ export default function Prenota() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Passeggero <span className="text-destructive">*</span></Label>
-                  <Input value={form.contatto} onChange={(e) => set("contatto", e.target.value)} placeholder="Nome passeggero" className="rounded-lg h-10" />
+                  {utenze.length > 0 ? (
+                    <Select onValueChange={handleUtenzaSelect}>
+                      <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona utenza" /></SelectTrigger>
+                      <SelectContent>
+                        {utenze.map(u => (
+                          <SelectItem key={u.id} value={u.id}>{u.nome} {u.cognome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input value={form.contatto} onChange={(e) => set("contatto", e.target.value)} placeholder="Nome passeggero" className="rounded-lg h-10" />
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Telefono</Label>
