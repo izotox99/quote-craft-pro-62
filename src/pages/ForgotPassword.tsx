@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
-import { FileText, ArrowLeft } from "lucide-react";
+import { Car, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ForgotPassword() {
@@ -19,11 +19,8 @@ export default function ForgotPassword() {
     setLoading(true);
     const { error } = await resetPassword(email);
     setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      setSent(true);
-    }
+    if (error) toast.error(error.message);
+    else setSent(true);
   };
 
   return (
@@ -31,30 +28,30 @@ export default function ForgotPassword() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <Link to="/" className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <FileText className="h-5 w-5 text-primary-foreground" />
+            <Car className="h-5 w-5 text-primary-foreground" />
           </Link>
-          <CardTitle className="font-display text-2xl">Reset password</CardTitle>
-          <CardDescription>{sent ? "Check your email for a reset link" : "Enter your email to receive a reset link"}</CardDescription>
+          <CardTitle className="font-display text-2xl">Recupera password</CardTitle>
+          <CardDescription>{sent ? "Controlla la tua email per il link di reset" : "Inserisci la tua email per ricevere il link di reset"}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {!sent ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Input id="email" type="email" placeholder="tu@azienda.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Sending..." : "Send reset link"}
+                {loading ? "Invio in corso..." : "Invia link di reset"}
               </Button>
             </form>
           ) : (
             <p className="text-center text-sm text-muted-foreground">
-              We've sent a password reset link to <strong>{email}</strong>. Check your inbox and follow the instructions.
+              Abbiamo inviato un link di reset a <strong>{email}</strong>. Controlla la tua casella di posta.
             </p>
           )}
           <div className="text-center">
             <Link to="/login" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-              <ArrowLeft className="h-3 w-3" /> Back to login
+              <ArrowLeft className="h-3 w-3" /> Torna al login
             </Link>
           </div>
         </CardContent>
