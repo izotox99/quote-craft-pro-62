@@ -676,45 +676,78 @@ export default function Servizi() {
                   <DialogHeader>
                     <DialogTitle className="text-base">
                       {format(new Date(s.data_servizio), "EEEE dd MMMM yyyy", { locale: itLocale })}
+                      {s.ora_inizio && ` · ${s.ora_inizio}`}
                     </DialogTitle>
                   </DialogHeader>
                   <div className="flex flex-wrap gap-2 mt-1">
                     <Badge variant="outline" className={statusColors[s.stato] || ""}>{statusLabels[s.stato] || s.stato}</Badge>
-                    {s.tipologia && <Badge variant="outline">{tipologiaLabels[s.tipologia] || s.tipologia}</Badge>}
                     {s.citta && <Badge variant="outline">{s.citta}</Badge>}
                   </div>
+
                   <Separator className="my-2" />
+
+                  {/* T.Serv - combined service type */}
+                  <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tipo Servizio</p>
+                    <p className="font-medium">{buildTServ(s)}</p>
+                  </div>
+
+                  <Separator className="my-2" />
+
+                  {/* Contact & Passenger info */}
                   <div className="space-y-0">
                     <DetailRow icon={Users} label="Società" value={s.clients?.company || s.clients?.name} />
                     <DetailRow icon={Phone} label="Contatto" value={s.contatto} />
                     <DetailRow icon={Phone} label="Telefono" value={s.telefono_contatto} />
+                    <DetailRow icon={Info} label="Email Contatto" value={s.email_contatto} />
                     <DetailRow icon={Users} label="Passeggeri / Bagagli" value={`${s.n_passeggeri ?? 0} pax · ${s.n_bagagli ?? 0} bag`} />
+                  </div>
+
+                  <Separator className="my-2" />
+
+                  {/* Route info */}
+                  <div className="space-y-0">
                     <DetailRow icon={MapPin} label="Luogo Inizio" value={s.luogo_inizio} />
                     <DetailRow icon={Route} label="Itinerario" value={s.itinerario} />
                     <DetailRow icon={MapPin} label="Luogo Fine" value={s.luogo_fine} />
+                  </div>
+
+                  <Separator className="my-2" />
+
+                  {/* Vehicle & Driver */}
+                  <div className="space-y-0">
                     <DetailRow icon={Info} label="Info Autista" value={s.info_autista} />
                     <DetailRow icon={Luggage} label="Accessori" value={s.accessori} />
-                    <DetailRow icon={Car} label="Veicolo" value={s.veicoli ? `${s.veicoli.tipo_macchina || ""} — ${s.veicoli.targa}` : null} />
+                    <DetailRow icon={Car} label="Veicolo" value={
+                      s.veicoli ? `${s.veicoli.tipo_macchina || ""} — ${s.veicoli.targa}` : (s.veicolo_tipo || null)
+                    } />
                     <DetailRow icon={Users} label="Autista" value={s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : null} />
                     <DetailRow icon={Users} label="Fornitore CS" value={s.fornitori_cs?.nome} />
-                    {(s.incasso || s.costo_cs || s.costo_autista || s.costo_commissione) && (
-                      <>
-                        <Separator className="my-2" />
-                        <DetailRow icon={CreditCard} label="Incasso" value={s.incasso ? `€ ${s.incasso}` : null} />
-                        <DetailRow icon={CreditCard} label="Costo CS" value={s.costo_cs ? `€ ${s.costo_cs}` : null} />
-                        <DetailRow icon={CreditCard} label="Costo Autista" value={s.costo_autista ? `€ ${s.costo_autista}` : null} />
-                        <DetailRow icon={CreditCard} label="Commissione" value={s.costo_commissione ? `€ ${s.costo_commissione}` : null} />
-                      </>
-                    )}
-                    {(s.codice || s.foglio || s.note) && (
-                      <>
-                        <Separator className="my-2" />
+                  </div>
+
+                  <Separator className="my-2" />
+
+                  {/* Financial */}
+                  <div className="space-y-0">
+                    <DetailRow icon={CreditCard} label="Tipo Pagamento" value={s.tipo_pagamento} />
+                    <DetailRow icon={CreditCard} label="Prezzo" value={s.prezzo != null ? `€ ${s.prezzo}` : null} />
+                    <DetailRow icon={CreditCard} label="Incasso" value={s.incasso != null ? `€ ${s.incasso}` : null} />
+                    <DetailRow icon={CreditCard} label="Costo CS" value={s.costo_cs != null ? `€ ${s.costo_cs}` : null} />
+                    <DetailRow icon={CreditCard} label="Costo Autista" value={s.costo_autista != null ? `€ ${s.costo_autista}` : null} />
+                    <DetailRow icon={CreditCard} label="Commissione" value={s.costo_commissione != null ? `€ ${s.costo_commissione}` : null} />
+                    <DetailRow icon={Info} label="Centro Costo" value={s.centro_costo} />
+                  </div>
+
+                  {(s.codice || s.foglio || s.note) && (
+                    <>
+                      <Separator className="my-2" />
+                      <div className="space-y-0">
                         <DetailRow icon={Info} label="Codice" value={s.codice} />
                         <DetailRow icon={Info} label="Foglio" value={s.foglio} />
                         <DetailRow icon={Info} label="Note" value={s.note} />
-                      </>
-                    )}
-                  </div>
+                      </div>
+                    </>
+                  )}
                 </>
               );
             })()}
