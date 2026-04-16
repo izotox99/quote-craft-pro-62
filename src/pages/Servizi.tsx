@@ -257,136 +257,36 @@ export default function Servizi() {
     }
   }, [quickDay]);
 
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const hasActiveFilters = filterTipologia !== "all" || filterTarga || filterContatto || filterCliente !== "all" || filterAutista !== "all" || filterFornitore !== "all" || filterCodice;
+
+  const resetAllFilters = () => {
+    setQuickDay(null);
+    setFilterDal(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"));
+    setFilterAl(format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), "yyyy-MM-dd"));
+    setFilterStato("all");
+    setFilterTipologia("all");
+    setFilterTarga("");
+    setFilterContatto("");
+    setFilterCliente("all");
+    setFilterAutista("all");
+    setFilterFornitore("all");
+    setFilterCodice("");
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-4">
-        {/* Quick day filter chips */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-semibold text-foreground mr-1">Nuovi Servizi:</span>
-          {quickDayOptions.map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => handleQuickDay(opt.key)}
-              className={`
-                inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all
-                ${quickDay === opt.key
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-muted/60 text-muted-foreground hover:bg-muted"
-                }
-              `}
-            >
-              {opt.label}
-              {quickDayCounts[opt.key] > 0 && (
-                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${
-                  quickDay === opt.key ? "bg-primary-foreground/20" : "bg-primary/10 text-primary"
-                }`}>
-                  {quickDayCounts[opt.key]}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold italic">Dal</Label>
-                <Input type="date" value={filterDal} onChange={e => setFilterDal(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold italic">Al</Label>
-                <Input type="date" value={filterAl} onChange={e => setFilterAl(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold italic">Stato</Label>
-                <Select value={filterStato} onValueChange={setFilterStato}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">---</SelectItem>
-                    {Object.entries(statusLabels).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold italic">Tipologia</Label>
-                <Select value={filterTipologia} onValueChange={setFilterTipologia}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">---</SelectItem>
-                    {Object.entries(tipologiaLabels).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold italic">Targa</Label>
-                <Input value={filterTarga} onChange={e => setFilterTarga(e.target.value)} placeholder="" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold italic">Contatto</Label>
-                <Input value={filterContatto} onChange={e => setFilterContatto(e.target.value)} placeholder="" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold italic">Società Cliente</Label>
-                <Select value={filterCliente} onValueChange={setFilterCliente}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">---</SelectItem>
-                    {clients.map(c => (
-                      <SelectItem key={c.id} value={c.id}>{c.company || c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold italic">Autista</Label>
-                <Select value={filterAutista} onValueChange={setFilterAutista}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">---</SelectItem>
-                    {autisti.map(a => (
-                      <SelectItem key={a.id} value={a.id}>{a.cognome} {a.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold italic">Fornitore CS</Label>
-                <Select value={filterFornitore} onValueChange={setFilterFornitore}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">---</SelectItem>
-                    {fornitori.map(f => (
-                      <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold italic">Codice</Label>
-                <Input value={filterCodice} onChange={e => setFilterCodice(e.target.value)} placeholder="" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center gap-3">
-              <Button onClick={handleSearch} className="gap-2" variant="destructive">
-                <Search className="h-4 w-4" /> Ricerca!
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Summary */}
-        <div className="flex items-center gap-4">
-          <h2 className="text-xl font-bold">Home</h2>
-          <span className="text-sm text-muted-foreground">{nuoviCount} Servizi Nuovi</span>
+        {/* Header row */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="font-display text-2xl font-bold text-foreground">Servizi</h1>
+            <p className="text-sm text-muted-foreground">{nuoviCount} nuovi · {servizi.length} totali</p>
+          </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="gap-2">
+              <Button className="gap-2 w-full sm:w-auto">
                 <PlusCircle className="h-4 w-4" /> Nuovo Servizio
               </Button>
             </DialogTrigger>
