@@ -276,7 +276,8 @@ export type Database = {
           id: string
           nome: string
           parent_client_id: string
-          password: string
+          password: string | null
+          password_hash: string
           tipo: Database["public"]["Enums"]["utenza_tipo"]
           updated_at: string
         }
@@ -290,7 +291,8 @@ export type Database = {
           id?: string
           nome: string
           parent_client_id: string
-          password: string
+          password?: string | null
+          password_hash: string
           tipo?: Database["public"]["Enums"]["utenza_tipo"]
           updated_at?: string
         }
@@ -304,7 +306,8 @@ export type Database = {
           id?: string
           nome?: string
           parent_client_id?: string
-          password?: string
+          password?: string | null
+          password_hash?: string
           tipo?: Database["public"]["Enums"]["utenza_tipo"]
           updated_at?: string
         }
@@ -1150,9 +1153,14 @@ export type Database = {
         Returns: boolean
       }
       hash_share_password: { Args: { _password: string }; Returns: string }
+      hash_utenza_password: { Args: { _password: string }; Returns: string }
       is_client_user: { Args: { _user_id: string }; Returns: boolean }
       verify_share_password: {
         Args: { _password: string; _share_id: string }
+        Returns: boolean
+      }
+      verify_utenza_password: {
+        Args: { _password: string; _utenza_id: string }
         Returns: boolean
       }
     }
