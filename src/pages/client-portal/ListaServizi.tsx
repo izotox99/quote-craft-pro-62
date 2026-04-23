@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TimePicker } from "@/components/ui/time-picker";
 import { Search, Download, CalendarDays, Pencil, XCircle, Info, ChevronRight, MapPin, Clock, Users, Car, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 const VEICOLI_DISPONIBILI = [
   "Autovettura 3 posti",
@@ -403,6 +404,17 @@ export default function ListaServizi() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              )}
+              {isParentClient && utenze.length === 0 && (
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Utenza</label>
+                  <Button asChild variant="outline" size="sm" className="rounded-lg h-9 text-xs w-full gap-1.5">
+                    <Link to="/client-portal/utenze">
+                      <Users className="h-3.5 w-3.5" />
+                      Crea utenza
+                    </Link>
+                  </Button>
                 </div>
               )}
               <div className="flex items-end">
