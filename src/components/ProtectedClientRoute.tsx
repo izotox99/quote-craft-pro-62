@@ -12,14 +12,26 @@ export function ProtectedClientRoute({ children }: { children: React.ReactNode }
   useEffect(() => {
     const check = async () => {
       if (!user) { setChecking(false); return; }
-      const { data } = await supabase
+      const { data: client } = await supabase
         .from("clients")
         .select("id, gdpr_accepted_at")
         .eq("auth_user_id", user.id)
-        .single();
-      if (data) {
+        .maybeSingle();
+      if (client) {
         setIsClient(true);
-        setGdprAccepted(!!data.gdpr_accepted_at);
+        setGdprAccepted(!!client.gdpr_accepted_at);
+        setChecking(false);
+        return;
+      }
+      const { data: utenza } = await supabase
+        .from("client_utenze")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .eq("attivo", true)
+        .maybeSingle();
+      if (utenza) {
+        setIsClient(true);
+        setGdprAccepted(true);
       }
       setChecking(false);
     };
