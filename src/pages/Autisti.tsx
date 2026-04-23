@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PlusCircle, Trash2, Pencil, Calculator } from "lucide-react";
+import { NuovoAutistaDialog } from "@/components/NuovoAutistaDialog";
 
 type Autista = {
   id: string;
@@ -42,13 +43,6 @@ type Spesa = {
   totale_fattura: number | null;
 };
 
-const emptyForm = {
-  mansione: "Autista full time", nome: "", cognome: "",
-  codice_fiscale: "", patente: "",
-  prezzo_ora_ord: "", prezzo_ora_straord: "",
-  cellulare: "", email: "", password: "", note: "",
-};
-
 const emptySpesa = {
   tipo: "Patente", data_intervento: "", data_scadenza: "",
   importo_spese: "", totale_fattura: "",
@@ -60,10 +54,9 @@ export default function Autisti() {
   const [loading, setLoading] = useState(true);
   const [showDisattivati, setShowDisattivati] = useState(false);
 
-  // Form autista
+  // Dialog autista (nuovo / modifica)
   const [autistaDialogOpen, setAutistaDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [editingAutista, setEditingAutista] = useState<{ tipo: "interno" | "esterno"; id: string; data: any } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Spese dialog
@@ -87,53 +80,13 @@ export default function Autisti() {
   useEffect(() => { if (user) load(); }, [user, showDisattivati]);
 
   const openNuovo = () => {
-    setEditingId(null);
-    setForm(emptyForm);
+    setEditingAutista(null);
     setAutistaDialogOpen(true);
   };
 
   const openModifica = (a: Autista) => {
-    setEditingId(a.id);
-    setForm({
-      mansione: a.mansione ?? "Autista full time",
-      nome: a.nome ?? "",
-      cognome: a.cognome ?? "",
-      codice_fiscale: a.codice_fiscale ?? "",
-      patente: a.patente ?? "",
-      prezzo_ora_ord: a.prezzo_ora_ord?.toString() ?? "",
-      prezzo_ora_straord: a.prezzo_ora_straord?.toString() ?? "",
-      cellulare: a.cellulare ?? a.telefono ?? "",
-      email: a.email ?? "",
-      password: a.password ?? "",
-      note: a.note ?? "",
-    });
+    setEditingAutista({ tipo: "interno", id: a.id, data: a });
     setAutistaDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    const payload = {
-      mansione: form.mansione || null,
-      nome: form.nome,
-      cognome: form.cognome,
-      codice_fiscale: form.codice_fiscale || null,
-      patente: form.patente || null,
-      prezzo_ora_ord: form.prezzo_ora_ord ? Number(form.prezzo_ora_ord) : 0,
-      prezzo_ora_straord: form.prezzo_ora_straord ? Number(form.prezzo_ora_straord) : 0,
-      cellulare: form.cellulare || null,
-      telefono: form.cellulare || null,
-      email: form.email || null,
-      password: form.password || null,
-      note: form.note || null,
-    };
-    const { error } = editingId
-      ? await supabase.from("autisti").update(payload).eq("id", editingId)
-      : await supabase.from("autisti").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success(editingId ? "Autista aggiornato" : "Autista aggiunto");
-    setAutistaDialogOpen(false);
-    setForm(emptyForm);
-    setEditingId(null);
-    load();
   };
 
   const confirmDelete = async () => {
@@ -291,52 +244,13 @@ export default function Autisti() {
       </div>
 
       {/* Dialog Nuovo / Modifica autista */}
-      <Dialog open={autistaDialogOpen} onOpenChange={setAutistaDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingId ? "Modifica autista" : "Nuovo autista"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1 sm:col-span-2"><Label>Mansione</Label>
-              <Input value={form.mansione} onChange={e => setForm({ ...form, mansione: e.target.value })} placeholder="Autista full time" />
-            </div>
-            <div className="space-y-1"><Label>Cognome *</Label>
-              <Input value={form.cognome} onChange={e => setForm({ ...form, cognome: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Nome *</Label>
-              <Input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Codice fiscale</Label>
-              <Input value={form.codice_fiscale} onChange={e => setForm({ ...form, codice_fiscale: e.target.value.toUpperCase() })} />
-            </div>
-            <div className="space-y-1"><Label>Numero patente</Label>
-              <Input value={form.patente} onChange={e => setForm({ ...form, patente: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Prezzo ora ordinario (€)</Label>
-              <Input type="number" step="0.01" value={form.prezzo_ora_ord} onChange={e => setForm({ ...form, prezzo_ora_ord: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Prezzo ora straordinario (€)</Label>
-              <Input type="number" step="0.01" value={form.prezzo_ora_straord} onChange={e => setForm({ ...form, prezzo_ora_straord: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Cellulare</Label>
-              <Input value={form.cellulare} onChange={e => setForm({ ...form, cellulare: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Email</Label>
-              <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Password</Label>
-              <Input value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
-            </div>
-            <div className="space-y-1 sm:col-span-2"><Label>Note</Label>
-              <Input value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAutistaDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleSave} disabled={!form.nome || !form.cognome}>Salva</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NuovoAutistaDialog
+        open={autistaDialogOpen}
+        onOpenChange={setAutistaDialogOpen}
+        defaultTipo="interno"
+        editing={editingAutista}
+        onSaved={() => load()}
+      />
 
       {/* Dialog conferma disattivazione */}
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
