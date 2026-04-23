@@ -189,6 +189,20 @@ export default function ListaServizi() {
 
   useEffect(() => { loadServizi(); }, [user, dateFrom, dateTo]);
 
+  // Realtime: aggiorna la lista quando il proprietario riassegna/conferma l'autista
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("client-servizi-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "servizi" },
+        () => { loadServizi(); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   const filtered = servizi.filter((s) =>
     (s.contatto ?? "").toLowerCase().includes(search.toLowerCase()) ||
     (s.citta ?? "").toLowerCase().includes(search.toLowerCase()) ||
