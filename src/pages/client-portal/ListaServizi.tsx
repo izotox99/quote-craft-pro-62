@@ -377,9 +377,7 @@ export default function ListaServizi() {
         ) : (
           <div className="space-y-2">
             {filtered.map((s) => {
-              const stato = s.modificato_da_cliente
-                ? { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" }
-                : (statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" });
+              const stato = computeClientStato(s);
               return (
                 <Card
                   key={s.id}
@@ -437,9 +435,7 @@ export default function ListaServizi() {
         <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
           <DialogContent className="sm:max-w-lg rounded-xl p-0 gap-0 overflow-hidden">
             {selected && (() => {
-              const stato = selected.modificato_da_cliente
-                ? { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" }
-                : (statoConfig[selected.stato] ?? { label: selected.stato, className: "bg-muted" });
+              const stato = computeClientStato(selected);
               const editable = canModify(selected);
               return (
                 <>
