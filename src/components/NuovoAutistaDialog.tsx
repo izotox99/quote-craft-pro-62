@@ -366,7 +366,7 @@ export function NuovoAutistaDialog({
                 <Field label="Percentuale Last Minute">
                   <Input inputMode="decimal" value={esterno.percentuale_last_minute} onChange={(e) => setEsterno({ ...esterno, percentuale_last_minute: e.target.value })} />
                 </Field>
-                <Field label="Numero Compto">
+                <Field label="Numero Compito">
                   <Input value={esterno.numero_compto} onChange={(e) => setEsterno({ ...esterno, numero_compto: e.target.value })} />
                 </Field>
                 <Field label="Iban">
@@ -378,7 +378,7 @@ export function NuovoAutistaDialog({
                 <Field label="Km Voucher">
                   <Input inputMode="decimal" value={esterno.km_voucher} onChange={(e) => setEsterno({ ...esterno, km_voucher: e.target.value })} />
                 </Field>
-                <Field label="Modello Vehicolo">
+                <Field label="Modello Veicolo">
                   <Input value={esterno.modello_veicolo} onChange={(e) => setEsterno({ ...esterno, modello_veicolo: e.target.value })} />
                 </Field>
                 <Field label="Lingua">
