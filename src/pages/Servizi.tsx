@@ -607,8 +607,18 @@ export default function Servizi() {
           </CardContent>
         </Card>
 
-        {/* Services list */}
-        <div className="space-y-2">
+        {/* Notifica modifiche cliente */}
+        {servizi.some(s => s.modificato_da_cliente) && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-900">
+            <Bell className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span className="text-xs font-medium text-amber-900 dark:text-amber-200">
+              {servizi.filter(s => s.modificato_da_cliente).length} servizi modificati dal cliente — da rivedere
+            </span>
+          </div>
+        )}
+
+        {/* MOBILE: card list */}
+        <div className="space-y-2 md:hidden">
           {loading ? (
             <div className="space-y-2">
               {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />)}
@@ -620,43 +630,163 @@ export default function Servizi() {
               </CardContent>
             </Card>
           ) : (
-            servizi.map((s) => (
-              <Card
-                key={s.id}
-                className="cursor-pointer hover:shadow-md transition-all hover:border-primary/30 group"
-                onClick={() => setDetailServizio(s)}
-              >
-                <CardContent className="p-4 flex items-center gap-4">
-                  {/* Date */}
-                  <div className="flex flex-col items-center justify-center w-12 shrink-0">
-                    <span className="text-[10px] text-muted-foreground uppercase">{format(new Date(s.data_servizio), "MMM", { locale: itLocale })}</span>
-                    <span className="text-lg font-bold text-foreground leading-none">{format(new Date(s.data_servizio), "dd")}</span>
-                  </div>
-                  <Separator orientation="vertical" className="h-10" />
-                  {/* Main */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-sm text-card-foreground truncate">{s.clients?.company || s.clients?.name || "—"}</p>
-                      {s.citta && <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">{s.citta}</Badge>}
+            servizi.map((s) => {
+              const senzaAutista = !s.autista_id;
+              const modificato = s.modificato_da_cliente;
+              return (
+                <Card
+                  key={s.id}
+                  className={`cursor-pointer hover:shadow-md transition-all hover:border-primary/30 group ${
+                    senzaAutista ? "bg-red-50/60 dark:bg-red-950/20 border-red-200 dark:border-red-900" : ""
+                  } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
+                  onClick={() => setDetailServizio(s)}
+                >
+                  <CardContent className="p-4 flex items-center gap-4">
+                    <div className="flex flex-col items-center justify-center w-12 shrink-0">
+                      <span className="text-[10px] text-muted-foreground uppercase">{format(new Date(s.data_servizio), "MMM", { locale: itLocale })}</span>
+                      <span className="text-lg font-bold text-foreground leading-none">{format(new Date(s.data_servizio), "dd")}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {s.contatto || "—"} · {s.telefono_contatto || ""} · {buildTServ(s)}
-                    </p>
-                  </div>
-                  {/* Right */}
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
-                      <Users className="h-3.5 w-3.5" /> {s.n_passeggeri ?? 0}
+                    <Separator orientation="vertical" className="h-10" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        {modificato && <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />}
+                        <p className="font-semibold text-sm text-card-foreground truncate">{s.clients?.company || s.clients?.name || "—"}</p>
+                        {s.citta && <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">{s.citta}</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {s.contatto || "—"} · {s.telefono_contatto || ""} · {buildTServ(s)}
+                      </p>
                     </div>
-                    <Badge variant="outline" className={statusColors[s.stato] || ""}>
-                      {statusLabels[s.stato] || s.stato}
-                    </Badge>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
+                        <Users className="h-3.5 w-3.5" /> {s.n_passeggeri ?? 0}
+                      </div>
+                      <Badge variant="outline" className={senzaAutista ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" : (statusColors[s.stato] || "")}>
+                        {senzaAutista ? "Senza autista" : (statusLabels[s.stato] || s.stato)}
+                      </Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
+        </div>
+
+        {/* DESKTOP/TABLET: schema completo */}
+        <Card className="hidden md:block">
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Città</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Data</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Società</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Contatti</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Telefono</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-center">N.P</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-center">N.B</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">T.Serv</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Luogo inizio</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Itinerario</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Luogo fine</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Info autista</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Accessori</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Veicolo</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">T.P</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">Inc €</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">CS</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">CS €</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Aut</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">Aut €</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">C.C</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">Com €</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Codice</TableHead>
+                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Foglio</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow><TableCell colSpan={24} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</TableCell></TableRow>
+                  ) : servizi.length === 0 ? (
+                    <TableRow><TableCell colSpan={24} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</TableCell></TableRow>
+                  ) : (
+                    servizi.map(s => {
+                      const senzaAutista = !s.autista_id;
+                      const modificato = s.modificato_da_cliente;
+                      return (
+                        <TableRow
+                          key={s.id}
+                          onClick={() => setDetailServizio(s)}
+                          className={`text-xs cursor-pointer ${
+                            senzaAutista ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/30" : ""
+                          } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
+                        >
+                          <TableCell className="py-2 font-medium">{s.citta || "—"}</TableCell>
+                          <TableCell className="py-2 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5">
+                              {modificato && (
+                                <span title="Modificato dal cliente">
+                                  <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                                </span>
+                              )}
+                              <div>
+                                <div className={senzaAutista ? "text-red-700 dark:text-red-400 font-semibold" : ""}>
+                                  {format(new Date(s.data_servizio), "dd/MM/yyyy")}
+                                </div>
+                                {s.ora_inizio && <div className="text-muted-foreground">{s.ora_inizio}</div>}
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="py-2 font-semibold italic">{s.clients?.company || s.clients?.name || "—"}</TableCell>
+                          <TableCell className="py-2">{s.contatto || "—"}</TableCell>
+                          <TableCell className="py-2 whitespace-nowrap">{s.telefono_contatto || "—"}</TableCell>
+                          <TableCell className="py-2 text-center">{s.n_passeggeri ?? 0}</TableCell>
+                          <TableCell className="py-2 text-center">{s.n_bagagli ?? 0}</TableCell>
+                          <TableCell className="py-2">{buildTServ(s)}</TableCell>
+                          <TableCell className="py-2 max-w-[200px] truncate" title={s.luogo_inizio || ""}>{s.luogo_inizio || "—"}</TableCell>
+                          <TableCell className="py-2 max-w-[200px] truncate" title={s.itinerario || ""}>{s.itinerario || "—"}</TableCell>
+                          <TableCell className="py-2 max-w-[200px] truncate" title={s.luogo_fine || ""}>{s.luogo_fine || "—"}</TableCell>
+                          <TableCell className="py-2 max-w-[180px] truncate" title={s.info_autista || ""}>{s.info_autista || "—"}</TableCell>
+                          <TableCell className="py-2">{s.accessori || "—"}</TableCell>
+                          <TableCell className="py-2">{s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—")}</TableCell>
+                          <TableCell className="py-2">{s.tipo_pagamento || "—"}</TableCell>
+                          <TableCell className="py-2 text-right tabular-nums">{s.incasso ?? 0}</TableCell>
+                          <TableCell className="py-2">{s.fornitori_cs?.nome || "—"}</TableCell>
+                          <TableCell className="py-2 text-right tabular-nums">{s.costo_cs ?? 0}</TableCell>
+                          <TableCell className="py-2">
+                            {s.autisti ? (
+                              `${s.autisti.nome} ${s.autisti.cognome}`
+                            ) : (
+                              <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Non assegnato</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-2 text-right tabular-nums">{s.costo_autista ?? 0}</TableCell>
+                          <TableCell className="py-2 text-right tabular-nums">{s.centro_costo || "—"}</TableCell>
+                          <TableCell className="py-2 text-right tabular-nums">{s.costo_commissione ?? 0}</TableCell>
+                          <TableCell className="py-2 font-mono text-[11px]">{s.codice || "—"}</TableCell>
+                          <TableCell className="py-2 font-mono text-[11px]">{s.foglio || "—"}</TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Legenda (solo desktop/tablet) */}
+        <div className="hidden md:flex flex-wrap gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded bg-red-100 border border-red-300" />
+            Riga rossa = senza autista (da assegnare per confermare)
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-1 h-3 bg-amber-500 rounded" />
+            Bordo giallo = modificato dal cliente
+          </div>
         </div>
 
         {/* Detail dialog */}
