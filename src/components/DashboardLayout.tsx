@@ -27,10 +27,21 @@ const clientSubItems = [
   { to: "/clients/preventivi", icon: FileSpreadsheet, label: "Preventivo" },
 ];
 
+const autistiSubItems = [
+  { to: "/autisti", icon: Users2, label: "Autisti interni" },
+  { to: "/autisti/collaboratori", icon: UserPlus, label: "Collaboratore" },
+  { to: "/autisti/consumi", icon: Fuel, label: "Autista/Consumi" },
+  { to: "/autisti/valutazione", icon: Star, label: "Valutazione autista" },
+  { to: "/autisti/valutazione-interni", icon: ClipboardCheck, label: "Valutazione Interni" },
+  { to: "/autisti/produzione", icon: TrendingUp, label: "Produzione autista" },
+  { to: "/autisti/nuova-nota", icon: FilePlus, label: "Nuova nota autista" },
+  { to: "/autisti/note", icon: StickyNote, label: "Note autisti" },
+  { to: "/autisti/mensile", icon: CalendarDays, label: "Mensile autisti interni" },
+];
+
 const mainNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
   { to: "/veicoli", icon: Car, label: "Mezzi" },
-  { to: "/autisti", icon: UserCheck, label: "Autisti" },
   { to: "/fornitori", icon: Truck, label: "Fornitori CS" },
 ];
 
