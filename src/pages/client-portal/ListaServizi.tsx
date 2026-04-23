@@ -77,6 +77,7 @@ type Servizio = {
   codice: string | null;
   note: string | null;
   accessori: string | null;
+  modificato_da_cliente?: boolean | null;
 };
 
 function canModify(s: Servizio): boolean {
