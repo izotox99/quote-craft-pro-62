@@ -282,8 +282,8 @@ export default function Servizi() {
     const payload = driver === null
       ? { autista_id: null, autista_esterno_id: null }
       : driver.kind === "interno"
-        ? { autista_id: driver.id, autista_esterno_id: null }
-        : { autista_id: null, autista_esterno_id: driver.id };
+        ? { autista_id: driver.id, autista_esterno_id: null, modificato_da_cliente: false, modificato_at: null }
+        : { autista_id: null, autista_esterno_id: driver.id, modificato_da_cliente: false, modificato_at: null };
 
     const { error } = await supabase.from("servizi").update(payload as any).eq("id", servizioId);
 
