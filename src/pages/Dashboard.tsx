@@ -273,7 +273,7 @@ export default function Dashboard() {
                   <TableRow className="bg-muted/40">
                     <TableHead className="h-9 w-8 px-2">
                       <Checkbox
-                        checked={allChecked || (someChecked && "indeterminate")}
+                        checked={allChecked ? true : someChecked ? "indeterminate" : false}
                         onCheckedChange={toggleAll}
                         aria-label="Seleziona tutti"
                       />
