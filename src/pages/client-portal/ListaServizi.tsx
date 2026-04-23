@@ -484,32 +484,174 @@ export default function ListaServizi() {
 
         {/* Edit Dialog */}
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="sm:max-w-md rounded-xl">
-            <DialogHeader>
-              <DialogTitle>Modifica servizio</DialogTitle>
+          <DialogContent className="sm:max-w-2xl rounded-xl p-0 gap-0 overflow-hidden">
+            <DialogHeader className="p-5 pb-3">
+              <DialogTitle className="text-lg">Modifica servizio</DialogTitle>
+              {selected && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Passeggero: <span className="font-medium text-foreground">{selected.contatto ?? "—"}</span> · Le info di contatto non sono modificabili
+                </p>
+              )}
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Luogo inizio</Label>
-                <Input value={editForm.luogo_inizio} onChange={(e) => setEditForm(p => ({ ...p, luogo_inizio: e.target.value }))} className="rounded-lg h-10" />
+            <Separator />
+            <div className="p-5 space-y-5 max-h-[65vh] overflow-y-auto">
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Quando</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Data</Label>
+                    <DatePicker value={editForm.data_servizio} onChange={(v) => setEditForm(p => ({ ...p, data_servizio: v }))} className="h-10" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Ora</Label>
+                    <TimePicker value={editForm.ora_inizio} onChange={(v) => setEditForm(p => ({ ...p, ora_inizio: v }))} className="h-10" />
+                  </div>
+                  <div className="space-y-1.5 col-span-2">
+                    <Label className="text-xs text-muted-foreground">Città</Label>
+                    <Input value={editForm.citta} onChange={(e) => setEditForm(p => ({ ...p, citta: e.target.value }))} className="rounded-lg h-10" />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Luogo fine</Label>
-                <Input value={editForm.luogo_fine} onChange={(e) => setEditForm(p => ({ ...p, luogo_fine: e.target.value }))} className="rounded-lg h-10" />
+
+              <Separator />
+
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Servizio</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Tipologia</Label>
+                    <Select value={editForm.tipologia} onValueChange={(v) => setEditForm(p => ({ ...p, tipologia: v, transfer_tipo: "", disposizione_oraria: "", tour_tipo: "" }))}>
+                      <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                      <SelectContent>
+                        {TIPOLOGIA_OPZIONI.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Veicolo</Label>
+                    <Select value={editForm.veicolo_tipo} onValueChange={(v) => setEditForm(p => ({ ...p, veicolo_tipo: v }))}>
+                      <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                      <SelectContent>
+                        {VEICOLI_DISPONIBILI.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {editForm.tipologia === "transfer" && (
+                    <div className="space-y-1.5 col-span-2">
+                      <Label className="text-xs text-muted-foreground">Tipo transfer</Label>
+                      <Select value={editForm.transfer_tipo} onValueChange={(v) => setEditForm(p => ({ ...p, transfer_tipo: v }))}>
+                        <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                        <SelectContent>
+                          {TRANSFER_OPZIONI.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {editForm.tipologia === "disposizione" && (
+                    <div className="space-y-1.5 col-span-2">
+                      <Label className="text-xs text-muted-foreground">Durata disposizione</Label>
+                      <Select value={editForm.disposizione_oraria} onValueChange={(v) => setEditForm(p => ({ ...p, disposizione_oraria: v }))}>
+                        <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                        <SelectContent>
+                          {DISPOSIZIONE_OPZIONI.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {editForm.tipologia === "tour" && (
+                    <div className="space-y-1.5 col-span-2">
+                      <Label className="text-xs text-muted-foreground">Tipo tour</Label>
+                      <Select value={editForm.tour_tipo} onValueChange={(v) => setEditForm(p => ({ ...p, tour_tipo: v }))}>
+                        <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                        <SelectContent>
+                          {TOUR_OPZIONI.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">N. passeggeri</Label>
+                    <Input type="number" min="1" value={editForm.n_passeggeri} onChange={(e) => setEditForm(p => ({ ...p, n_passeggeri: e.target.value }))} className="rounded-lg h-10" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">N. bagagli</Label>
+                    <Input type="number" min="0" value={editForm.n_bagagli} onChange={(e) => setEditForm(p => ({ ...p, n_bagagli: e.target.value }))} className="rounded-lg h-10" />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Itinerario</Label>
-                <Input value={editForm.itinerario} onChange={(e) => setEditForm(p => ({ ...p, itinerario: e.target.value }))} className="rounded-lg h-10" />
+
+              <Separator />
+
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Itinerario</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Luogo inizio</Label>
+                    <Input value={editForm.luogo_inizio} onChange={(e) => setEditForm(p => ({ ...p, luogo_inizio: e.target.value }))} className="rounded-lg h-10" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Luogo fine</Label>
+                    <Input value={editForm.luogo_fine} onChange={(e) => setEditForm(p => ({ ...p, luogo_fine: e.target.value }))} className="rounded-lg h-10" />
+                  </div>
+                  <div className="space-y-1.5 col-span-2">
+                    <Label className="text-xs text-muted-foreground">Itinerario / tappe</Label>
+                    <Input value={editForm.itinerario} onChange={(e) => setEditForm(p => ({ ...p, itinerario: e.target.value }))} className="rounded-lg h-10" />
+                  </div>
+                  <div className="space-y-1.5 col-span-2">
+                    <Label className="text-xs text-muted-foreground">Info autista</Label>
+                    <Input value={editForm.info_autista} onChange={(e) => setEditForm(p => ({ ...p, info_autista: e.target.value }))} className="rounded-lg h-10" />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Info autista</Label>
-                <Input value={editForm.info_autista} onChange={(e) => setEditForm(p => ({ ...p, info_autista: e.target.value }))} className="rounded-lg h-10" />
+
+              <Separator />
+
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Pagamento & extra</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Tipo pagamento</Label>
+                    <Select value={editForm.tipo_pagamento} onValueChange={(v) => setEditForm(p => ({ ...p, tipo_pagamento: v }))}>
+                      <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                      <SelectContent>
+                        {PAGAMENTO_OPZIONI.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Centro di costo</Label>
+                    <Input value={editForm.centro_costo} onChange={(e) => setEditForm(p => ({ ...p, centro_costo: e.target.value }))} className="rounded-lg h-10" />
+                  </div>
+                  <div className="space-y-1.5 col-span-2">
+                    <Label className="text-xs text-muted-foreground">Accessori</Label>
+                    <Input value={editForm.accessori} onChange={(e) => setEditForm(p => ({ ...p, accessori: e.target.value }))} className="rounded-lg h-10" />
+                  </div>
+                  <div className="space-y-1.5 col-span-2">
+                    <Label className="text-xs text-muted-foreground">Note</Label>
+                    <Textarea value={editForm.note} onChange={(e) => setEditForm(p => ({ ...p, note: e.target.value }))} className="rounded-lg min-h-[70px]" />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Note</Label>
-                <Textarea value={editForm.note} onChange={(e) => setEditForm(p => ({ ...p, note: e.target.value }))} className="rounded-lg min-h-[60px]" />
-              </div>
-              <Button className="w-full rounded-lg h-10" onClick={handleSaveEdit}>Salva modifiche</Button>
+
+              {selected && (
+                <div className="rounded-lg bg-muted/40 border border-border/50 p-3 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    <Lock className="h-3 w-3" /> Dati passeggero (non modificabili)
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                    <div><span className="text-muted-foreground">Nome:</span> <span className="font-medium">{selected.contatto ?? "—"}</span></div>
+                    <div><span className="text-muted-foreground">Tel:</span> <span className="font-medium">{selected.telefono_contatto ?? "—"}</span></div>
+                    <div className="truncate"><span className="text-muted-foreground">Email:</span> <span className="font-medium">{selected.email_contatto ?? "—"}</span></div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <Separator />
+            <div className="p-4 flex gap-2">
+              <Button variant="outline" className="flex-1 rounded-lg h-10" onClick={() => setEditOpen(false)}>Annulla</Button>
+              <Button className="flex-1 rounded-lg h-10" onClick={handleSaveEdit}>Salva modifiche</Button>
             </div>
           </DialogContent>
         </Dialog>
