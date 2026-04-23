@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Building2, User, Users, Layers } from "lucide-react";
+import { Building2, User, Users, Layers, ShieldCheck, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
 export default function Settings() {
   const { user, role, organization, refreshOrg } = useAuth();
@@ -27,6 +27,41 @@ export default function Settings() {
   const [members, setMembers] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [newDept, setNewDept] = useState("");
+
+  // Security check state
+  type HibpResult = {
+    name: string;
+    description: string;
+    expected: "rejected" | "accepted";
+    outcome: "rejected" | "accepted" | "error";
+    passed: boolean;
+    detail?: string;
+  };
+  const [hibpRunning, setHibpRunning] = useState(false);
+  const [hibpReport, setHibpReport] = useState<{
+    ok: boolean;
+    summary: string;
+    results: HibpResult[];
+  } | null>(null);
+
+  const runHibpCheck = async () => {
+    setHibpRunning(true);
+    setHibpReport(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-hibp-protection", { body: {} });
+      if (error) {
+        toast.error(error.message || "Errore durante il controllo");
+        return;
+      }
+      setHibpReport(data);
+      if (data?.ok) toast.success("Tutti i controlli sono passati");
+      else toast.warning("Alcuni controlli sono falliti — vedi dettagli");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Errore imprevisto");
+    } finally {
+      setHibpRunning(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -103,6 +138,7 @@ export default function Settings() {
             {isAdmin && <TabsTrigger value="organization" className="gap-2"><Building2 className="h-4 w-4" /> Organizzazione</TabsTrigger>}
             {isAdmin && <TabsTrigger value="team" className="gap-2"><Users className="h-4 w-4" /> Team</TabsTrigger>}
             {isAdmin && <TabsTrigger value="departments" className="gap-2"><Layers className="h-4 w-4" /> Reparti</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="security" className="gap-2"><ShieldCheck className="h-4 w-4" /> Sicurezza</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="profile" className="mt-6">
