@@ -49,7 +49,10 @@ export type Database = {
       }
       autisti: {
         Row: {
+          assicurazione: number | null
           attivo: boolean
+          buono_pasto: number | null
+          calcola_riposi: boolean
           cellulare: string | null
           codice_fiscale: string | null
           cognome: string
@@ -59,16 +62,23 @@ export type Database = {
           mansione: string | null
           nome: string
           note: string | null
+          numero_ore_ord: number | null
           org_id: string
           password: string | null
           patente: string | null
+          percentuale_notturno: number | null
           prezzo_ora_ord: number | null
           prezzo_ora_straord: number | null
           telefono: string | null
+          trasferta: number | null
+          trasferta_2: number | null
           updated_at: string
         }
         Insert: {
+          assicurazione?: number | null
           attivo?: boolean
+          buono_pasto?: number | null
+          calcola_riposi?: boolean
           cellulare?: string | null
           codice_fiscale?: string | null
           cognome: string
@@ -78,16 +88,23 @@ export type Database = {
           mansione?: string | null
           nome: string
           note?: string | null
+          numero_ore_ord?: number | null
           org_id?: string
           password?: string | null
           patente?: string | null
+          percentuale_notturno?: number | null
           prezzo_ora_ord?: number | null
           prezzo_ora_straord?: number | null
           telefono?: string | null
+          trasferta?: number | null
+          trasferta_2?: number | null
           updated_at?: string
         }
         Update: {
+          assicurazione?: number | null
           attivo?: boolean
+          buono_pasto?: number | null
+          calcola_riposi?: boolean
           cellulare?: string | null
           codice_fiscale?: string | null
           cognome?: string
@@ -97,12 +114,16 @@ export type Database = {
           mansione?: string | null
           nome?: string
           note?: string | null
+          numero_ore_ord?: number | null
           org_id?: string
           password?: string | null
           patente?: string | null
+          percentuale_notturno?: number | null
           prezzo_ora_ord?: number | null
           prezzo_ora_straord?: number | null
           telefono?: string | null
+          trasferta?: number | null
+          trasferta_2?: number | null
           updated_at?: string
         }
         Relationships: []
@@ -110,17 +131,26 @@ export type Database = {
       autisti_esterni: {
         Row: {
           attivo: boolean
+          banca: string | null
+          calcola_riposi: boolean
           cellulare: string | null
           codice_fiscale: string | null
           created_at: string
           email: string | null
+          iban: string | null
           id: string
+          km_voucher: number | null
           level: string | null
+          lingua: string | null
+          modello_veicolo: string | null
           nome: string
           note: string | null
+          numero_compto: string | null
           org_id: string
           password: string | null
           patente: string | null
+          percentuale_last_minute: number | null
+          percentuale_network: number | null
           targa: string | null
           tariffario_nome: string | null
           tariffario_url: string | null
@@ -129,17 +159,26 @@ export type Database = {
         }
         Insert: {
           attivo?: boolean
+          banca?: string | null
+          calcola_riposi?: boolean
           cellulare?: string | null
           codice_fiscale?: string | null
           created_at?: string
           email?: string | null
+          iban?: string | null
           id?: string
+          km_voucher?: number | null
           level?: string | null
+          lingua?: string | null
+          modello_veicolo?: string | null
           nome: string
           note?: string | null
+          numero_compto?: string | null
           org_id?: string
           password?: string | null
           patente?: string | null
+          percentuale_last_minute?: number | null
+          percentuale_network?: number | null
           targa?: string | null
           tariffario_nome?: string | null
           tariffario_url?: string | null
@@ -148,17 +187,26 @@ export type Database = {
         }
         Update: {
           attivo?: boolean
+          banca?: string | null
+          calcola_riposi?: boolean
           cellulare?: string | null
           codice_fiscale?: string | null
           created_at?: string
           email?: string | null
+          iban?: string | null
           id?: string
+          km_voucher?: number | null
           level?: string | null
+          lingua?: string | null
+          modello_veicolo?: string | null
           nome?: string
           note?: string | null
+          numero_compto?: string | null
           org_id?: string
           password?: string | null
           patente?: string | null
+          percentuale_last_minute?: number | null
+          percentuale_network?: number | null
           targa?: string | null
           tariffario_nome?: string | null
           tariffario_url?: string | null
