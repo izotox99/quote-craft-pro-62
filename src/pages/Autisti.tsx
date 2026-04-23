@@ -244,52 +244,13 @@ export default function Autisti() {
       </div>
 
       {/* Dialog Nuovo / Modifica autista */}
-      <Dialog open={autistaDialogOpen} onOpenChange={setAutistaDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingId ? "Modifica autista" : "Nuovo autista"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1 sm:col-span-2"><Label>Mansione</Label>
-              <Input value={form.mansione} onChange={e => setForm({ ...form, mansione: e.target.value })} placeholder="Autista full time" />
-            </div>
-            <div className="space-y-1"><Label>Cognome *</Label>
-              <Input value={form.cognome} onChange={e => setForm({ ...form, cognome: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Nome *</Label>
-              <Input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Codice fiscale</Label>
-              <Input value={form.codice_fiscale} onChange={e => setForm({ ...form, codice_fiscale: e.target.value.toUpperCase() })} />
-            </div>
-            <div className="space-y-1"><Label>Numero patente</Label>
-              <Input value={form.patente} onChange={e => setForm({ ...form, patente: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Prezzo ora ordinario (€)</Label>
-              <Input type="number" step="0.01" value={form.prezzo_ora_ord} onChange={e => setForm({ ...form, prezzo_ora_ord: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Prezzo ora straordinario (€)</Label>
-              <Input type="number" step="0.01" value={form.prezzo_ora_straord} onChange={e => setForm({ ...form, prezzo_ora_straord: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Cellulare</Label>
-              <Input value={form.cellulare} onChange={e => setForm({ ...form, cellulare: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Email</Label>
-              <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Password</Label>
-              <Input value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
-            </div>
-            <div className="space-y-1 sm:col-span-2"><Label>Note</Label>
-              <Input value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAutistaDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleSave} disabled={!form.nome || !form.cognome}>Salva</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NuovoAutistaDialog
+        open={autistaDialogOpen}
+        onOpenChange={setAutistaDialogOpen}
+        defaultTipo="interno"
+        editing={editingAutista}
+        onSaved={() => load()}
+      />
 
       {/* Dialog conferma disattivazione */}
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
