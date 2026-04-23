@@ -58,6 +58,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   const isClientActive = pathname.startsWith("/clients");
+  const isAutistiActive = pathname.startsWith("/autisti");
+  const [autistiExpanded, setAutistiExpanded] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
