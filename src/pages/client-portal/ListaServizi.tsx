@@ -78,7 +78,20 @@ type Servizio = {
   note: string | null;
   accessori: string | null;
   modificato_da_cliente?: boolean | null;
+  autista_id?: string | null;
+  autista_esterno_id?: string | null;
 };
+
+function computeClientStato(s: Servizio): { label: string; className: string } {
+  if (s.modificato_da_cliente) {
+    return { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" };
+  }
+  const hasDriver = !!(s.autista_id || s.autista_esterno_id);
+  if (!hasDriver && (s.stato === "nuovo" || s.stato === "confermato")) {
+    return { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" };
+  }
+  return statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" };
+}
 
 function canModify(s: Servizio): boolean {
   if (s.stato === "annullato" || s.stato === "completato") return false;
@@ -364,9 +377,7 @@ export default function ListaServizi() {
         ) : (
           <div className="space-y-2">
             {filtered.map((s) => {
-              const stato = s.modificato_da_cliente
-                ? { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" }
-                : (statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" });
+              const stato = computeClientStato(s);
               return (
                 <Card
                   key={s.id}
@@ -424,9 +435,7 @@ export default function ListaServizi() {
         <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
           <DialogContent className="sm:max-w-lg rounded-xl p-0 gap-0 overflow-hidden">
             {selected && (() => {
-              const stato = selected.modificato_da_cliente
-                ? { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" }
-                : (statoConfig[selected.stato] ?? { label: selected.stato, className: "bg-muted" });
+              const stato = computeClientStato(selected);
               const editable = canModify(selected);
               return (
                 <>
