@@ -432,11 +432,57 @@ export default function ListaServizi() {
             {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />)}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-20 text-center">
-            <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/30" />
-            <p className="mt-3 text-sm text-muted-foreground">Nessun servizio trovato</p>
-          </div>
-        ) : (
+          (() => {
+            const hasFilters = !!(search || dateFrom || dateTo || utenzaFilter !== "all");
+            const hasAnyServizi = servizi.length > 0;
+
+            if (hasFilters && hasAnyServizi) {
+              return (
+                <div className="py-16 text-center">
+                  <Search className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                  <p className="mt-3 text-sm font-medium">Nessun servizio corrisponde ai filtri</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Prova a modificare data, ricerca o utenza selezionata.</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 rounded-lg text-xs"
+                    onClick={() => {
+                      setSearch("");
+                      setDateFrom("");
+                      setDateTo("");
+                      setUtenzaFilter("all");
+                    }}
+                  >
+                    Azzera filtri
+                  </Button>
+                </div>
+              );
+            }
+
+            return (
+              <div className="py-16 text-center">
+                <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                <p className="mt-3 text-sm font-medium">Nessun servizio prenotato</p>
+                <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
+                  {isParentClient && utenze.length === 0
+                    ? "Non hai ancora creato utenze. Crea utenze per permettere ai tuoi collaboratori di prenotare e gestire i propri servizi."
+                    : "Quando verrà prenotato un servizio comparirà in questa lista."}
+                </p>
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <Button asChild size="sm" className="rounded-lg text-xs">
+                    <Link to="/client-portal/prenota">Prenota ora</Link>
+                  </Button>
+                  {isParentClient && utenze.length === 0 && (
+                    <Button asChild size="sm" variant="outline" className="rounded-lg text-xs gap-1.5">
+                      <Link to="/client-portal/utenze">
+                        <Users className="h-3.5 w-3.5" /> Gestisci utenze
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })()
           <div className="space-y-2">
             {filtered.map((s) => {
               const stato = computeClientStato(s);
