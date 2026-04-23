@@ -51,6 +51,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [clientsExpanded, setClientsExpanded] = useState(false);
+  const [autistiExpanded, setAutistiExpanded] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -59,7 +60,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const isClientActive = pathname.startsWith("/clients");
   const isAutistiActive = pathname.startsWith("/autisti");
-  const [autistiExpanded, setAutistiExpanded] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
