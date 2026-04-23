@@ -349,7 +349,9 @@ export default function ListaServizi() {
         ) : (
           <div className="space-y-2">
             {filtered.map((s) => {
-              const stato = statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" };
+              const stato = s.modificato_da_cliente
+                ? { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" }
+                : (statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" });
               return (
                 <Card
                   key={s.id}
