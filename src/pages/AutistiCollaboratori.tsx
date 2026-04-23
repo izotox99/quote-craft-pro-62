@@ -274,49 +274,13 @@ export default function AutistiCollaboratori() {
       </div>
 
       {/* Dialog Nuovo / Modifica */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{editingId ? "Modifica collaboratore" : "Nuovo collaboratore"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1 sm:col-span-2"><Label>Nome *</Label>
-              <Input value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} placeholder="Cognome Nome - Sigla" />
-            </div>
-            <div className="space-y-1"><Label>Codice fiscale</Label>
-              <Input value={form.codice_fiscale} onChange={e => setForm({ ...form, codice_fiscale: e.target.value.toUpperCase() })} />
-            </div>
-            <div className="space-y-1"><Label>Numero patente</Label>
-              <Input value={form.patente} onChange={e => setForm({ ...form, patente: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Cellulare</Label>
-              <Input value={form.cellulare} onChange={e => setForm({ ...form, cellulare: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Email</Label>
-              <Input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Password</Label>
-              <Input value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
-            </div>
-            <div className="space-y-1"><Label>Tipo macchina</Label>
-              <Input value={form.tipo_macchina} onChange={e => setForm({ ...form, tipo_macchina: e.target.value })} placeholder="Autovettura 3 posti" />
-            </div>
-            <div className="space-y-1"><Label>Targa</Label>
-              <Input value={form.targa} onChange={e => setForm({ ...form, targa: e.target.value.toUpperCase() })} />
-            </div>
-            <div className="space-y-1"><Label>Level</Label>
-              <Input value={form.level} onChange={e => setForm({ ...form, level: e.target.value })} />
-            </div>
-            <div className="space-y-1 sm:col-span-2"><Label>Note</Label>
-              <Input value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleSave} disabled={!form.nome}>Salva</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <NuovoAutistaDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        defaultTipo="esterno"
+        editing={editingAutista}
+        onSaved={() => load()}
+      />
 
       <AlertDialog open={!!deleteId} onOpenChange={(o) => !o && setDeleteId(null)}>
         <AlertDialogContent>
