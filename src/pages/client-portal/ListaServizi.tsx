@@ -390,6 +390,21 @@ export default function ListaServizi() {
                   <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Passeggero, città..." className="pl-8 rounded-lg h-9 text-sm" />
                 </div>
               </div>
+              {isParentClient && utenze.length > 0 && (
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Utenza</label>
+                  <Select value={utenzaFilter} onValueChange={setUtenzaFilter}>
+                    <SelectTrigger className="rounded-lg h-9 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tutte le utenze</SelectItem>
+                      <SelectItem value="__direct__">Solo miei (cliente)</SelectItem>
+                      {utenze.map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.nome} {u.cognome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="flex items-end">
                 <Button variant="outline" size="sm" className="gap-1.5 rounded-lg w-full h-9 text-xs" onClick={exportExcel}>
                   <Download className="h-3.5 w-3.5" /> Esporta
