@@ -483,6 +483,7 @@ export default function ListaServizi() {
               </div>
             );
           })()
+        ) : (
           <div className="space-y-2">
             {filtered.map((s) => {
               const stato = computeClientStato(s);
