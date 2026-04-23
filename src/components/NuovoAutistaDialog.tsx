@@ -407,7 +407,7 @@ export function NuovoAutistaDialog({
         <DialogFooter className="pt-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
           <Button onClick={handleSave} disabled={saving || !common.nome.trim()}>
-            {editing ? "Aggiorna" : "Inserire !"}
+            {editing ? "Aggiorna" : "Inserisci"}
           </Button>
         </DialogFooter>
       </DialogContent>
