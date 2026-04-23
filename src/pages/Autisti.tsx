@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PlusCircle, Trash2, Pencil, Calculator } from "lucide-react";
+import { NuovoAutistaDialog } from "@/components/NuovoAutistaDialog";
 
 type Autista = {
   id: string;
