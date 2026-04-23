@@ -24,6 +24,7 @@ import ClientiInAttesa from "./pages/ClientiInAttesa";
 import Preventivi from "./pages/Preventivi";
 import Veicoli from "./pages/Veicoli";
 import Autisti from "./pages/Autisti";
+import AutistiCollaboratori from "./pages/AutistiCollaboratori";
 import FornitoriCS from "./pages/FornitoriCS";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
