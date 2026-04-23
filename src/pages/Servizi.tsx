@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, AlertTriangle, Bell } from "lucide-react";
+import { ModificheClientePopover } from "@/components/ModificheClientePopover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, addDays } from "date-fns";
 import { it as itLocale } from "date-fns/locale";
@@ -741,7 +742,7 @@ export default function Servizi() {
                     <Separator orientation="vertical" className="h-10" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        {modificato && <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />}
+                        {modificato && <ModificheClientePopover servizioId={s.id} />}
                         <p className="font-semibold text-sm text-card-foreground truncate">{s.clients?.company || s.clients?.name || "—"}</p>
                         {s.citta && <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0">{s.citta}</Badge>}
                       </div>
@@ -841,9 +842,7 @@ export default function Servizi() {
                           <TableCell className="py-2 whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
                               {modificato && (
-                                <span title="Modificato dal cliente">
-                                  <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                                </span>
+                                <ModificheClientePopover servizioId={s.id} />
                               )}
                               <div>
                                 <div className={senzaAutista ? "text-red-700 dark:text-red-400 font-semibold" : ""}>

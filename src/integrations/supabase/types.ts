@@ -969,6 +969,47 @@ export type Database = {
           },
         ]
       }
+      servizi_modifiche: {
+        Row: {
+          changed_by: string | null
+          created_at: string
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          org_id: string
+          servizio_id: string
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          org_id: string
+          servizio_id: string
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          org_id?: string
+          servizio_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servizi_modifiche_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       templates: {
         Row: {
           category: Database["public"]["Enums"]["template_category"]
