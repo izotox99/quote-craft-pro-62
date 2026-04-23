@@ -219,6 +219,7 @@ export default function Prenota() {
       client_id: clientId,
       org_id: orgId,
       stato: "nuovo" as any,
+      utenza_id: activeUtenzaId,
     } as any);
 
     if (error) {
