@@ -90,7 +90,17 @@ export default function Utenze() {
         email: form.email,
         tipo: form.tipo,
       };
-      if (form.password) updateData.password = form.password;
+      if (form.password) {
+        const { data: hash, error: hashErr } = await supabase.rpc("hash_utenza_password", {
+          _password: form.password,
+        });
+        if (hashErr || !hash) {
+          toast.error("Errore durante la cifratura della password");
+          setSaving(false);
+          return;
+        }
+        updateData.password_hash = hash;
+      }
 
       const { error } = await supabase.from("client_utenze").update(updateData).eq("id", editingId);
       if (error) {
@@ -101,13 +111,21 @@ export default function Utenze() {
         await fetchUtenze(clientId);
       }
     } else {
+      const { data: hash, error: hashErr } = await supabase.rpc("hash_utenza_password", {
+        _password: form.password,
+      });
+      if (hashErr || !hash) {
+        toast.error("Errore durante la cifratura della password");
+        setSaving(false);
+        return;
+      }
       const { error } = await supabase.from("client_utenze").insert({
         parent_client_id: clientId,
         nome: form.nome,
         cognome: form.cognome,
         cellulare: form.cellulare || null,
         email: form.email,
-        password: form.password,
+        password_hash: hash,
         tipo: form.tipo,
       });
       if (error) {
