@@ -43,13 +43,6 @@ type Spesa = {
   totale_fattura: number | null;
 };
 
-const emptyForm = {
-  mansione: "Autista full time", nome: "", cognome: "",
-  codice_fiscale: "", patente: "",
-  prezzo_ora_ord: "", prezzo_ora_straord: "",
-  cellulare: "", email: "", password: "", note: "",
-};
-
 const emptySpesa = {
   tipo: "Patente", data_intervento: "", data_scadenza: "",
   importo_spese: "", totale_fattura: "",
@@ -61,10 +54,9 @@ export default function Autisti() {
   const [loading, setLoading] = useState(true);
   const [showDisattivati, setShowDisattivati] = useState(false);
 
-  // Form autista
+  // Dialog autista (nuovo / modifica)
   const [autistaDialogOpen, setAutistaDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [editingAutista, setEditingAutista] = useState<{ tipo: "interno" | "esterno"; id: string; data: any } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Spese dialog
