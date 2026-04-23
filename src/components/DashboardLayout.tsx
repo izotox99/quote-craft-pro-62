@@ -255,6 +255,42 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </CollapsibleContent>
             </Collapsible>
 
+            {/* Autisti collapsible on mobile */}
+            <Collapsible open={autistiExpanded || isAutistiActive} onOpenChange={setAutistiExpanded}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between gap-3 h-11 rounded-lg font-medium",
+                    isAutistiActive && "bg-primary/10 text-primary"
+                  )}
+                >
+                  <span className="flex items-center gap-3">
+                    <UserCheck className="h-5 w-5" />
+                    Autisti
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", (autistiExpanded || isAutistiActive) && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-border/30 pl-4">
+                {autistiSubItems.map((sub) => (
+                  <Link key={sub.to} to={sub.to} onClick={() => setMobileOpen(false)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "w-full justify-start gap-3 h-9 rounded-lg text-sm font-normal",
+                        pathname === sub.to && "bg-accent text-accent-foreground font-medium"
+                      )}
+                    >
+                      <sub.icon className="h-4 w-4" />
+                      {sub.label}
+                    </Button>
+                  </Link>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+
             <div className="my-3 border-t border-border/30" />
             <Button variant="ghost" className="w-full justify-start gap-3 h-11 rounded-lg font-medium" onClick={() => { setMobileOpen(false); navigate("/settings"); }}>
               <Settings className="h-5 w-5" />
