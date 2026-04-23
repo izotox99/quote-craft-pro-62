@@ -198,6 +198,20 @@ export default function Servizi() {
     }
   }, [user]);
 
+  // Realtime: aggiornamento istantaneo quando i clienti modificano i loro servizi
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel("org-servizi-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "servizi" },
+        () => { loadServizi(); }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   const handleSearch = () => loadServizi();
 
   const handleCreate = async () => {
