@@ -804,6 +804,7 @@ export type Database = {
       servizi: {
         Row: {
           accessori: string | null
+          autista_esterno_id: string | null
           autista_id: string | null
           centro_costo: string | null
           citta: string | null
@@ -846,6 +847,7 @@ export type Database = {
         }
         Insert: {
           accessori?: string | null
+          autista_esterno_id?: string | null
           autista_id?: string | null
           centro_costo?: string | null
           citta?: string | null
@@ -888,6 +890,7 @@ export type Database = {
         }
         Update: {
           accessori?: string | null
+          autista_esterno_id?: string | null
           autista_id?: string | null
           centro_costo?: string | null
           citta?: string | null
@@ -929,6 +932,13 @@ export type Database = {
           veicolo_tipo?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "servizi_autista_esterno_id_fkey"
+            columns: ["autista_esterno_id"]
+            isOneToOne: false
+            referencedRelation: "autisti_esterni"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "servizi_autista_id_fkey"
             columns: ["autista_id"]
