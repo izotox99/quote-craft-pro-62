@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Building2, User, Users, Layers } from "lucide-react";
+import { Building2, User, Users, Layers, ShieldCheck, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
 export default function Settings() {
   const { user, role, organization, refreshOrg } = useAuth();
@@ -27,6 +27,41 @@ export default function Settings() {
   const [members, setMembers] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [newDept, setNewDept] = useState("");
+
+  // Security check state
+  type HibpResult = {
+    name: string;
+    description: string;
+    expected: "rejected" | "accepted";
+    outcome: "rejected" | "accepted" | "error";
+    passed: boolean;
+    detail?: string;
+  };
+  const [hibpRunning, setHibpRunning] = useState(false);
+  const [hibpReport, setHibpReport] = useState<{
+    ok: boolean;
+    summary: string;
+    results: HibpResult[];
+  } | null>(null);
+
+  const runHibpCheck = async () => {
+    setHibpRunning(true);
+    setHibpReport(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-hibp-protection", { body: {} });
+      if (error) {
+        toast.error(error.message || "Errore durante il controllo");
+        return;
+      }
+      setHibpReport(data);
+      if (data?.ok) toast.success("Tutti i controlli sono passati");
+      else toast.warning("Alcuni controlli sono falliti — vedi dettagli");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Errore imprevisto");
+    } finally {
+      setHibpRunning(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -103,6 +138,7 @@ export default function Settings() {
             {isAdmin && <TabsTrigger value="organization" className="gap-2"><Building2 className="h-4 w-4" /> Organizzazione</TabsTrigger>}
             {isAdmin && <TabsTrigger value="team" className="gap-2"><Users className="h-4 w-4" /> Team</TabsTrigger>}
             {isAdmin && <TabsTrigger value="departments" className="gap-2"><Layers className="h-4 w-4" /> Reparti</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="security" className="gap-2"><ShieldCheck className="h-4 w-4" /> Sicurezza</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="profile" className="mt-6">
@@ -234,6 +270,89 @@ export default function Settings() {
                           </Button>
                         </div>
                       ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="security" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-primary" />
+                    Verifica protezione password compromesse
+                  </CardTitle>
+                  <CardDescription>
+                    Esegue 5 test reali contro Lovable Cloud Auth per assicurarsi che le password
+                    presenti nel database HIBP (Have I Been Pwned) vengano rifiutate sia in
+                    registrazione che in cambio password. Gli account creati durante il test
+                    vengono eliminati automaticamente.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Button onClick={runHibpCheck} disabled={hibpRunning} className="gap-2">
+                      {hibpRunning ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> Verifica in corso…</>
+                      ) : (
+                        <><ShieldCheck className="h-4 w-4" /> Esegui verifica</>
+                      )}
+                    </Button>
+                    {hibpReport && (
+                      <Badge
+                        variant="outline"
+                        className={
+                          hibpReport.ok
+                            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                            : "border-destructive/40 bg-destructive/10 text-destructive"
+                        }
+                      >
+                        {hibpReport.ok ? "Tutti i test passati" : "Alcuni test falliti"}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {hibpReport && (
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground">{hibpReport.summary}</p>
+                      <div className="space-y-2">
+                        {hibpReport.results.map((r, i) => (
+                          <div
+                            key={i}
+                            className={`flex items-start gap-3 rounded-lg border p-3 ${
+                              r.passed
+                                ? "border-emerald-500/30 bg-emerald-500/5"
+                                : "border-destructive/30 bg-destructive/5"
+                            }`}
+                          >
+                            {r.passed ? (
+                              <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-medium">{r.name}</span>
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                  atteso: {r.expected === "rejected" ? "rifiutato" : "accettato"}
+                                </Badge>
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                  esito: {r.outcome === "rejected" ? "rifiutato" : r.outcome === "accepted" ? "accettato" : "errore"}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">{r.description}</p>
+                              {r.detail && (
+                                <p className="text-xs font-mono bg-muted/50 rounded px-2 py-1 mt-1.5 break-words">
+                                  {r.detail}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </CardContent>
