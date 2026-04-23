@@ -107,6 +107,66 @@ export type Database = {
         }
         Relationships: []
       }
+      autisti_esterni: {
+        Row: {
+          attivo: boolean
+          cellulare: string | null
+          codice_fiscale: string | null
+          created_at: string
+          email: string | null
+          id: string
+          level: string | null
+          nome: string
+          note: string | null
+          org_id: string
+          password: string | null
+          patente: string | null
+          targa: string | null
+          tariffario_nome: string | null
+          tariffario_url: string | null
+          tipo_macchina: string | null
+          updated_at: string
+        }
+        Insert: {
+          attivo?: boolean
+          cellulare?: string | null
+          codice_fiscale?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          level?: string | null
+          nome: string
+          note?: string | null
+          org_id?: string
+          password?: string | null
+          patente?: string | null
+          targa?: string | null
+          tariffario_nome?: string | null
+          tariffario_url?: string | null
+          tipo_macchina?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attivo?: boolean
+          cellulare?: string | null
+          codice_fiscale?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          level?: string | null
+          nome?: string
+          note?: string | null
+          org_id?: string
+          password?: string | null
+          patente?: string | null
+          targa?: string | null
+          tariffario_nome?: string | null
+          tariffario_url?: string | null
+          tipo_macchina?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       autisti_spese: {
         Row: {
           autista_id: string
