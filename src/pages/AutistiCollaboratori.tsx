@@ -30,11 +30,6 @@ type Esterno = {
   tariffario_nome: string | null;
 };
 
-const emptyForm = {
-  nome: "", codice_fiscale: "", patente: "", cellulare: "",
-  email: "", password: "", tipo_macchina: "", targa: "", level: "", note: "",
-};
-
 export default function AutistiCollaboratori() {
   const { user } = useAuth();
   const [list, setList] = useState<Esterno[]>([]);
@@ -42,8 +37,7 @@ export default function AutistiCollaboratori() {
   const [showDisattivati, setShowDisattivati] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyForm);
+  const [editingAutista, setEditingAutista] = useState<{ tipo: "interno" | "esterno"; id: string; data: any } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -63,50 +57,13 @@ export default function AutistiCollaboratori() {
   useEffect(() => { if (user) load(); }, [user, showDisattivati]);
 
   const openNuovo = () => {
-    setEditingId(null);
-    setForm(emptyForm);
+    setEditingAutista(null);
     setDialogOpen(true);
   };
 
   const openModifica = (a: Esterno) => {
-    setEditingId(a.id);
-    setForm({
-      nome: a.nome ?? "",
-      codice_fiscale: a.codice_fiscale ?? "",
-      patente: a.patente ?? "",
-      cellulare: a.cellulare ?? "",
-      email: a.email ?? "",
-      password: a.password ?? "",
-      tipo_macchina: a.tipo_macchina ?? "",
-      targa: a.targa ?? "",
-      level: a.level ?? "",
-      note: a.note ?? "",
-    });
+    setEditingAutista({ tipo: "esterno", id: a.id, data: a });
     setDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    const payload = {
-      nome: form.nome,
-      codice_fiscale: form.codice_fiscale || null,
-      patente: form.patente || null,
-      cellulare: form.cellulare || null,
-      email: form.email || null,
-      password: form.password || null,
-      tipo_macchina: form.tipo_macchina || null,
-      targa: form.targa || null,
-      level: form.level || null,
-      note: form.note || null,
-    };
-    const { error } = editingId
-      ? await supabase.from("autisti_esterni").update(payload).eq("id", editingId)
-      : await supabase.from("autisti_esterni").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success(editingId ? "Collaboratore aggiornato" : "Collaboratore aggiunto");
-    setDialogOpen(false);
-    setEditingId(null);
-    setForm(emptyForm);
-    load();
   };
 
   const confirmDelete = async () => {
