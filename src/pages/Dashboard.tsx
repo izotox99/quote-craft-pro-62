@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertTriangle, Bell, Sparkles, UserPlus } from "lucide-react";
-import { format, addDays } from "date-fns";
+import { AlertTriangle, Bell, Sparkles, UserPlus, XCircle } from "lucide-react";
+import { format, addDays, differenceInDays, parseISO } from "date-fns";
+import { it } from "date-fns/locale";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
 import { toast } from "sonner";
 
@@ -100,9 +101,11 @@ export default function Dashboard() {
 
   const filtered = useMemo(() => {
     let list = servizi;
-    if (statoFilter === "senza_autista") list = list.filter(s => !s.autista_id && !s.autista_esterno_id);
-    else if (statoFilter === "modificati") list = list.filter(s => s.modificato_da_cliente);
-    else if (statoFilter !== "tutti") list = list.filter(s => s.stato === statoFilter);
+    // Default: nascondi gli annullati dalla lista principale
+    if (statoFilter === "tutti") list = list.filter(s => s.stato !== "annullato");
+    else if (statoFilter === "senza_autista") list = list.filter(s => !s.autista_id && !s.autista_esterno_id && s.stato !== "annullato");
+    else if (statoFilter === "modificati") list = list.filter(s => s.modificato_da_cliente && s.stato !== "annullato");
+    else list = list.filter(s => s.stato === statoFilter);
 
     const q = search.trim().toLowerCase();
     if (q) {
@@ -116,13 +119,24 @@ export default function Dashboard() {
     return list;
   }, [servizi, statoFilter, search]);
 
-  const counts = useMemo(() => ({
-    totale: servizi.length,
-    senzaAutista: servizi.filter(s => !s.autista_id && !s.autista_esterno_id).length,
-    modificati: servizi.filter(s => s.modificato_da_cliente).length,
-    nuovi: servizi.filter(s => s.stato === "nuovo").length,
-    confermati: servizi.filter(s => s.stato === "confermato").length,
-  }), [servizi]);
+  const annullatiRecenti = useMemo(() => {
+    const now = new Date();
+    return servizi
+      .filter(s => s.stato === "annullato" && s.modificato_at && differenceInDays(now, parseISO(s.modificato_at)) <= 3)
+      .sort((a, b) => (b.modificato_at || "").localeCompare(a.modificato_at || ""));
+  }, [servizi]);
+
+  const counts = useMemo(() => {
+    const attivi = servizi.filter(s => s.stato !== "annullato");
+    return {
+      totale: attivi.length,
+      senzaAutista: attivi.filter(s => !s.autista_id && !s.autista_esterno_id).length,
+      modificati: attivi.filter(s => s.modificato_da_cliente).length,
+      nuovi: attivi.filter(s => s.stato === "nuovo").length,
+      confermati: attivi.filter(s => s.stato === "confermato").length,
+      annullati: servizi.filter(s => s.stato === "annullato").length,
+    };
+  }, [servizi]);
 
   const assignSingle = async (servizioId: string, driver: DriverOption | null) => {
     const payload: any = driver === null
@@ -195,6 +209,45 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* Banner annullamenti recenti (ultimi 3 giorni) */}
+        {annullatiRecenti.length > 0 && (
+          <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900 p-3">
+            <div className="flex items-start gap-2">
+              <XCircle className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <p className="text-xs font-semibold text-red-900 dark:text-red-200">
+                    {annullatiRecenti.length} {annullatiRecenti.length === 1 ? "servizio annullato" : "servizi annullati"} dal cliente negli ultimi 3 giorni
+                  </p>
+                  <button
+                    onClick={() => setStatoFilter("annullato")}
+                    className="text-[11px] font-medium text-red-700 dark:text-red-300 hover:underline"
+                  >
+                    Vedi tutti gli annullati →
+                  </button>
+                </div>
+                <ul className="mt-1.5 space-y-0.5">
+                  {annullatiRecenti.slice(0, 3).map(s => (
+                    <li key={s.id} className="text-[11px] text-red-800 dark:text-red-300/90 truncate">
+                      <span className="font-medium">{s.clients?.company || s.clients?.name || "—"}</span>
+                      {" · "}{format(parseISO(s.data_servizio), "dd/MM")}{s.ora_inizio ? ` ${s.ora_inizio}` : ""}
+                      {s.luogo_inizio ? ` · ${s.luogo_inizio}` : ""}
+                      <span className="text-red-600/70 dark:text-red-400/70">
+                        {" · annullato "}{format(parseISO(s.modificato_at!), "dd/MM HH:mm", { locale: it })}
+                      </span>
+                    </li>
+                  ))}
+                  {annullatiRecenti.length > 3 && (
+                    <li className="text-[11px] text-red-700/80 dark:text-red-400/80 italic">
+                      e altri {annullatiRecenti.length - 3}…
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Bulk action bar */}
         {selected.size > 0 && (
           <BulkAssignBar
@@ -212,6 +265,7 @@ export default function Dashboard() {
             { key: "modificati", label: "Modificati", count: counts.modificati, color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" },
             { key: "nuovo", label: "Nuovi", count: counts.nuovi, color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
             { key: "confermato", label: "Confermati", count: counts.confermati, color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
+            { key: "annullato", label: "Annullati", count: counts.annullati, color: "bg-red-200 text-red-900 dark:bg-red-900/40 dark:text-red-200" },
           ].map(c => (
             <button
               key={c.key}
