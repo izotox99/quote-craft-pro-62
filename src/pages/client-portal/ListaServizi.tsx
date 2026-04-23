@@ -142,7 +142,26 @@ export default function ListaServizi() {
 
   // Edit
   const [editOpen, setEditOpen] = useState(false);
-  const [editForm, setEditForm] = useState({ luogo_inizio: "", luogo_fine: "", itinerario: "", info_autista: "", note: "" });
+  const [editForm, setEditForm] = useState({
+    data_servizio: "",
+    ora_inizio: "",
+    citta: "",
+    n_passeggeri: "1",
+    n_bagagli: "0",
+    tipologia: "" as string,
+    transfer_tipo: "",
+    disposizione_oraria: "",
+    tour_tipo: "",
+    veicolo_tipo: "",
+    luogo_inizio: "",
+    luogo_fine: "",
+    itinerario: "",
+    info_autista: "",
+    tipo_pagamento: "",
+    centro_costo: "",
+    accessori: "",
+    note: "",
+  });
 
   const loadServizi = async () => {
     if (!user) return;
@@ -183,10 +202,23 @@ export default function ListaServizi() {
   const openEdit = (s: Servizio) => {
     setSelected(s);
     setEditForm({
+      data_servizio: s.data_servizio ?? "",
+      ora_inizio: s.ora_inizio ?? "",
+      citta: s.citta ?? "",
+      n_passeggeri: String(s.n_passeggeri ?? 1),
+      n_bagagli: String(s.n_bagagli ?? 0),
+      tipologia: s.tipologia ?? "",
+      transfer_tipo: s.transfer_tipo ?? "",
+      disposizione_oraria: s.disposizione_oraria ?? "",
+      tour_tipo: s.tour_tipo ?? "",
+      veicolo_tipo: s.veicolo_tipo ?? "",
       luogo_inizio: s.luogo_inizio ?? "",
       luogo_fine: s.luogo_fine ?? "",
       itinerario: s.itinerario ?? "",
       info_autista: s.info_autista ?? "",
+      tipo_pagamento: s.tipo_pagamento ?? "",
+      centro_costo: s.centro_costo ?? "",
+      accessori: s.accessori ?? "",
       note: s.note ?? "",
     });
     setDetailOpen(false);
@@ -195,16 +227,27 @@ export default function ListaServizi() {
 
   const handleSaveEdit = async () => {
     if (!selected) return;
-    const { error } = await supabase
-      .from("servizi")
-      .update({
-        luogo_inizio: editForm.luogo_inizio || null,
-        luogo_fine: editForm.luogo_fine || null,
-        itinerario: editForm.itinerario || null,
-        info_autista: editForm.info_autista || null,
-        note: editForm.note || null,
-      } as any)
-      .eq("id", selected.id);
+    const payload: any = {
+      data_servizio: editForm.data_servizio || null,
+      ora_inizio: editForm.ora_inizio || null,
+      citta: editForm.citta || null,
+      n_passeggeri: editForm.n_passeggeri ? parseInt(editForm.n_passeggeri) : null,
+      n_bagagli: editForm.n_bagagli ? parseInt(editForm.n_bagagli) : null,
+      tipologia: editForm.tipologia || null,
+      transfer_tipo: editForm.tipologia === "transfer" ? (editForm.transfer_tipo || null) : null,
+      disposizione_oraria: editForm.tipologia === "disposizione" ? (editForm.disposizione_oraria || null) : null,
+      tour_tipo: editForm.tipologia === "tour" ? (editForm.tour_tipo || null) : null,
+      veicolo_tipo: editForm.veicolo_tipo || null,
+      luogo_inizio: editForm.luogo_inizio || null,
+      luogo_fine: editForm.luogo_fine || null,
+      itinerario: editForm.itinerario || null,
+      info_autista: editForm.info_autista || null,
+      tipo_pagamento: editForm.tipo_pagamento || null,
+      centro_costo: editForm.centro_costo || null,
+      accessori: editForm.accessori || null,
+      note: editForm.note || null,
+    };
+    const { error } = await supabase.from("servizi").update(payload).eq("id", selected.id);
     if (error) {
       toast.error("Errore nel salvataggio");
     } else {
