@@ -14,7 +14,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage } from "lucide-react";
+import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, AlertTriangle, Bell } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, addDays } from "date-fns";
 import { it as itLocale } from "date-fns/locale";
 
@@ -49,6 +50,9 @@ type Servizio = {
   costo_autista: number | null;
   costo_commissione: number | null;
   note: string | null;
+  autista_id: string | null;
+  modificato_da_cliente: boolean | null;
+  modificato_at: string | null;
   clients: { name: string; company: string | null } | null;
   autisti: { nome: string; cognome: string } | null;
   veicoli: { targa: string; tipo_macchina: string | null } | null;
