@@ -28,12 +28,29 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     const load = async () => {
       if (!user) return;
-      const { data } = await supabase
+      const { data: client } = await supabase
         .from("clients")
         .select("company, name")
         .eq("auth_user_id", user.id)
-        .single();
-      if (data) setClientName(data.company || data.name);
+        .maybeSingle();
+      if (client) {
+        setClientName(client.company || client.name);
+        return;
+      }
+      const { data: utenza } = await supabase
+        .from("client_utenze")
+        .select("nome, cognome, parent_client_id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      if (utenza) {
+        const { data: parent } = await supabase
+          .from("clients")
+          .select("company, name")
+          .eq("id", utenza.parent_client_id)
+          .maybeSingle();
+        const parentLabel = parent?.company || parent?.name || "";
+        setClientName(`${utenza.nome} ${utenza.cognome}${parentLabel ? ` · ${parentLabel}` : ""}`);
+      }
     };
     load();
   }, [user]);

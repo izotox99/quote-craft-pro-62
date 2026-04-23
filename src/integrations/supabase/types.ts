@@ -842,6 +842,7 @@ export type Database = {
           tour_tipo: string | null
           transfer_tipo: string | null
           updated_at: string
+          utenza_id: string | null
           veicolo_id: string | null
           veicolo_tipo: string | null
         }
@@ -885,6 +886,7 @@ export type Database = {
           tour_tipo?: string | null
           transfer_tipo?: string | null
           updated_at?: string
+          utenza_id?: string | null
           veicolo_id?: string | null
           veicolo_tipo?: string | null
         }
@@ -928,6 +930,7 @@ export type Database = {
           tour_tipo?: string | null
           transfer_tipo?: string | null
           updated_at?: string
+          utenza_id?: string | null
           veicolo_id?: string | null
           veicolo_tipo?: string | null
         }
@@ -958,6 +961,13 @@ export type Database = {
             columns: ["fornitore_cs_id"]
             isOneToOne: false
             referencedRelation: "fornitori_cs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_utenza_id_fkey"
+            columns: ["utenza_id"]
+            isOneToOne: false
+            referencedRelation: "client_utenze"
             referencedColumns: ["id"]
           },
           {
@@ -1125,8 +1135,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_active_utenza_id: { Args: { _user_id: string }; Returns: string }
       get_client_org_id: { Args: { _user_id: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
+      get_utenza_parent_client_id: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

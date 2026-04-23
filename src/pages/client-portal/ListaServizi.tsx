@@ -80,6 +80,7 @@ type Servizio = {
   modificato_da_cliente?: boolean | null;
   autista_id?: string | null;
   autista_esterno_id?: string | null;
+  utenza_id?: string | null;
 };
 
 function computeClientStato(s: Servizio): { label: string; className: string } {
@@ -149,6 +150,9 @@ export default function ListaServizi() {
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [utenzaFilter, setUtenzaFilter] = useState<string>("all");
+  const [utenze, setUtenze] = useState<{ id: string; nome: string; cognome: string }[]>([]);
+  const [isParentClient, setIsParentClient] = useState(false);
 
   // Detail sheet
   const [selected, setSelected] = useState<Servizio | null>(null);
@@ -179,28 +183,59 @@ export default function ListaServizi() {
 
   const loadServizi = async () => {
     if (!user) return;
-    const { data: client } = await supabase
+    // Resolve client_id whether user is parent or utenza
+    const { data: parentClient } = await supabase
       .from("clients")
       .select("id")
       .eq("auth_user_id", user.id)
-      .single();
-    if (!client) return;
+      .maybeSingle();
+
+    let clientIdResolved: string | null = parentClient?.id ?? null;
+    if (parentClient) {
+      setIsParentClient(true);
+    } else {
+      const { data: utenza } = await supabase
+        .from("client_utenze")
+        .select("parent_client_id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      clientIdResolved = utenza?.parent_client_id ?? null;
+      setIsParentClient(false);
+    }
+    if (!clientIdResolved) { setLoading(false); return; }
+
+    // Load utenze list (only the parent client uses the filter)
+    if (parentClient) {
+      const { data: utenzeData } = await supabase
+        .from("client_utenze")
+        .select("id, nome, cognome")
+        .eq("parent_client_id", clientIdResolved)
+        .order("nome");
+      setUtenze(utenzeData ?? []);
+    }
 
     let query = supabase
       .from("servizi")
       .select("*")
-      .eq("client_id", client.id)
+      .eq("client_id", clientIdResolved)
       .order("data_servizio", { ascending: false });
 
     if (dateFrom) query = query.gte("data_servizio", dateFrom);
     if (dateTo) query = query.lte("data_servizio", dateTo);
+    if (parentClient && utenzaFilter !== "all") {
+      if (utenzaFilter === "__direct__") {
+        query = query.is("utenza_id", null);
+      } else {
+        query = query.eq("utenza_id", utenzaFilter);
+      }
+    }
 
     const { data } = await query;
     setServizi((data ?? []) as Servizio[]);
     setLoading(false);
   };
 
-  useEffect(() => { loadServizi(); }, [user, dateFrom, dateTo]);
+  useEffect(() => { loadServizi(); }, [user, dateFrom, dateTo, utenzaFilter]);
 
   // Realtime: aggiorna la lista quando il proprietario riassegna/conferma l'autista
   useEffect(() => {
@@ -355,6 +390,21 @@ export default function ListaServizi() {
                   <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Passeggero, città..." className="pl-8 rounded-lg h-9 text-sm" />
                 </div>
               </div>
+              {isParentClient && utenze.length > 0 && (
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Utenza</label>
+                  <Select value={utenzaFilter} onValueChange={setUtenzaFilter}>
+                    <SelectTrigger className="rounded-lg h-9 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tutte le utenze</SelectItem>
+                      <SelectItem value="__direct__">Solo miei (cliente)</SelectItem>
+                      {utenze.map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.nome} {u.cognome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="flex items-end">
                 <Button variant="outline" size="sm" className="gap-1.5 rounded-lg w-full h-9 text-xs" onClick={exportExcel}>
                   <Download className="h-3.5 w-3.5" /> Esporta
