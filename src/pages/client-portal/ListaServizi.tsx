@@ -150,6 +150,9 @@ export default function ListaServizi() {
   const [search, setSearch] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [utenzaFilter, setUtenzaFilter] = useState<string>("all");
+  const [utenze, setUtenze] = useState<{ id: string; nome: string; cognome: string }[]>([]);
+  const [isParentClient, setIsParentClient] = useState(false);
 
   // Detail sheet
   const [selected, setSelected] = useState<Servizio | null>(null);
@@ -180,28 +183,59 @@ export default function ListaServizi() {
 
   const loadServizi = async () => {
     if (!user) return;
-    const { data: client } = await supabase
+    // Resolve client_id whether user is parent or utenza
+    const { data: parentClient } = await supabase
       .from("clients")
       .select("id")
       .eq("auth_user_id", user.id)
-      .single();
-    if (!client) return;
+      .maybeSingle();
+
+    let clientIdResolved: string | null = parentClient?.id ?? null;
+    if (parentClient) {
+      setIsParentClient(true);
+    } else {
+      const { data: utenza } = await supabase
+        .from("client_utenze")
+        .select("parent_client_id")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      clientIdResolved = utenza?.parent_client_id ?? null;
+      setIsParentClient(false);
+    }
+    if (!clientIdResolved) { setLoading(false); return; }
+
+    // Load utenze list (only the parent client uses the filter)
+    if (parentClient) {
+      const { data: utenzeData } = await supabase
+        .from("client_utenze")
+        .select("id, nome, cognome")
+        .eq("parent_client_id", clientIdResolved)
+        .order("nome");
+      setUtenze(utenzeData ?? []);
+    }
 
     let query = supabase
       .from("servizi")
       .select("*")
-      .eq("client_id", client.id)
+      .eq("client_id", clientIdResolved)
       .order("data_servizio", { ascending: false });
 
     if (dateFrom) query = query.gte("data_servizio", dateFrom);
     if (dateTo) query = query.lte("data_servizio", dateTo);
+    if (parentClient && utenzaFilter !== "all") {
+      if (utenzaFilter === "__direct__") {
+        query = query.is("utenza_id", null);
+      } else {
+        query = query.eq("utenza_id", utenzaFilter);
+      }
+    }
 
     const { data } = await query;
     setServizi((data ?? []) as Servizio[]);
     setLoading(false);
   };
 
-  useEffect(() => { loadServizi(); }, [user, dateFrom, dateTo]);
+  useEffect(() => { loadServizi(); }, [user, dateFrom, dateTo, utenzaFilter]);
 
   // Realtime: aggiorna la lista quando il proprietario riassegna/conferma l'autista
   useEffect(() => {
