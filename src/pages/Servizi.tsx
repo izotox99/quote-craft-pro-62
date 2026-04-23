@@ -9,8 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -51,10 +53,12 @@ type Servizio = {
   costo_commissione: number | null;
   note: string | null;
   autista_id: string | null;
+  autista_esterno_id: string | null;
   modificato_da_cliente: boolean | null;
   modificato_at: string | null;
   clients: { name: string; company: string | null } | null;
   autisti: { nome: string; cognome: string } | null;
+  autisti_esterni: { nome: string } | null;
   veicoli: { targa: string; tipo_macchina: string | null } | null;
   fornitori_cs: { nome: string } | null;
 };
@@ -107,6 +111,7 @@ export default function Servizi() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
+  const [selectedServiziIds, setSelectedServiziIds] = useState<string[]>([]);
 
   // Filters
   const [filterDal, setFilterDal] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"));
@@ -165,7 +170,7 @@ export default function Servizi() {
     setLoading(true);
     let query = supabase
       .from("servizi")
-      .select("*, clients(name, company), autisti(nome, cognome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
+      .select("*, clients(name, company), autisti(nome, cognome), autisti_esterni(nome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
       .gte("data_servizio", filterDal)
       .lte("data_servizio", filterAl)
       .order("data_servizio", { ascending: true });
@@ -180,7 +185,9 @@ export default function Servizi() {
     if (filterCodice) query = query.ilike("codice", `%${filterCodice}%`);
 
     const { data } = await query;
-    setServizi((data ?? []) as unknown as Servizio[]);
+    const nextServizi = (data ?? []) as unknown as Servizio[];
+    setServizi(nextServizi);
+    setSelectedServiziIds(prev => prev.filter(id => nextServizi.some(servizio => servizio.id === id)));
     setLoading(false);
   };
 
@@ -230,6 +237,67 @@ export default function Servizi() {
       setDialogOpen(false);
       loadServizi();
     }
+  };
+
+  const handleToggleServizioSelection = (servizioId: string) => {
+    setSelectedServiziIds(prev => prev.includes(servizioId)
+      ? prev.filter(id => id !== servizioId)
+      : [...prev, servizioId],
+    );
+  };
+
+  const handleToggleAllVisible = () => {
+    const visibleIds = servizi.map(s => s.id);
+    const allVisibleSelected = visibleIds.length > 0 && visibleIds.every(id => selectedServiziIds.includes(id));
+
+    if (allVisibleSelected) {
+      setSelectedServiziIds(prev => prev.filter(id => !visibleIds.includes(id)));
+      return;
+    }
+
+    setSelectedServiziIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+  };
+
+  const selectedVisibleCount = useMemo(
+    () => servizi.filter(s => selectedServiziIds.includes(s.id)).length,
+    [servizi, selectedServiziIds],
+  );
+
+  const handleAssignDriver = async (servizioId: string, driver: DriverOption | null) => {
+    const payload = driver === null
+      ? { autista_id: null, autista_esterno_id: null }
+      : driver.kind === "interno"
+        ? { autista_id: driver.id, autista_esterno_id: null }
+        : { autista_id: null, autista_esterno_id: driver.id };
+
+    const { error } = await supabase.from("servizi").update(payload as any).eq("id", servizioId);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success(driver ? "Autista assegnato" : "Assegnazione rimossa");
+    await loadServizi();
+  };
+
+  const handleBulkAssignDriver = async (driver: DriverOption) => {
+    if (selectedServiziIds.length === 0) return;
+
+    const payload = driver.kind === "interno"
+      ? { autista_id: driver.id, autista_esterno_id: null }
+      : { autista_id: null, autista_esterno_id: driver.id };
+
+    const { error } = await supabase.from("servizi").update(payload as any).in("id", selectedServiziIds);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success(`Autista assegnato a ${selectedServiziIds.length} servizi`);
+    setSelectedServiziIds([]);
+    await loadServizi();
   };
 
   const nuoviCount = servizi.filter(s => s.stato === "nuovo").length;
@@ -617,6 +685,16 @@ export default function Servizi() {
           </div>
         )}
 
+        {selectedVisibleCount > 0 && (
+          <div className="hidden md:block">
+            <BulkAssignBar
+              count={selectedVisibleCount}
+              onAssign={handleBulkAssignDriver}
+              onClear={() => setSelectedServiziIds([])}
+            />
+          </div>
+        )}
+
         {/* MOBILE: card list */}
         <div className="space-y-2 md:hidden">
           {loading ? (
@@ -631,7 +709,7 @@ export default function Servizi() {
             </Card>
           ) : (
             servizi.map((s) => {
-              const senzaAutista = !s.autista_id;
+              const senzaAutista = !s.autista_id && !s.autista_esterno_id;
               const modificato = s.modificato_da_cliente;
               return (
                 <Card
@@ -680,6 +758,13 @@ export default function Servizi() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
+                    <TableHead className="h-9 w-10 px-2">
+                      <Checkbox
+                        checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
+                        onCheckedChange={handleToggleAllVisible}
+                        aria-label="Seleziona tutti i servizi visibili"
+                      />
+                    </TableHead>
                     <TableHead className="h-9 text-[11px] uppercase tracking-wide">Città</TableHead>
                     <TableHead className="h-9 text-[11px] uppercase tracking-wide">Data</TableHead>
                     <TableHead className="h-9 text-[11px] uppercase tracking-wide">Società</TableHead>
@@ -708,21 +793,36 @@ export default function Servizi() {
                 </TableHeader>
                 <TableBody>
                   {loading ? (
-                    <TableRow><TableCell colSpan={24} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={25} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</TableCell></TableRow>
                   ) : servizi.length === 0 ? (
-                    <TableRow><TableCell colSpan={24} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={25} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</TableCell></TableRow>
                   ) : (
                     servizi.map(s => {
-                      const senzaAutista = !s.autista_id;
+                      const senzaAutista = !s.autista_id && !s.autista_esterno_id;
                       const modificato = s.modificato_da_cliente;
+                      const isSelected = selectedServiziIds.includes(s.id);
+                      const driverLabel = s.autisti
+                        ? `${s.autisti.nome} ${s.autisti.cognome}`
+                        : s.autisti_esterni?.nome || null;
                       return (
                         <TableRow
                           key={s.id}
                           onClick={() => setDetailServizio(s)}
                           className={`text-xs cursor-pointer ${
-                            senzaAutista ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/30" : ""
+                            isSelected
+                              ? "bg-primary/5 hover:bg-primary/10"
+                              : senzaAutista
+                                ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/30"
+                                : ""
                           } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
                         >
+                          <TableCell className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => handleToggleServizioSelection(s.id)}
+                              aria-label="Seleziona servizio"
+                            />
+                          </TableCell>
                           <TableCell className="py-2 font-medium">{s.citta || "—"}</TableCell>
                           <TableCell className="py-2 whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
@@ -755,12 +855,29 @@ export default function Servizi() {
                           <TableCell className="py-2 text-right tabular-nums">{s.incasso ?? 0}</TableCell>
                           <TableCell className="py-2">{s.fornitori_cs?.nome || "—"}</TableCell>
                           <TableCell className="py-2 text-right tabular-nums">{s.costo_cs ?? 0}</TableCell>
-                          <TableCell className="py-2">
-                            {s.autisti ? (
-                              `${s.autisti.nome} ${s.autisti.cognome}`
-                            ) : (
-                              <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Non assegnato</Badge>
-                            )}
+                          <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
+                            <AssignDriverPopover
+                              currentInternoId={s.autista_id}
+                              currentEsternoId={s.autista_esterno_id}
+                              currentLabel={driverLabel}
+                              onAssign={(driver) => handleAssignDriver(s.id, driver)}
+                              trigger={
+                                <button
+                                  type="button"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className={`inline-flex max-w-[150px] items-center gap-1.5 rounded-md px-2 py-1 text-left transition-colors ${
+                                    driverLabel
+                                      ? "hover:bg-accent"
+                                      : "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                  }`}
+                                >
+                                  <span className="truncate text-[11px] font-medium">{driverLabel || "Assegna"}</span>
+                                  {s.autisti_esterni && (
+                                    <Badge variant="outline" className="h-4 px-1 py-0 text-[9px]">EXT</Badge>
+                                  )}
+                                </button>
+                              }
+                            />
                           </TableCell>
                           <TableCell className="py-2 text-right tabular-nums">{s.costo_autista ?? 0}</TableCell>
                           <TableCell className="py-2 text-right tabular-nums">{s.centro_costo || "—"}</TableCell>
@@ -856,7 +973,7 @@ export default function Servizi() {
                     <DetailRow icon={Car} label="Veicolo" value={
                       s.veicoli ? `${s.veicoli.tipo_macchina || ""} — ${s.veicoli.targa}` : (s.veicolo_tipo || null)
                     } />
-                    <DetailRow icon={Users} label="Autista" value={s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : null} />
+                    <DetailRow icon={Users} label="Autista" value={s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : (s.autisti_esterni?.nome || null)} />
                     <DetailRow icon={Users} label="Fornitore CS" value={s.fornitori_cs?.nome} />
                   </div>
 
