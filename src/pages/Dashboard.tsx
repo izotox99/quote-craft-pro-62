@@ -4,13 +4,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DatePicker } from "@/components/ui/date-picker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertTriangle, Bell, Sparkles } from "lucide-react";
+import { AlertTriangle, Bell, Sparkles, UserPlus } from "lucide-react";
 import { format, addDays } from "date-fns";
+import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
+import { toast } from "sonner";
 
 type Servizio = {
   id: string;
@@ -43,10 +46,12 @@ type Servizio = {
   costo_commissione: number | null;
   centro_costo: string | null;
   autista_id: string | null;
+  autista_esterno_id: string | null;
   modificato_da_cliente: boolean | null;
   modificato_at: string | null;
   clients: { name: string; company: string | null } | null;
   autisti: { nome: string; cognome: string } | null;
+  autisti_esterni: { nome: string } | null;
   veicoli: { targa: string; tipo_macchina: string | null } | null;
   fornitori_cs: { nome: string } | null;
 };
@@ -64,10 +69,6 @@ function buildTipoServ(s: Servizio) {
   return parts.join(" · ") || "—";
 }
 
-const statoLabels: Record<string, string> = {
-  nuovo: "Nuovo", confermato: "Confermato", in_corso: "In corso", completato: "Completato", annullato: "Annullato",
-};
-
 export default function Dashboard() {
   const { user } = useAuth();
   const [servizi, setServizi] = useState<Servizio[]>([]);
@@ -76,27 +77,30 @@ export default function Dashboard() {
   const [al, setAl] = useState(format(addDays(new Date(), 30), "yyyy-MM-dd"));
   const [statoFilter, setStatoFilter] = useState<string>("tutti");
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase
+      .from("servizi")
+      .select("*, clients(name, company), autisti(nome, cognome), autisti_esterni(nome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
+      .gte("data_servizio", dal)
+      .lte("data_servizio", al)
+      .order("data_servizio", { ascending: true })
+      .order("ora_inizio", { ascending: true });
+    setServizi((data ?? []) as unknown as Servizio[]);
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!user) return;
-    const load = async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from("servizi")
-        .select("*, clients(name, company), autisti(nome, cognome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
-        .gte("data_servizio", dal)
-        .lte("data_servizio", al)
-        .order("data_servizio", { ascending: true })
-        .order("ora_inizio", { ascending: true });
-      setServizi((data ?? []) as unknown as Servizio[]);
-      setLoading(false);
-    };
     load();
+    setSelected(new Set());
   }, [user, dal, al]);
 
   const filtered = useMemo(() => {
     let list = servizi;
-    if (statoFilter === "senza_autista") list = list.filter(s => !s.autista_id);
+    if (statoFilter === "senza_autista") list = list.filter(s => !s.autista_id && !s.autista_esterno_id);
     else if (statoFilter === "modificati") list = list.filter(s => s.modificato_da_cliente);
     else if (statoFilter !== "tutti") list = list.filter(s => s.stato === statoFilter);
 
@@ -114,11 +118,61 @@ export default function Dashboard() {
 
   const counts = useMemo(() => ({
     totale: servizi.length,
-    senzaAutista: servizi.filter(s => !s.autista_id).length,
+    senzaAutista: servizi.filter(s => !s.autista_id && !s.autista_esterno_id).length,
     modificati: servizi.filter(s => s.modificato_da_cliente).length,
     nuovi: servizi.filter(s => s.stato === "nuovo").length,
     confermati: servizi.filter(s => s.stato === "confermato").length,
   }), [servizi]);
+
+  const assignSingle = async (servizioId: string, driver: DriverOption | null) => {
+    const payload: any = driver === null
+      ? { autista_id: null, autista_esterno_id: null }
+      : driver.kind === "interno"
+        ? { autista_id: driver.id, autista_esterno_id: null }
+        : { autista_esterno_id: driver.id, autista_id: null };
+
+    const { error } = await supabase.from("servizi").update(payload).eq("id", servizioId);
+    if (error) {
+      toast.error("Errore: " + error.message);
+      return;
+    }
+    toast.success(driver === null ? "Assegnazione rimossa" : `Assegnato a ${driver.nome} ${driver.cognome ?? ""}`.trim());
+    await load();
+  };
+
+  const assignBulk = async (driver: DriverOption) => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    const payload: any = driver.kind === "interno"
+      ? { autista_id: driver.id, autista_esterno_id: null }
+      : { autista_esterno_id: driver.id, autista_id: null };
+
+    const { error } = await supabase.from("servizi").update(payload).in("id", ids);
+    if (error) {
+      toast.error("Errore assegnazione massiva: " + error.message);
+      return;
+    }
+    toast.success(`${ids.length} servizi assegnati a ${driver.nome} ${driver.cognome ?? ""}`.trim());
+    setSelected(new Set());
+    await load();
+  };
+
+  const toggleOne = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selected.size === filtered.length) setSelected(new Set());
+    else setSelected(new Set(filtered.map(s => s.id)));
+  };
+
+  const allChecked = filtered.length > 0 && selected.size === filtered.length;
+  const someChecked = selected.size > 0 && selected.size < filtered.length;
 
   return (
     <DashboardLayout>
@@ -140,6 +194,15 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+
+        {/* Bulk action bar */}
+        {selected.size > 0 && (
+          <BulkAssignBar
+            count={selected.size}
+            onAssign={assignBulk}
+            onClear={() => setSelected(new Set())}
+          />
+        )}
 
         {/* Stat chips */}
         <div className="flex flex-wrap gap-2">
@@ -208,6 +271,13 @@ export default function Dashboard() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
+                    <TableHead className="h-9 w-8 px-2">
+                      <Checkbox
+                        checked={allChecked || (someChecked && "indeterminate")}
+                        onCheckedChange={toggleAll}
+                        aria-label="Seleziona tutti"
+                      />
+                    </TableHead>
                     <TableHead className="h-9 text-[11px] uppercase tracking-wide">Città</TableHead>
                     <TableHead className="h-9 text-[11px] uppercase tracking-wide">Data servizio</TableHead>
                     <TableHead className="h-9 text-[11px] uppercase tracking-wide">Società</TableHead>
@@ -236,25 +306,39 @@ export default function Dashboard() {
                 </TableHeader>
                 <TableBody>
                   {loading ? (
-                    <TableRow><TableCell colSpan={24} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={25} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</TableCell></TableRow>
                   ) : filtered.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={24} className="text-center py-16">
+                      <TableCell colSpan={25} className="text-center py-16">
                         <Sparkles className="mx-auto h-8 w-8 text-muted-foreground/30" />
                         <p className="mt-2 text-sm text-muted-foreground">Nessun servizio per i filtri selezionati</p>
                       </TableCell>
                     </TableRow>
                   ) : (
                     filtered.map(s => {
-                      const senzaAutista = !s.autista_id;
+                      const senzaAutista = !s.autista_id && !s.autista_esterno_id;
                       const modificato = s.modificato_da_cliente;
+                      const isSelected = selected.has(s.id);
+                      const driverLabel = s.autisti
+                        ? `${s.autisti.nome} ${s.autisti.cognome}`
+                        : s.autisti_esterni
+                          ? s.autisti_esterni.nome
+                          : null;
                       return (
                         <TableRow
                           key={s.id}
                           className={`text-xs ${
+                            isSelected ? "bg-primary/5" :
                             senzaAutista ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/30" : ""
                           } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
                         >
+                          <TableCell className="py-2 px-2">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => toggleOne(s.id)}
+                              aria-label="Seleziona riga"
+                            />
+                          </TableCell>
                           <TableCell className="py-2 font-medium">{s.citta || "—"}</TableCell>
                           <TableCell className="py-2 whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
@@ -289,12 +373,28 @@ export default function Dashboard() {
                           <TableCell className="py-2 text-right tabular-nums">{s.incasso ?? 0}</TableCell>
                           <TableCell className="py-2">{s.fornitori_cs?.nome || "—"}</TableCell>
                           <TableCell className="py-2 text-right tabular-nums">{s.costo_cs ?? 0}</TableCell>
-                          <TableCell className="py-2">
-                            {s.autisti ? (
-                              `${s.autisti.nome} ${s.autisti.cognome}`
-                            ) : (
-                              <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Non assegnato</Badge>
-                            )}
+                          <TableCell className="py-2 p-1">
+                            <AssignDriverPopover
+                              currentInternoId={s.autista_id}
+                              currentEsternoId={s.autista_esterno_id}
+                              currentLabel={driverLabel}
+                              onAssign={(d) => assignSingle(s.id, d)}
+                              trigger={
+                                driverLabel ? (
+                                  <button className="inline-flex items-center gap-1 px-2 py-1 rounded hover:bg-accent transition-colors text-left max-w-[140px] truncate">
+                                    <span className="truncate">{driverLabel}</span>
+                                    {s.autisti_esterni && (
+                                      <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 shrink-0">EXT</Badge>
+                                    )}
+                                  </button>
+                                ) : (
+                                  <button className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors">
+                                    <UserPlus className="h-3 w-3" />
+                                    Assegna
+                                  </button>
+                                )
+                              }
+                            />
                           </TableCell>
                           <TableCell className="py-2 text-right tabular-nums">{s.costo_autista ?? 0}</TableCell>
                           <TableCell className="py-2 text-right tabular-nums">{s.centro_costo || "—"}</TableCell>
@@ -320,6 +420,10 @@ export default function Dashboard() {
           <div className="flex items-center gap-1.5">
             <span className="inline-block w-1 h-3 bg-amber-500 rounded" />
             Bordo giallo = modificato dal cliente
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4">EXT</Badge>
+            Autista esterno (collaboratore)
           </div>
         </div>
       </div>
