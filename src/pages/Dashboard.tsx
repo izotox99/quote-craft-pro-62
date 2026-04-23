@@ -209,6 +209,45 @@ export default function Dashboard() {
           )}
         </div>
 
+        {/* Banner annullamenti recenti (ultimi 3 giorni) */}
+        {annullatiRecenti.length > 0 && (
+          <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900 p-3">
+            <div className="flex items-start gap-2">
+              <XCircle className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <p className="text-xs font-semibold text-red-900 dark:text-red-200">
+                    {annullatiRecenti.length} {annullatiRecenti.length === 1 ? "servizio annullato" : "servizi annullati"} dal cliente negli ultimi 3 giorni
+                  </p>
+                  <button
+                    onClick={() => setStatoFilter("annullato")}
+                    className="text-[11px] font-medium text-red-700 dark:text-red-300 hover:underline"
+                  >
+                    Vedi tutti gli annullati →
+                  </button>
+                </div>
+                <ul className="mt-1.5 space-y-0.5">
+                  {annullatiRecenti.slice(0, 3).map(s => (
+                    <li key={s.id} className="text-[11px] text-red-800 dark:text-red-300/90 truncate">
+                      <span className="font-medium">{s.clients?.company || s.clients?.name || "—"}</span>
+                      {" · "}{format(parseISO(s.data_servizio), "dd/MM")}{s.ora_inizio ? ` ${s.ora_inizio}` : ""}
+                      {s.luogo_inizio ? ` · ${s.luogo_inizio}` : ""}
+                      <span className="text-red-600/70 dark:text-red-400/70">
+                        {" · annullato "}{format(parseISO(s.modificato_at!), "dd/MM HH:mm", { locale: it })}
+                      </span>
+                    </li>
+                  ))}
+                  {annullatiRecenti.length > 3 && (
+                    <li className="text-[11px] text-red-700/80 dark:text-red-400/80 italic">
+                      e altri {annullatiRecenti.length - 3}…
+                    </li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Bulk action bar */}
         {selected.size > 0 && (
           <BulkAssignBar
