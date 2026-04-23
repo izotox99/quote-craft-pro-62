@@ -80,6 +80,7 @@ type Servizio = {
   modificato_da_cliente?: boolean | null;
   autista_id?: string | null;
   autista_esterno_id?: string | null;
+  utenza_id?: string | null;
 };
 
 function computeClientStato(s: Servizio): { label: string; className: string } {
