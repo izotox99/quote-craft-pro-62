@@ -120,10 +120,14 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Email o password non corretti", code: "invalid_credentials" }, 401);
     }
 
-    // Use a deterministic auth password derived from the utenza id + a server secret-ish
-    // (the bcrypt hash). NOTE: the hash changes if the user changes password, so we always
-    // re-sync it below.
-    const authPassword = `utz_${utenza.id}_${utenza.password_hash ?? utenza.password}`;
+    // Deterministic auth password derived from utenza id + current credential hash,
+    // compressed to a fixed length (Supabase auth caps passwords at 72 chars).
+    const seed = `utz_${utenza.id}_${utenza.password_hash ?? utenza.password ?? ""}`;
+    const seedBytes = new TextEncoder().encode(seed);
+    const digest = await crypto.subtle.digest("SHA-256", seedBytes);
+    const authPassword = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join(""); // 64 hex chars, well under the 72-char limit
     const syntheticEmail = `utenza+${utenza.id}@portal.local`;
 
     let authUserId = utenza.auth_user_id as string | null;
