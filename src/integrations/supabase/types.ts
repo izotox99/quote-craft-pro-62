@@ -647,6 +647,8 @@ export type Database = {
           itinerario: string | null
           luogo_fine: string | null
           luogo_inizio: string | null
+          modificato_at: string | null
+          modificato_da_cliente: boolean
           n_bagagli: number | null
           n_passeggeri: number | null
           note: string | null
@@ -687,6 +689,8 @@ export type Database = {
           itinerario?: string | null
           luogo_fine?: string | null
           luogo_inizio?: string | null
+          modificato_at?: string | null
+          modificato_da_cliente?: boolean
           n_bagagli?: number | null
           n_passeggeri?: number | null
           note?: string | null
@@ -727,6 +731,8 @@ export type Database = {
           itinerario?: string | null
           luogo_fine?: string | null
           luogo_inizio?: string | null
+          modificato_at?: string | null
+          modificato_da_cliente?: boolean
           n_bagagli?: number | null
           n_passeggeri?: number | null
           note?: string | null
