@@ -77,6 +77,7 @@ type Servizio = {
   codice: string | null;
   note: string | null;
   accessori: string | null;
+  modificato_da_cliente?: boolean | null;
 };
 
 function canModify(s: Servizio): boolean {
@@ -349,7 +350,9 @@ export default function ListaServizi() {
         ) : (
           <div className="space-y-2">
             {filtered.map((s) => {
-              const stato = statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" };
+              const stato = s.modificato_da_cliente
+                ? { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" }
+                : (statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" });
               return (
                 <Card
                   key={s.id}
@@ -407,7 +410,9 @@ export default function ListaServizi() {
         <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
           <DialogContent className="sm:max-w-lg rounded-xl p-0 gap-0 overflow-hidden">
             {selected && (() => {
-              const stato = statoConfig[selected.stato] ?? { label: selected.stato, className: "bg-muted" };
+              const stato = selected.modificato_da_cliente
+                ? { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" }
+                : (statoConfig[selected.stato] ?? { label: selected.stato, className: "bg-muted" });
               const editable = canModify(selected);
               return (
                 <>
