@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TimePicker } from "@/components/ui/time-picker";
 import { Search, Download, CalendarDays, Pencil, XCircle, Info, ChevronRight, MapPin, Clock, Users, Car, Lock } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 const VEICOLI_DISPONIBILI = [
   "Autovettura 3 posti",
@@ -405,6 +406,17 @@ export default function ListaServizi() {
                   </Select>
                 </div>
               )}
+              {isParentClient && utenze.length === 0 && (
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Utenza</label>
+                  <Button asChild variant="outline" size="sm" className="rounded-lg h-9 text-xs w-full gap-1.5">
+                    <Link to="/client-portal/utenze">
+                      <Users className="h-3.5 w-3.5" />
+                      Crea utenza
+                    </Link>
+                  </Button>
+                </div>
+              )}
               <div className="flex items-end">
                 <Button variant="outline" size="sm" className="gap-1.5 rounded-lg w-full h-9 text-xs" onClick={exportExcel}>
                   <Download className="h-3.5 w-3.5" /> Esporta
@@ -420,10 +432,57 @@ export default function ListaServizi() {
             {[1, 2, 3].map(i => <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />)}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-20 text-center">
-            <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/30" />
-            <p className="mt-3 text-sm text-muted-foreground">Nessun servizio trovato</p>
-          </div>
+          (() => {
+            const hasFilters = !!(search || dateFrom || dateTo || utenzaFilter !== "all");
+            const hasAnyServizi = servizi.length > 0;
+
+            if (hasFilters && hasAnyServizi) {
+              return (
+                <div className="py-16 text-center">
+                  <Search className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                  <p className="mt-3 text-sm font-medium">Nessun servizio corrisponde ai filtri</p>
+                  <p className="mt-1 text-xs text-muted-foreground">Prova a modificare data, ricerca o utenza selezionata.</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 rounded-lg text-xs"
+                    onClick={() => {
+                      setSearch("");
+                      setDateFrom("");
+                      setDateTo("");
+                      setUtenzaFilter("all");
+                    }}
+                  >
+                    Azzera filtri
+                  </Button>
+                </div>
+              );
+            }
+
+            return (
+              <div className="py-16 text-center">
+                <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/30" />
+                <p className="mt-3 text-sm font-medium">Nessun servizio prenotato</p>
+                <p className="mt-1 text-xs text-muted-foreground max-w-sm mx-auto">
+                  {isParentClient && utenze.length === 0
+                    ? "Non hai ancora creato utenze. Crea utenze per permettere ai tuoi collaboratori di prenotare e gestire i propri servizi."
+                    : "Quando verrà prenotato un servizio comparirà in questa lista."}
+                </p>
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <Button asChild size="sm" className="rounded-lg text-xs">
+                    <Link to="/client-portal/prenota">Prenota ora</Link>
+                  </Button>
+                  {isParentClient && utenze.length === 0 && (
+                    <Button asChild size="sm" variant="outline" className="rounded-lg text-xs gap-1.5">
+                      <Link to="/client-portal/utenze">
+                        <Users className="h-3.5 w-3.5" /> Gestisci utenze
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })()
         ) : (
           <div className="space-y-2">
             {filtered.map((s) => {
