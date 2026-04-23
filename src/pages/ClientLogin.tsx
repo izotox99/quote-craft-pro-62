@@ -22,30 +22,44 @@ export default function ClientLogin() {
     }
     setLoading(true);
     try {
+      // 1) Try parent-client login (direct auth)
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
+      if (!error) {
+        const { data: client } = await supabase
+          .from("clients")
+          .select("id, gdpr_accepted_at")
+          .eq("auth_user_id", (await supabase.auth.getUser()).data.user?.id)
+          .single();
+
+        if (client) {
+          if (!client.gdpr_accepted_at) navigate("/client-portal/gdpr");
+          else navigate("/client-portal");
+          return;
+        }
+        // Logged in but not a client → sign out and try utenza fallback
+        await supabase.auth.signOut();
+      }
+
+      // 2) Fallback: try utenza login via edge function
+      const { data: utenzaResp, error: fnErr } = await supabase.functions.invoke("utenza-login", {
+        body: { email, password },
+      });
+      if (fnErr || !utenzaResp?.synthetic_email) {
         toast.error("Credenziali non valide");
         return;
       }
 
-      // Check if this user is a client
-      const { data: client } = await supabase
-        .from("clients")
-        .select("id, gdpr_accepted_at")
-        .eq("auth_user_id", (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      if (!client) {
-        await supabase.auth.signOut();
-        toast.error("Account non trovato. Contatta la tua società.");
+      const { error: signErr } = await supabase.auth.signInWithPassword({
+        email: utenzaResp.synthetic_email,
+        password: utenzaResp.auth_password,
+      });
+      if (signErr) {
+        toast.error("Errore di accesso");
         return;
       }
 
-      if (!client.gdpr_accepted_at) {
-        navigate("/client-portal/gdpr");
-      } else {
-        navigate("/client-portal");
-      }
+      // Utenze skip GDPR (parent client already accepted)
+      navigate("/client-portal");
     } catch {
       toast.error("Errore durante il login");
     } finally {
