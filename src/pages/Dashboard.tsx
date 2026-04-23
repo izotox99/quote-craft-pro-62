@@ -101,9 +101,11 @@ export default function Dashboard() {
 
   const filtered = useMemo(() => {
     let list = servizi;
-    if (statoFilter === "senza_autista") list = list.filter(s => !s.autista_id && !s.autista_esterno_id);
-    else if (statoFilter === "modificati") list = list.filter(s => s.modificato_da_cliente);
-    else if (statoFilter !== "tutti") list = list.filter(s => s.stato === statoFilter);
+    // Default: nascondi gli annullati dalla lista principale
+    if (statoFilter === "tutti") list = list.filter(s => s.stato !== "annullato");
+    else if (statoFilter === "senza_autista") list = list.filter(s => !s.autista_id && !s.autista_esterno_id && s.stato !== "annullato");
+    else if (statoFilter === "modificati") list = list.filter(s => s.modificato_da_cliente && s.stato !== "annullato");
+    else list = list.filter(s => s.stato === statoFilter);
 
     const q = search.trim().toLowerCase();
     if (q) {
@@ -117,13 +119,24 @@ export default function Dashboard() {
     return list;
   }, [servizi, statoFilter, search]);
 
-  const counts = useMemo(() => ({
-    totale: servizi.length,
-    senzaAutista: servizi.filter(s => !s.autista_id && !s.autista_esterno_id).length,
-    modificati: servizi.filter(s => s.modificato_da_cliente).length,
-    nuovi: servizi.filter(s => s.stato === "nuovo").length,
-    confermati: servizi.filter(s => s.stato === "confermato").length,
-  }), [servizi]);
+  const annullatiRecenti = useMemo(() => {
+    const now = new Date();
+    return servizi
+      .filter(s => s.stato === "annullato" && s.modificato_at && differenceInDays(now, parseISO(s.modificato_at)) <= 3)
+      .sort((a, b) => (b.modificato_at || "").localeCompare(a.modificato_at || ""));
+  }, [servizi]);
+
+  const counts = useMemo(() => {
+    const attivi = servizi.filter(s => s.stato !== "annullato");
+    return {
+      totale: attivi.length,
+      senzaAutista: attivi.filter(s => !s.autista_id && !s.autista_esterno_id).length,
+      modificati: attivi.filter(s => s.modificato_da_cliente).length,
+      nuovi: attivi.filter(s => s.stato === "nuovo").length,
+      confermati: attivi.filter(s => s.stato === "confermato").length,
+      annullati: servizi.filter(s => s.stato === "annullato").length,
+    };
+  }, [servizi]);
 
   const assignSingle = async (servizioId: string, driver: DriverOption | null) => {
     const payload: any = driver === null
