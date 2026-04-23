@@ -87,22 +87,47 @@ export default function Prenota() {
 
   const [form, setForm] = useState(empty);
 
+  const [activeUtenzaId, setActiveUtenzaId] = useState<string | null>(null);
+
   useEffect(() => {
     const load = async () => {
       if (!user) return;
-      const { data } = await supabase
+      // Try parent client first
+      const { data: client } = await supabase
         .from("clients")
         .select("id, org_id")
         .eq("auth_user_id", user.id)
-        .single();
-      if (data) {
-        setClientId(data.id);
-        setOrgId(data.org_id);
-        // Load utenze for this client
+        .maybeSingle();
+
+      let resolvedClientId: string | null = null;
+      let resolvedOrgId: string | null = null;
+
+      if (client) {
+        resolvedClientId = client.id;
+        resolvedOrgId = client.org_id;
+      } else {
+        // Utenza fallback
+        const { data: utenza } = await supabase
+          .from("client_utenze")
+          .select("id, parent_client_id, clients:parent_client_id(id, org_id)")
+          .eq("auth_user_id", user.id)
+          .maybeSingle();
+        if (utenza) {
+          setActiveUtenzaId(utenza.id);
+          resolvedClientId = utenza.parent_client_id;
+          // @ts-ignore
+          resolvedOrgId = utenza.clients?.org_id ?? null;
+        }
+      }
+
+      if (resolvedClientId) setClientId(resolvedClientId);
+      if (resolvedOrgId) setOrgId(resolvedOrgId);
+
+      if (resolvedClientId) {
         const { data: utenzeData } = await supabase
           .from("client_utenze")
           .select("id, nome, cognome, cellulare, email")
-          .eq("parent_client_id", data.id)
+          .eq("parent_client_id", resolvedClientId)
           .eq("attivo", true);
         setUtenze(utenzeData ?? []);
       }
