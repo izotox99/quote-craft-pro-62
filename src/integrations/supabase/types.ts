@@ -49,42 +49,113 @@ export type Database = {
       }
       autisti: {
         Row: {
+          attivo: boolean
+          cellulare: string | null
+          codice_fiscale: string | null
           cognome: string
           created_at: string
           email: string | null
           id: string
+          mansione: string | null
           nome: string
           note: string | null
           org_id: string
+          password: string | null
           patente: string | null
+          prezzo_ora_ord: number | null
+          prezzo_ora_straord: number | null
           telefono: string | null
           updated_at: string
         }
         Insert: {
+          attivo?: boolean
+          cellulare?: string | null
+          codice_fiscale?: string | null
           cognome: string
           created_at?: string
           email?: string | null
           id?: string
+          mansione?: string | null
           nome: string
           note?: string | null
           org_id?: string
+          password?: string | null
           patente?: string | null
+          prezzo_ora_ord?: number | null
+          prezzo_ora_straord?: number | null
           telefono?: string | null
           updated_at?: string
         }
         Update: {
+          attivo?: boolean
+          cellulare?: string | null
+          codice_fiscale?: string | null
           cognome?: string
           created_at?: string
           email?: string | null
           id?: string
+          mansione?: string | null
           nome?: string
           note?: string | null
           org_id?: string
+          password?: string | null
           patente?: string | null
+          prezzo_ora_ord?: number | null
+          prezzo_ora_straord?: number | null
           telefono?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      autisti_spese: {
+        Row: {
+          autista_id: string
+          created_at: string
+          data_intervento: string | null
+          data_scadenza: string | null
+          id: string
+          importo_spese: number | null
+          note: string | null
+          org_id: string
+          tipo: string
+          totale_fattura: number | null
+          updated_at: string
+        }
+        Insert: {
+          autista_id: string
+          created_at?: string
+          data_intervento?: string | null
+          data_scadenza?: string | null
+          id?: string
+          importo_spese?: number | null
+          note?: string | null
+          org_id?: string
+          tipo: string
+          totale_fattura?: number | null
+          updated_at?: string
+        }
+        Update: {
+          autista_id?: string
+          created_at?: string
+          data_intervento?: string | null
+          data_scadenza?: string | null
+          id?: string
+          importo_spese?: number | null
+          note?: string | null
+          org_id?: string
+          tipo?: string
+          totale_fattura?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autisti_spese_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       client_utenze: {
         Row: {
