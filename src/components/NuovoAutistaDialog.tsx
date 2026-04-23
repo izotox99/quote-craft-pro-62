@@ -318,28 +318,28 @@ export function NuovoAutistaDialog({
                   <Input value={interno.mansione} onChange={(e) => setInterno({ ...interno, mansione: e.target.value })} />
                 </Field>
                 <Field label="Numero Ore Ordinarie">
-                  <Input type="number" step="0.01" value={interno.numero_ore_ord} onChange={(e) => setInterno({ ...interno, numero_ore_ord: e.target.value })} />
+                  <Input inputMode="decimal" value={interno.numero_ore_ord} onChange={(e) => setInterno({ ...interno, numero_ore_ord: e.target.value })} />
                 </Field>
                 <Field label="Prezzo Ore Ordinarie">
-                  <Input type="number" step="0.01" value={interno.prezzo_ora_ord} onChange={(e) => setInterno({ ...interno, prezzo_ora_ord: e.target.value })} />
+                  <Input inputMode="decimal" value={interno.prezzo_ora_ord} onChange={(e) => setInterno({ ...interno, prezzo_ora_ord: e.target.value })} />
                 </Field>
                 <Field label="Prezzo Ore Straordinarie">
-                  <Input type="number" step="0.01" value={interno.prezzo_ora_straord} onChange={(e) => setInterno({ ...interno, prezzo_ora_straord: e.target.value })} />
+                  <Input inputMode="decimal" value={interno.prezzo_ora_straord} onChange={(e) => setInterno({ ...interno, prezzo_ora_straord: e.target.value })} />
                 </Field>
                 <Field label="Trasferta">
-                  <Input type="number" step="0.01" value={interno.trasferta} onChange={(e) => setInterno({ ...interno, trasferta: e.target.value })} />
+                  <Input inputMode="decimal" value={interno.trasferta} onChange={(e) => setInterno({ ...interno, trasferta: e.target.value })} />
                 </Field>
                 <Field label="Trasferta 2">
-                  <Input type="number" step="0.01" value={interno.trasferta_2} onChange={(e) => setInterno({ ...interno, trasferta_2: e.target.value })} />
+                  <Input inputMode="decimal" value={interno.trasferta_2} onChange={(e) => setInterno({ ...interno, trasferta_2: e.target.value })} />
                 </Field>
                 <Field label="Buono pasto">
-                  <Input type="number" step="0.01" value={interno.buono_pasto} onChange={(e) => setInterno({ ...interno, buono_pasto: e.target.value })} />
+                  <Input inputMode="decimal" value={interno.buono_pasto} onChange={(e) => setInterno({ ...interno, buono_pasto: e.target.value })} />
                 </Field>
                 <Field label="Assicurazione">
-                  <Input type="number" step="0.01" value={interno.assicurazione} onChange={(e) => setInterno({ ...interno, assicurazione: e.target.value })} />
+                  <Input inputMode="decimal" value={interno.assicurazione} onChange={(e) => setInterno({ ...interno, assicurazione: e.target.value })} />
                 </Field>
                 <Field label="Percentuale notturno">
-                  <Input type="number" step="0.01" value={interno.percentuale_notturno} onChange={(e) => setInterno({ ...interno, percentuale_notturno: e.target.value })} />
+                  <Input inputMode="decimal" value={interno.percentuale_notturno} onChange={(e) => setInterno({ ...interno, percentuale_notturno: e.target.value })} />
                 </Field>
               </>
             ) : (
@@ -361,10 +361,10 @@ export function NuovoAutistaDialog({
                   <Input value={esterno.targa} onChange={(e) => setEsterno({ ...esterno, targa: e.target.value.toUpperCase() })} />
                 </Field>
                 <Field label="Percentuale Network">
-                  <Input type="number" step="0.01" value={esterno.percentuale_network} onChange={(e) => setEsterno({ ...esterno, percentuale_network: e.target.value })} />
+                  <Input inputMode="decimal" value={esterno.percentuale_network} onChange={(e) => setEsterno({ ...esterno, percentuale_network: e.target.value })} />
                 </Field>
                 <Field label="Percentuale Last Minute">
-                  <Input type="number" step="0.01" value={esterno.percentuale_last_minute} onChange={(e) => setEsterno({ ...esterno, percentuale_last_minute: e.target.value })} />
+                  <Input inputMode="decimal" value={esterno.percentuale_last_minute} onChange={(e) => setEsterno({ ...esterno, percentuale_last_minute: e.target.value })} />
                 </Field>
                 <Field label="Numero Compto">
                   <Input value={esterno.numero_compto} onChange={(e) => setEsterno({ ...esterno, numero_compto: e.target.value })} />
@@ -376,7 +376,7 @@ export function NuovoAutistaDialog({
                   <Input value={esterno.banca} onChange={(e) => setEsterno({ ...esterno, banca: e.target.value })} />
                 </Field>
                 <Field label="Km Voucher">
-                  <Input type="number" step="0.01" value={esterno.km_voucher} onChange={(e) => setEsterno({ ...esterno, km_voucher: e.target.value })} />
+                  <Input inputMode="decimal" value={esterno.km_voucher} onChange={(e) => setEsterno({ ...esterno, km_voucher: e.target.value })} />
                 </Field>
                 <Field label="Modello Vehicolo">
                   <Input value={esterno.modello_veicolo} onChange={(e) => setEsterno({ ...esterno, modello_veicolo: e.target.value })} />
