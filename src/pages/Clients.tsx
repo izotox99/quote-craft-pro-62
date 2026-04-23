@@ -103,12 +103,31 @@ export default function Clients() {
       if (error) { toast.error(error.message); return; }
       toast.success("Cliente aggiornato");
     } else {
+      // Pre-check duplicate email within org (case-insensitive)
+      if (form.email.trim()) {
+        const { data: existing } = await supabase
+          .from("clients")
+          .select("id")
+          .ilike("email", form.email.trim())
+          .maybeSingle();
+        if (existing) {
+          toast.error("Esiste già un cliente con questa email");
+          return;
+        }
+      }
       const { data: inserted, error } = await supabase.from("clients").insert({
         ...payload,
         org_id: "00000000-0000-0000-0000-000000000001",
         created_by: user?.id ?? null,
       } as any).select("id").single();
-      if (error) { toast.error(error.message); return; }
+      if (error) {
+        if (error.code === "23505" || error.message.includes("clients_org_email_unique")) {
+          toast.error("Esiste già un cliente con questa email");
+        } else {
+          toast.error(error.message);
+        }
+        return;
+      }
 
       // Create auth account if email and password provided
       if (form.email.trim() && form.password_cliente.trim() && inserted) {
