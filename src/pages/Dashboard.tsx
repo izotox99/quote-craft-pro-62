@@ -265,6 +265,7 @@ export default function Dashboard() {
             { key: "modificati", label: "Modificati", count: counts.modificati, color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" },
             { key: "nuovo", label: "Nuovi", count: counts.nuovi, color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
             { key: "confermato", label: "Confermati", count: counts.confermati, color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
+            { key: "annullato", label: "Annullati", count: counts.annullati, color: "bg-red-200 text-red-900 dark:bg-red-900/40 dark:text-red-200" },
           ].map(c => (
             <button
               key={c.key}
