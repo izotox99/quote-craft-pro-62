@@ -80,53 +80,13 @@ export default function Autisti() {
   useEffect(() => { if (user) load(); }, [user, showDisattivati]);
 
   const openNuovo = () => {
-    setEditingId(null);
-    setForm(emptyForm);
+    setEditingAutista(null);
     setAutistaDialogOpen(true);
   };
 
   const openModifica = (a: Autista) => {
-    setEditingId(a.id);
-    setForm({
-      mansione: a.mansione ?? "Autista full time",
-      nome: a.nome ?? "",
-      cognome: a.cognome ?? "",
-      codice_fiscale: a.codice_fiscale ?? "",
-      patente: a.patente ?? "",
-      prezzo_ora_ord: a.prezzo_ora_ord?.toString() ?? "",
-      prezzo_ora_straord: a.prezzo_ora_straord?.toString() ?? "",
-      cellulare: a.cellulare ?? a.telefono ?? "",
-      email: a.email ?? "",
-      password: a.password ?? "",
-      note: a.note ?? "",
-    });
+    setEditingAutista({ tipo: "interno", id: a.id, data: a });
     setAutistaDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    const payload = {
-      mansione: form.mansione || null,
-      nome: form.nome,
-      cognome: form.cognome,
-      codice_fiscale: form.codice_fiscale || null,
-      patente: form.patente || null,
-      prezzo_ora_ord: form.prezzo_ora_ord ? Number(form.prezzo_ora_ord) : 0,
-      prezzo_ora_straord: form.prezzo_ora_straord ? Number(form.prezzo_ora_straord) : 0,
-      cellulare: form.cellulare || null,
-      telefono: form.cellulare || null,
-      email: form.email || null,
-      password: form.password || null,
-      note: form.note || null,
-    };
-    const { error } = editingId
-      ? await supabase.from("autisti").update(payload).eq("id", editingId)
-      : await supabase.from("autisti").insert(payload);
-    if (error) return toast.error(error.message);
-    toast.success(editingId ? "Autista aggiornato" : "Autista aggiunto");
-    setAutistaDialogOpen(false);
-    setForm(emptyForm);
-    setEditingId(null);
-    load();
   };
 
   const confirmDelete = async () => {
