@@ -12,6 +12,7 @@ import {
 import {
   FileText, LayoutDashboard, Users, Car, UserCheck, Truck, Settings, LogOut, User, Menu,
   ChevronDown, List, Receipt, Star, Package, UserPlus, StickyNote, Clock, FileSpreadsheet,
+  Users2, Fuel, ClipboardCheck, ClipboardList, TrendingUp, FilePlus, FileText as FileTextIcon, CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,10 +27,21 @@ const clientSubItems = [
   { to: "/clients/preventivi", icon: FileSpreadsheet, label: "Preventivo" },
 ];
 
+const autistiSubItems = [
+  { to: "/autisti", icon: Users2, label: "Autisti interni" },
+  { to: "/autisti/collaboratori", icon: UserPlus, label: "Collaboratore" },
+  { to: "/autisti/consumi", icon: Fuel, label: "Autista/Consumi" },
+  { to: "/autisti/valutazione", icon: Star, label: "Valutazione autista" },
+  { to: "/autisti/valutazione-interni", icon: ClipboardCheck, label: "Valutazione Interni" },
+  { to: "/autisti/produzione", icon: TrendingUp, label: "Produzione autista" },
+  { to: "/autisti/nuova-nota", icon: FilePlus, label: "Nuova nota autista" },
+  { to: "/autisti/note", icon: StickyNote, label: "Note autisti" },
+  { to: "/autisti/mensile", icon: CalendarDays, label: "Mensile autisti interni" },
+];
+
 const mainNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
   { to: "/veicoli", icon: Car, label: "Mezzi" },
-  { to: "/autisti", icon: UserCheck, label: "Autisti" },
   { to: "/fornitori", icon: Truck, label: "Fornitori CS" },
 ];
 
@@ -39,6 +51,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [clientsExpanded, setClientsExpanded] = useState(false);
+  const [autistiExpanded, setAutistiExpanded] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -46,6 +59,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   const isClientActive = pathname.startsWith("/clients");
+  const isAutistiActive = pathname.startsWith("/autisti");
 
   return (
     <div className="min-h-screen bg-background">
@@ -103,6 +117,39 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-56">
                 {clientSubItems.map((sub) => (
+                  <DropdownMenuItem
+                    key={sub.to}
+                    onClick={() => navigate(sub.to)}
+                    className={cn(
+                      "gap-3 cursor-pointer",
+                      pathname === sub.to && "bg-accent"
+                    )}
+                  >
+                    <sub.icon className="h-4 w-4 text-muted-foreground" />
+                    {sub.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Autisti dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "gap-2 rounded-lg font-medium transition-all",
+                    isAutistiActive && "bg-primary/10 text-primary hover:bg-primary/15"
+                  )}
+                >
+                  <UserCheck className="h-4 w-4" />
+                  <span>Autisti</span>
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-60">
+                {autistiSubItems.map((sub) => (
                   <DropdownMenuItem
                     key={sub.to}
                     onClick={() => navigate(sub.to)}
@@ -191,6 +238,42 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </CollapsibleTrigger>
               <CollapsibleContent className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-border/30 pl-4">
                 {clientSubItems.map((sub) => (
+                  <Link key={sub.to} to={sub.to} onClick={() => setMobileOpen(false)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "w-full justify-start gap-3 h-9 rounded-lg text-sm font-normal",
+                        pathname === sub.to && "bg-accent text-accent-foreground font-medium"
+                      )}
+                    >
+                      <sub.icon className="h-4 w-4" />
+                      {sub.label}
+                    </Button>
+                  </Link>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Autisti collapsible on mobile */}
+            <Collapsible open={autistiExpanded || isAutistiActive} onOpenChange={setAutistiExpanded}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between gap-3 h-11 rounded-lg font-medium",
+                    isAutistiActive && "bg-primary/10 text-primary"
+                  )}
+                >
+                  <span className="flex items-center gap-3">
+                    <UserCheck className="h-5 w-5" />
+                    Autisti
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", (autistiExpanded || isAutistiActive) && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-border/30 pl-4">
+                {autistiSubItems.map((sub) => (
                   <Link key={sub.to} to={sub.to} onClick={() => setMobileOpen(false)}>
                     <Button
                       variant="ghost"
