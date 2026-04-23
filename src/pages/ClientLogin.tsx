@@ -42,10 +42,27 @@ export default function ClientLogin() {
 
       // 2) Fallback: try utenza login via edge function
       const { data: utenzaResp, error: fnErr } = await supabase.functions.invoke("utenza-login", {
-        body: { email, password },
+        body: { email: email.trim().toLowerCase(), password },
       });
-      if (fnErr || !utenzaResp?.synthetic_email) {
-        toast.error("Credenziali non valide");
+
+      // Edge function returned a non-2xx: extract specific error message
+      if (fnErr) {
+        let msg = "Credenziali non valide";
+        const ctx = (fnErr as { context?: Response }).context;
+        if (ctx && typeof ctx.json === "function") {
+          try {
+            const body = await ctx.json();
+            if (body?.error) msg = body.error;
+          } catch {
+            // ignore parse errors, keep default
+          }
+        }
+        toast.error(msg);
+        return;
+      }
+
+      if (!utenzaResp?.synthetic_email) {
+        toast.error(utenzaResp?.error || "Credenziali non valide");
         return;
       }
 
@@ -54,7 +71,7 @@ export default function ClientLogin() {
         password: utenzaResp.auth_password,
       });
       if (signErr) {
-        toast.error("Errore di accesso");
+        toast.error("Errore di accesso. Riprova più tardi.");
         return;
       }
 
