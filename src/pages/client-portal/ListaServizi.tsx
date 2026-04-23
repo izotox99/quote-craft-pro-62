@@ -78,7 +78,20 @@ type Servizio = {
   note: string | null;
   accessori: string | null;
   modificato_da_cliente?: boolean | null;
+  autista_id?: string | null;
+  autista_esterno_id?: string | null;
 };
+
+function computeClientStato(s: Servizio): { label: string; className: string } {
+  if (s.modificato_da_cliente) {
+    return { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" };
+  }
+  const hasDriver = !!(s.autista_id || s.autista_esterno_id);
+  if (!hasDriver && (s.stato === "nuovo" || s.stato === "confermato")) {
+    return { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" };
+  }
+  return statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" };
+}
 
 function canModify(s: Servizio): boolean {
   if (s.stato === "annullato" || s.stato === "completato") return false;
