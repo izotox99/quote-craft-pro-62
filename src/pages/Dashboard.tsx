@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertTriangle, Bell, Sparkles, UserPlus } from "lucide-react";
-import { format, addDays } from "date-fns";
+import { AlertTriangle, Bell, Sparkles, UserPlus, XCircle } from "lucide-react";
+import { format, addDays, differenceInDays, parseISO } from "date-fns";
+import { it } from "date-fns/locale";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
 import { toast } from "sonner";
 
