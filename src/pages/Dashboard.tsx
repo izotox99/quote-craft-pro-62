@@ -319,6 +319,12 @@ export default function Dashboard() {
           ))}
         </div>
 
+        {statoFilter === "annullato" && (
+          <div className="text-[11px] text-muted-foreground bg-muted/40 rounded-md px-3 py-2 border border-border/40">
+            ℹ️ I servizi annullati vengono eliminati automaticamente dopo 7 giorni per mantenere la dashboard pulita.
+          </div>
+        )}
+
         {/* Filters */}
         <Card>
           <CardContent className="p-3 grid grid-cols-1 md:grid-cols-4 gap-3">
