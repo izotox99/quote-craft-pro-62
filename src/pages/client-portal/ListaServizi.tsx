@@ -330,6 +330,9 @@ export default function ListaServizi() {
       centro_costo: editForm.centro_costo || null,
       accessori: editForm.accessori || null,
       note: editForm.note || null,
+      stato: "nuovo",
+      modificato_da_cliente: true,
+      modificato_at: new Date().toISOString(),
     };
     const { error } = await supabase.from("servizi").update(payload).eq("id", selected.id);
     if (error) {
