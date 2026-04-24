@@ -456,6 +456,49 @@ export default function Prenota() {
             </CardContent>
           </Card>
 
+          {/* Allegato per identificazione autista */}
+          <Card className="rounded-xl border-border/50 shadow-sm">
+            <CardContent className="p-5 space-y-3">
+              <div>
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <Paperclip className="h-4 w-4 text-primary" />
+                  Allegato per l'autista
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Carica una foto del passeggero o un documento (PDF, Word, Excel, immagini). L'autista lo userà per identificare la persona da prendere in carico. Max {ALLEGATO_MAX_MB}MB.
+                </p>
+              </div>
+              {allegato ? (
+                <div className="flex items-center justify-between gap-2 p-3 rounded-lg border border-border/60 bg-muted/30">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm truncate">{allegato.name}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">({(allegato.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setAllegato(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Input
+                  type="file"
+                  accept={ALLEGATO_ACCEPT}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    if (f.size > ALLEGATO_MAX_MB * 1024 * 1024) {
+                      toast.error(`File troppo grande. Massimo ${ALLEGATO_MAX_MB}MB.`);
+                      e.target.value = "";
+                      return;
+                    }
+                    setAllegato(f);
+                  }}
+                  className="rounded-lg h-10 cursor-pointer file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary"
+                />
+              )}
+            </CardContent>
+          </Card>
+
           <Button type="submit" className="w-full h-11 rounded-lg text-base font-medium gap-2" disabled={loading}>
             <Send className="h-4 w-4" />
             {loading ? "Invio in corso..." : "Invia prenotazione"}
