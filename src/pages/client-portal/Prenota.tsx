@@ -482,7 +482,12 @@ export default function Prenota() {
       if (!form.citta) { toast.error("Seleziona la città"); return false; }
       if (!form.luogo_inizio.trim()) { toast.error("Inserisci il luogo di inizio"); return false; }
       if (!form.luogo_fine.trim()) { toast.error("Inserisci il luogo di fine"); return false; }
-      if (luogoInizioSpeciale && !form.luogo_inizio_dettaglio) {
+      // Per FCO/CIA il dettaglio deve essere un terminal vero, non il nome aeroporto
+      const inizioTerminalOk =
+        luogoInizioSpeciale?.tipo === "fiumicino" ? TERMINAL_FIUMICINO.includes(form.luogo_inizio_dettaglio) :
+        luogoInizioSpeciale?.tipo === "ciampino" ? TERMINAL_CIAMPINO.includes(form.luogo_inizio_dettaglio) :
+        !!form.luogo_inizio_dettaglio;
+      if (luogoInizioSpeciale && !inizioTerminalOk) {
         toast.error(
           luogoInizioSpeciale.tipo === "aeroporto_generico" ? "Specifica quale aeroporto (inizio)" :
           luogoInizioSpeciale.tipo === "stazione" ? "Specifica quale stazione (inizio)" :
@@ -490,7 +495,11 @@ export default function Prenota() {
         );
         return false;
       }
-      if (luogoFineSpeciale && !form.luogo_fine_dettaglio) {
+      const fineTerminalOk =
+        luogoFineSpeciale?.tipo === "fiumicino" ? TERMINAL_FIUMICINO.includes(form.luogo_fine_dettaglio) :
+        luogoFineSpeciale?.tipo === "ciampino" ? TERMINAL_CIAMPINO.includes(form.luogo_fine_dettaglio) :
+        !!form.luogo_fine_dettaglio;
+      if (luogoFineSpeciale && !fineTerminalOk) {
         toast.error(
           luogoFineSpeciale.tipo === "aeroporto_generico" ? "Specifica quale aeroporto (fine)" :
           luogoFineSpeciale.tipo === "stazione" ? "Specifica quale stazione (fine)" :
