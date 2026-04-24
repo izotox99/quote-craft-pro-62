@@ -258,3 +258,32 @@
 .driver-overlay {
   filter: blur(0.5px);
 }
+
+/* Scroll orizzontale comodo per tabelle larghe (macOS/trackpad friendly) */
+.h-scroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.4) transparent;
+}
+.h-scroll::-webkit-scrollbar {
+  height: 12px;
+}
+.h-scroll::-webkit-scrollbar-track {
+  background: hsl(var(--muted) / 0.4);
+  border-radius: 8px;
+}
+.h-scroll::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.45);
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.h-scroll::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.7);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
