@@ -92,6 +92,113 @@ function detectLuogoSpeciale(testo: string, citta: string, dettaglio: string): L
 
 type Passeggero = { id: string; nome: string; cognome: string | null; telefono: string | null; email: string | null };
 
+/**
+ * Campo "Luogo" con autocompletamento contestuale.
+ * Quando rileva un luogo speciale (aeroporto/stazione/terminal) mostra un pannello
+ * di suggerimenti SOTTO il textarea. Cliccando un'opzione il valore sostituisce
+ * (o completa) il contenuto del campo.
+ */
+function LuogoField({
+  label,
+  value,
+  onChange,
+  dettaglio,
+  onDettaglioChange,
+  speciale,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  dettaglio: string;
+  onDettaglioChange: (v: string) => void;
+  speciale: LuogoSpeciale;
+}) {
+  const handlePick = (val: string, lbl: string) => {
+    if (!speciale) return;
+    if (speciale.tipo === "aeroporto_generico" || speciale.tipo === "stazione") {
+      // Sostituisce il contenuto del textarea col nome scelto.
+      // Per aeroporto_generico salviamo anche dettaglio (chiave per matchare FCO/CIA)
+      onChange(lbl);
+      if (speciale.tipo === "aeroporto_generico") onDettaglioChange(val);
+    } else {
+      // Terminal / settore: salva nel dettaglio, lasciando il nome aeroporto nel campo
+      onDettaglioChange(val);
+    }
+  };
+
+  const showSuggestions =
+    !!speciale &&
+    (speciale.tipo === "aeroporto_generico" ||
+      speciale.tipo === "stazione" ||
+      ((speciale.tipo === "fiumicino" || speciale.tipo === "ciampino") && !dettaglio));
+
+  const headerText =
+    !speciale
+      ? ""
+      : speciale.tipo === "aeroporto_generico"
+      ? "Quale aeroporto?"
+      : speciale.tipo === "stazione"
+      ? "Quale stazione?"
+      : "A quale terminal?";
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-medium text-muted-foreground">
+        {label} <span className="text-destructive">*</span>
+      </Label>
+      <div className="relative">
+        <Textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Inserire Hotel, via, n. volo o aeroporto/stazione"
+          className="rounded-lg min-h-[60px] resize-y"
+        />
+        {showSuggestions && (
+          <div className="absolute left-0 right-0 top-full mt-1.5 z-20 rounded-xl border border-border bg-popover shadow-lg overflow-hidden animate-in fade-in-0 slide-in-from-top-1 duration-150">
+            <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-primary bg-accent/40 border-b border-border">
+              {headerText}
+            </div>
+            <ul className="max-h-60 overflow-y-auto py-1">
+              {speciale!.opzioni.map((o: any) => {
+                const val = typeof o === "string" ? o : o.value;
+                const lbl = typeof o === "string" ? o : o.label;
+                return (
+                  <li key={val}>
+                    <button
+                      type="button"
+                      onClick={() => handlePick(val, lbl)}
+                      className="w-full text-left px-3 py-2.5 text-sm text-foreground hover:bg-accent transition-colors"
+                    >
+                      {lbl}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+      </div>
+      {/* Conferma scelta terminal/stazione: mini badge sotto */}
+      {speciale && dettaglio && (speciale.tipo === "fiumicino" || speciale.tipo === "ciampino") && (
+        <div className="flex items-center gap-2 pt-1">
+          <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-accent text-accent-foreground">
+            {dettaglio}
+            <button
+              type="button"
+              onClick={() => onDettaglioChange("")}
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Cambia terminal"
+            >
+              ×
+            </button>
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 export default function Prenota() {
   const { user } = useAuth();
   const [clientId, setClientId] = useState<string | null>(null);
@@ -550,66 +657,22 @@ export default function Prenota() {
           <Card className="rounded-xl border-border/50 shadow-sm">
             <CardContent className="p-5 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Luogo inizio <span className="text-destructive">*</span></Label>
-                  <Textarea
-                    value={form.luogo_inizio}
-                    onChange={(e) => set("luogo_inizio", e.target.value)}
-                    placeholder="Inserire Hotel, via, n. volo o aeroporto/stazione"
-                    className="rounded-lg min-h-[60px] resize-y"
-                  />
-                  {luogoInizioSpeciale && (
-                    <div className="space-y-1 pt-1">
-                      <Label className="text-xs font-medium text-primary">
-                        {luogoInizioSpeciale.tipo === "aeroporto_generico"
-                          ? "Quale aeroporto? *"
-                          : luogoInizioSpeciale.tipo === "stazione"
-                          ? "Quale stazione? *"
-                          : "A quale terminal? *"}
-                      </Label>
-                      <Select value={form.luogo_inizio_dettaglio} onValueChange={(v) => set("luogo_inizio_dettaglio", v)}>
-                        <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona..." /></SelectTrigger>
-                        <SelectContent>
-                          {luogoInizioSpeciale.opzioni.map((o: any) => {
-                            const val = typeof o === "string" ? o : o.value;
-                            const lbl = typeof o === "string" ? o : o.label;
-                            return <SelectItem key={val} value={val}>{lbl}</SelectItem>;
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Luogo fine <span className="text-destructive">*</span></Label>
-                  <Textarea
-                    value={form.luogo_fine}
-                    onChange={(e) => set("luogo_fine", e.target.value)}
-                    placeholder="Inserire Hotel, via, n. volo o aeroporto/stazione"
-                    className="rounded-lg min-h-[60px] resize-y"
-                  />
-                  {luogoFineSpeciale && (
-                    <div className="space-y-1 pt-1">
-                      <Label className="text-xs font-medium text-primary">
-                        {luogoFineSpeciale.tipo === "aeroporto_generico"
-                          ? "Quale aeroporto? *"
-                          : luogoFineSpeciale.tipo === "stazione"
-                          ? "Quale stazione? *"
-                          : "A quale terminal? *"}
-                      </Label>
-                      <Select value={form.luogo_fine_dettaglio} onValueChange={(v) => set("luogo_fine_dettaglio", v)}>
-                        <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona..." /></SelectTrigger>
-                        <SelectContent>
-                          {luogoFineSpeciale.opzioni.map((o: any) => {
-                            const val = typeof o === "string" ? o : o.value;
-                            const lbl = typeof o === "string" ? o : o.label;
-                            return <SelectItem key={val} value={val}>{lbl}</SelectItem>;
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </div>
+                <LuogoField
+                  label="Luogo inizio"
+                  value={form.luogo_inizio}
+                  onChange={(v) => set("luogo_inizio", v)}
+                  dettaglio={form.luogo_inizio_dettaglio}
+                  onDettaglioChange={(v) => set("luogo_inizio_dettaglio", v)}
+                  speciale={luogoInizioSpeciale}
+                />
+                <LuogoField
+                  label="Luogo fine"
+                  value={form.luogo_fine}
+                  onChange={(v) => set("luogo_fine", v)}
+                  dettaglio={form.luogo_fine_dettaglio}
+                  onDettaglioChange={(v) => set("luogo_fine_dettaglio", v)}
+                  speciale={luogoFineSpeciale}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Itinerario</Label>
