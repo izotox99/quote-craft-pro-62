@@ -11,7 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "sonner";
-import { CalendarPlus, Send, Info } from "lucide-react";
+import { CalendarPlus, Send, Info, Paperclip, X } from "lucide-react";
+
+const ALLEGATO_ACCEPT = "image/*,.pdf,.doc,.docx,.xls,.xlsx";
+const ALLEGATO_MAX_MB = 10;
 
 const VEICOLI_DISPONIBILI = [
   "Autovettura 3 posti",
