@@ -18,76 +18,172 @@ export function PortalTutorial({ autoStart = false, showUtenze = true, onReady }
   const driverRef = useRef<Driver | null>(null);
 
   useEffect(() => {
+    // Helper per popover ricche con elenchi puntati
+    const richDesc = (intro: string, bullets: string[], outro?: string) => `
+      <div class="ptt-body">
+        <p class="ptt-intro">${intro}</p>
+        <ul class="ptt-list">
+          ${bullets.map((b) => `<li><span class="ptt-dot"></span><span>${b}</span></li>`).join("")}
+        </ul>
+        ${outro ? `<p class="ptt-outro">${outro}</p>` : ""}
+      </div>
+    `;
+
     const steps = [
+      // 1. Benvenuto
       {
         popover: {
-          title: "Benvenuto nel tuo Portale 👋",
-          description:
-            "In meno di un minuto ti mostro come prenotare i tuoi servizi, gestire le utenze e consultare fatture e tariffario.",
+          title: "👋 Benvenuto nel tuo Portale",
+          description: richDesc(
+            "Ti guido in un tour di circa 90 secondi per scoprire tutto quello che puoi fare da qui.",
+            [
+              "<b>Prenotare</b> nuovi servizi in pochi click",
+              "<b>Gestire</b> e modificare i servizi esistenti",
+              "<b>Consultare</b> tariffario e fatture in autonomia",
+              showUtenze ? "<b>Creare utenze</b> per i tuoi collaboratori" : "",
+            ].filter(Boolean),
+            "Puoi saltare il tour e riavviarlo in qualsiasi momento dall'icona <b>?</b> in alto a destra."
+          ),
           showButtons: ["next", "close"] as ("next" | "close")[],
-          nextBtnText: "Inizia tour",
+          nextBtnText: "Inizia il tour →",
           closeBtnText: "Salta",
         },
       },
+
+      // 2. Prenota - voce menu
       {
         element: '[data-tour="prenota"]',
         popover: {
-          title: "Prenota un servizio",
-          description:
-            "Da qui crei una nuova prenotazione: data, orario, indirizzi, passeggeri e puoi anche allegare un file (foto, PDF) per l'autista.",
+          title: "📅 Prenota un servizio",
+          description: richDesc(
+            "Da qui crei una nuova prenotazione in modo guidato. Il sistema ti aiuta passo passo.",
+            [
+              "Scegli <b>data, orario e città</b>",
+              "Indica <b>luogo di partenza</b> e <b>destinazione</b>",
+              "Per Roma riconosciamo automaticamente <b>aeroporti</b> (Fiumicino, Ciampino) e <b>stazioni</b> (Termini, Tiburtina, Ostiense) chiedendoti il terminal/binario",
+              "Inserisci <b>passeggeri</b>, <b>bagagli</b> e <b>note per l'autista</b>",
+              "Puoi <b>allegare un file</b> (foto, PDF) — utile per voli, biglietti o ID",
+            ],
+            "💡 I dati del passeggero (nome, telefono, email) restano salvati per prenotare velocemente più servizi consecutivi."
+          ),
           side: "right" as const,
           align: "start" as const,
         },
       },
+
+      // 3. Lista Servizi
       {
         element: '[data-tour="servizi"]',
         popover: {
-          title: "Lista Servizi",
-          description:
-            "Qui trovi tutti i tuoi servizi prenotati. Puoi modificarli, annullarli o gestire l'allegato fino a 12 ore prima dell'orario di inizio.",
+          title: "📋 Lista Servizi",
+          description: richDesc(
+            "Qui trovi <b>tutti i servizi</b> che hai prenotato, ordinati per data.",
+            [
+              "Visualizzi <b>stato</b> (nuovo, confermato, in corso, completato)",
+              "Puoi <b>modificare</b> o <b>annullare</b> un servizio fino a <b>12 ore prima</b> dell'inizio",
+              "Aggiungi o sostituisci <b>allegati</b> in qualsiasi momento",
+              "Vedi l'<b>autista assegnato</b> e i dettagli del veicolo",
+            ],
+            "⚠️ Trascorse le 12 ore dall'orario di inizio, le modifiche vanno richieste direttamente al nostro centralino."
+          ),
           side: "right" as const,
           align: "start" as const,
         },
       },
+
+      // 4. Utenze (solo cliente padre)
       ...(showUtenze
         ? [
             {
               element: '[data-tour="utenze"]',
               popover: {
-                title: "Utenze",
-                description:
-                  "Crea sotto-utenze per i tuoi collaboratori: potranno prenotare servizi per conto della tua azienda con credenziali dedicate.",
+                title: "👥 Utenze collaboratori",
+                description: richDesc(
+                  "Crea <b>account dedicati</b> per i tuoi collaboratori: potranno prenotare servizi a nome della tua azienda con credenziali proprie.",
+                  [
+                    "Tipologia <b>Singolo</b>: vede solo i servizi che ha prenotato lui",
+                    "Tipologia <b>Gruppo</b>: vede tutti i servizi dell'azienda",
+                    "Puoi <b>disattivare</b> o <b>eliminare</b> un'utenza in qualsiasi momento",
+                    "Le <b>fatture</b> restano sempre intestate alla tua azienda",
+                  ],
+                  "🔐 Ogni utenza riceve email e password personali per accedere al portale."
+                ),
                 side: "right" as const,
                 align: "start" as const,
               },
             },
           ]
         : []),
+
+      // 5. Tariffario
       {
         element: '[data-tour="tariffario"]',
         popover: {
-          title: "Tariffario",
-          description: "Consulta le tariffe concordate per i tuoi servizi in qualsiasi momento.",
+          title: "💶 Tariffario",
+          description: richDesc(
+            "Consulta in <b>totale trasparenza</b> i prezzi concordati per i tuoi servizi.",
+            [
+              "Tariffe per <b>tipologia</b> (transfer, tour, disposizione)",
+              "Prezzi per <b>tipologia di veicolo</b> (auto, minivan, bus)",
+              "Eventuali <b>supplementi</b> e accessori",
+            ],
+            "Le tariffe mostrate sono quelle riservate alla tua azienda."
+          ),
           side: "right" as const,
           align: "start" as const,
         },
       },
+
+      // 6. Fatture
       {
         element: '[data-tour="fatture"]',
         popover: {
-          title: "Fatture",
-          description: "Scarica e consulta tutte le fatture emesse per i tuoi servizi.",
+          title: "🧾 Fatture",
+          description: richDesc(
+            "Tutte le fatture emesse, sempre a portata di click.",
+            [
+              "<b>Scarica</b> il PDF di ogni fattura",
+              "Filtra per <b>periodo</b> o <b>stato pagamento</b>",
+              "Visualizza <b>dettaglio servizi</b> inclusi in ogni fattura",
+            ],
+            "📥 Hai bisogno di una fattura specifica? Scrivici, te la inviamo subito."
+          ),
           side: "right" as const,
           align: "start" as const,
         },
       },
+
+      // 7. Header / Help
+      {
+        element: '[data-tour="help-button"]',
+        popover: {
+          title: "❓ Aiuto sempre disponibile",
+          description: richDesc(
+            "Da questa icona puoi <b>riavviare il tutorial</b> ogni volta che vuoi.",
+            [
+              "Nessuna informazione viene persa: il tour si chiude e riprendi da dove eri",
+              "Utile quando aggiungiamo <b>nuove funzionalità</b>",
+            ]
+          ),
+          side: "bottom" as const,
+          align: "end" as const,
+        },
+      },
+
+      // 8. Conclusione
       {
         popover: {
-          title: "Tutto chiaro! 🎉",
-          description:
-            "Puoi rivedere questo tutorial in qualsiasi momento cliccando sull'icona ? in alto a destra. Buon lavoro!",
+          title: "🎉 Tutto pronto!",
+          description: richDesc(
+            "Hai completato il tour. Ora sai esattamente come muoverti nel portale.",
+            [
+              "Inizia subito creando la <b>tua prima prenotazione</b>",
+              "Per qualsiasi dubbio, siamo a disposizione",
+              "Buon lavoro! 🚗",
+            ]
+          ),
           showButtons: ["next"] as "next"[],
-          nextBtnText: "Ho capito",
+          nextBtnText: "Inizia ad usare il portale",
         },
       },
     ];
@@ -113,11 +209,13 @@ export function PortalTutorial({ autoStart = false, showUtenze = true, onReady }
     const d = driver({
       showProgress: true,
       animate: true,
+      smoothScroll: true,
       allowClose: true,
-      overlayOpacity: 0.6,
-      stagePadding: 6,
-      stageRadius: 8,
-      progressText: "{{current}} di {{total}}",
+      overlayOpacity: 0.7,
+      stagePadding: 8,
+      stageRadius: 12,
+      popoverClass: "ptt-popover",
+      progressText: "Step {{current}} di {{total}}",
       nextBtnText: "Avanti →",
       prevBtnText: "← Indietro",
       doneBtnText: "Fine",
