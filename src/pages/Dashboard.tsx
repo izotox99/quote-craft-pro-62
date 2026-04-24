@@ -11,6 +11,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AlertTriangle, Bell, Sparkles, UserPlus, XCircle, Paperclip } from "lucide-react";
+import { useHorizontalWheel } from "@/hooks/use-horizontal-wheel";
 import { format, addDays, differenceInDays, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
