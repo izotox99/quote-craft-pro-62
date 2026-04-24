@@ -161,6 +161,7 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
             size="icon"
             className="h-8 w-8"
             title="Rivedi tutorial"
+            data-tour="help-button"
             onClick={() => tutorialStartRef.current?.()}
           >
             <HelpCircle className="h-4 w-4" />
