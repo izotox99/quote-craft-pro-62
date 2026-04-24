@@ -82,7 +82,20 @@ type Servizio = {
   autista_id?: string | null;
   autista_esterno_id?: string | null;
   utenza_id?: string | null;
+  org_id?: string | null;
+  allegato_path?: string | null;
+  allegato_nome?: string | null;
 };
+
+const ALLOWED_FILE_TYPES = [
+  "image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/heic",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 function computeClientStato(s: Servizio): { label: string; className: string } {
   if (s.modificato_da_cliente) {
