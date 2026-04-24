@@ -83,11 +83,12 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
 
       {/* Nav */}
       <nav className="flex-1 py-2 px-2 space-y-0.5">
-        {navItems.map((item) => {
+        {navItems.filter(i => !i.parentOnly || isParent).map((item) => {
           const active = location.pathname === item.path;
           return (
             <button
               key={item.path}
+              data-tour={item.tour}
               onClick={() => { navigate(item.path); setMobileOpen(false); }}
               className={cn(
                 "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
@@ -155,6 +156,15 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
               Benvenuto, <span className="text-foreground">{clientName}</span>
             </span>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            title="Rivedi tutorial"
+            onClick={() => tutorialStartRef.current?.()}
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Button>
         </header>
 
         {/* Content */}
@@ -162,6 +172,12 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+
+      <PortalTutorial
+        autoStart={autoStartTutorial}
+        showUtenze={isParent}
+        onReady={(start) => { tutorialStartRef.current = start; }}
+      />
     </div>
   );
 }
