@@ -176,7 +176,8 @@ export default function Servizi() {
       .lte("data_servizio", filterAl)
       .order("data_servizio", { ascending: true });
 
-    if (filterStato !== "all") query = query.eq("stato", filterStato as any);
+    if (filterStato === "all") query = query.neq("stato", "annullato");
+    else query = query.eq("stato", filterStato as any);
     if (filterTipologia !== "all") query = query.eq("tipologia", filterTipologia as any);
     if (filterTarga) query = query.ilike("veicoli.targa", `%${filterTarga}%`);
     if (filterContatto) query = query.ilike("contatto", `%${filterContatto}%`);
