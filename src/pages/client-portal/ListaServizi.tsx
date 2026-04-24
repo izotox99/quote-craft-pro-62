@@ -311,30 +311,30 @@ export default function ListaServizi() {
 
   const handleSaveEdit = async () => {
     if (!selected) return;
-    const payload: any = {
-      data_servizio: editForm.data_servizio || null,
-      ora_inizio: editForm.ora_inizio || null,
-      citta: editForm.citta || null,
-      n_passeggeri: editForm.n_passeggeri ? parseInt(editForm.n_passeggeri) : null,
-      n_bagagli: editForm.n_bagagli ? parseInt(editForm.n_bagagli) : null,
-      tipologia: editForm.tipologia || null,
-      transfer_tipo: editForm.tipologia === "transfer" ? (editForm.transfer_tipo || null) : null,
-      disposizione_oraria: editForm.tipologia === "disposizione" ? (editForm.disposizione_oraria || null) : null,
-      tour_tipo: editForm.tipologia === "tour" ? (editForm.tour_tipo || null) : null,
-      veicolo_tipo: editForm.veicolo_tipo || null,
-      luogo_inizio: editForm.luogo_inizio || null,
-      luogo_fine: editForm.luogo_fine || null,
-      itinerario: editForm.itinerario || null,
-      info_autista: editForm.info_autista || null,
-      tipo_pagamento: editForm.tipo_pagamento || null,
-      centro_costo: editForm.centro_costo || null,
-      accessori: editForm.accessori || null,
-      note: editForm.note || null,
-      stato: "nuovo",
-      modificato_da_cliente: true,
-      modificato_at: new Date().toISOString(),
-    };
-    const { error } = await supabase.from("servizi").update(payload).eq("id", selected.id);
+
+    const { error } = await supabase.rpc("client_portal_update_servizio", {
+      _servizio_id: selected.id,
+      _data_servizio: editForm.data_servizio || null,
+      _ora_inizio: editForm.ora_inizio || null,
+      _citta: editForm.citta || null,
+      _n_passeggeri: editForm.n_passeggeri ? parseInt(editForm.n_passeggeri) : null,
+      _n_bagagli: editForm.n_bagagli ? parseInt(editForm.n_bagagli) : null,
+      _tipologia: (editForm.tipologia || null) as any,
+      _transfer_tipo: editForm.tipologia === "transfer" ? (editForm.transfer_tipo || null) : null,
+      _disposizione_oraria: editForm.tipologia === "disposizione" ? (editForm.disposizione_oraria || null) : null,
+      _tour_tipo: editForm.tipologia === "tour" ? (editForm.tour_tipo || null) : null,
+      _veicolo_tipo: editForm.veicolo_tipo || null,
+      _luogo_inizio: editForm.luogo_inizio || null,
+      _luogo_fine: editForm.luogo_fine || null,
+      _itinerario: editForm.itinerario || null,
+      _info_autista: editForm.info_autista || null,
+      _tipo_pagamento: editForm.tipo_pagamento || null,
+      _centro_costo: editForm.centro_costo || null,
+      _accessori: editForm.accessori || null,
+      _note: editForm.note || null,
+      _allegato_nome: selected.allegato_nome ?? null,
+    });
+
     if (error) {
       toast.error("Errore nel salvataggio");
     } else {
@@ -350,10 +350,31 @@ export default function ListaServizi() {
       return;
     }
     if (!window.confirm("Sei sicuro di voler annullare questo servizio?")) return;
-    const { error } = await supabase
-      .from("servizi")
-      .update({ stato: "annullato" } as any)
-      .eq("id", s.id);
+
+    const { error } = await supabase.rpc("client_portal_update_servizio", {
+      _servizio_id: s.id,
+      _data_servizio: s.data_servizio,
+      _ora_inizio: s.ora_inizio,
+      _citta: s.citta,
+      _n_passeggeri: s.n_passeggeri,
+      _n_bagagli: s.n_bagagli,
+      _tipologia: s.tipologia as any,
+      _transfer_tipo: s.transfer_tipo,
+      _disposizione_oraria: s.disposizione_oraria,
+      _tour_tipo: s.tour_tipo,
+      _veicolo_tipo: s.veicolo_tipo,
+      _luogo_inizio: s.luogo_inizio,
+      _luogo_fine: s.luogo_fine,
+      _itinerario: s.itinerario,
+      _info_autista: s.info_autista,
+      _tipo_pagamento: s.tipo_pagamento,
+      _centro_costo: s.centro_costo,
+      _accessori: s.accessori,
+      _note: s.note,
+      _allegato_nome: s.allegato_nome ?? null,
+      _cancel: true,
+    });
+
     if (error) {
       toast.error("Errore nell'annullamento");
     } else {
@@ -384,7 +405,6 @@ export default function ListaServizi() {
       toast.error("File troppo grande (max 10MB)");
       return;
     }
-    // Resolve org_id
     let orgId = s.org_id;
     if (!orgId) {
       const { data: srv } = await supabase.from("servizi").select("org_id").eq("id", s.id).maybeSingle();
@@ -392,7 +412,6 @@ export default function ListaServizi() {
     }
     if (!orgId) { toast.error("Errore: organizzazione non trovata"); return; }
 
-    // Remove old file if present
     if (s.allegato_path) {
       await supabase.storage.from("servizi-allegati").remove([s.allegato_path]);
     }
@@ -406,37 +425,73 @@ export default function ListaServizi() {
       toast.error("Errore caricamento file");
       return;
     }
-    const { error: updErr } = await supabase
-      .from("servizi")
-      .update({ allegato_path: path, allegato_nome: file.name } as any)
-      .eq("id", s.id);
+
+    const { error: updErr } = await supabase.rpc("client_portal_update_servizio", {
+      _servizio_id: s.id,
+      _data_servizio: s.data_servizio,
+      _ora_inizio: s.ora_inizio,
+      _citta: s.citta,
+      _n_passeggeri: s.n_passeggeri,
+      _n_bagagli: s.n_bagagli,
+      _tipologia: s.tipologia as any,
+      _transfer_tipo: s.transfer_tipo,
+      _disposizione_oraria: s.disposizione_oraria,
+      _tour_tipo: s.tour_tipo,
+      _veicolo_tipo: s.veicolo_tipo,
+      _luogo_inizio: s.luogo_inizio,
+      _luogo_fine: s.luogo_fine,
+      _itinerario: s.itinerario,
+      _info_autista: s.info_autista,
+      _tipo_pagamento: s.tipo_pagamento,
+      _centro_costo: s.centro_costo,
+      _accessori: s.accessori,
+      _note: s.note,
+      _allegato_path: path,
+      _allegato_nome: file.name,
+    });
     if (updErr) {
       toast.error("Errore aggiornamento servizio");
       return;
     }
+
     toast.success("Allegato caricato");
-    // Update local state
-    const updated = { ...s, allegato_path: path, allegato_nome: file.name };
-    setSelected(updated);
-    setServizi((prev) => prev.map((x) => x.id === s.id ? updated : x));
+    loadServizi();
   };
 
   const deleteAllegato = async (s: Servizio) => {
     if (!s.allegato_path) return;
     if (!window.confirm("Eliminare l'allegato?")) return;
+
     await supabase.storage.from("servizi-allegati").remove([s.allegato_path]);
-    const { error } = await supabase
-      .from("servizi")
-      .update({ allegato_path: null, allegato_nome: null } as any)
-      .eq("id", s.id);
+    const { error } = await supabase.rpc("client_portal_update_servizio", {
+      _servizio_id: s.id,
+      _data_servizio: s.data_servizio,
+      _ora_inizio: s.ora_inizio,
+      _citta: s.citta,
+      _n_passeggeri: s.n_passeggeri,
+      _n_bagagli: s.n_bagagli,
+      _tipologia: s.tipologia as any,
+      _transfer_tipo: s.transfer_tipo,
+      _disposizione_oraria: s.disposizione_oraria,
+      _tour_tipo: s.tour_tipo,
+      _veicolo_tipo: s.veicolo_tipo,
+      _luogo_inizio: s.luogo_inizio,
+      _luogo_fine: s.luogo_fine,
+      _itinerario: s.itinerario,
+      _info_autista: s.info_autista,
+      _tipo_pagamento: s.tipo_pagamento,
+      _centro_costo: s.centro_costo,
+      _accessori: s.accessori,
+      _note: s.note,
+      _remove_allegato: true,
+    });
     if (error) {
       toast.error("Errore eliminazione");
       return;
     }
+
     toast.success("Allegato eliminato");
-    const updated = { ...s, allegato_path: null, allegato_nome: null };
-    setSelected(updated);
-    setServizi((prev) => prev.map((x) => x.id === s.id ? updated : x));
+    loadServizi();
   };
 
   const exportExcel = () => {
