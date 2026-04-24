@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TimePicker } from "@/components/ui/time-picker";
-import { Search, Download, CalendarDays, Pencil, XCircle, Info, ChevronRight, MapPin, Clock, Users, Car, Lock } from "lucide-react";
+import { Search, Download, CalendarDays, Pencil, XCircle, Info, ChevronRight, MapPin, Clock, Users, Car, Lock, Paperclip, Upload, Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -82,7 +82,20 @@ type Servizio = {
   autista_id?: string | null;
   autista_esterno_id?: string | null;
   utenza_id?: string | null;
+  org_id?: string | null;
+  allegato_path?: string | null;
+  allegato_nome?: string | null;
 };
+
+const ALLOWED_FILE_TYPES = [
+  "image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif", "image/heic",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 function computeClientStato(s: Servizio): { label: string; className: string } {
   if (s.modificato_da_cliente) {
@@ -347,6 +360,82 @@ export default function ListaServizi() {
     }
   };
 
+  const downloadAllegato = async (s: Servizio) => {
+    if (!s.allegato_path) return;
+    const { data, error } = await supabase.storage
+      .from("servizi-allegati")
+      .createSignedUrl(s.allegato_path, 60);
+    if (error || !data?.signedUrl) {
+      toast.error("Impossibile scaricare l'allegato");
+      return;
+    }
+    window.open(data.signedUrl, "_blank");
+  };
+
+  const uploadAllegato = async (s: Servizio, file: File) => {
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      toast.error("Formato non supportato (PNG, JPG, PDF, Word, Excel)");
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File troppo grande (max 10MB)");
+      return;
+    }
+    // Resolve org_id
+    let orgId = s.org_id;
+    if (!orgId) {
+      const { data: srv } = await supabase.from("servizi").select("org_id").eq("id", s.id).maybeSingle();
+      orgId = srv?.org_id ?? null;
+    }
+    if (!orgId) { toast.error("Errore: organizzazione non trovata"); return; }
+
+    // Remove old file if present
+    if (s.allegato_path) {
+      await supabase.storage.from("servizi-allegati").remove([s.allegato_path]);
+    }
+
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${orgId}/${s.id}/${Date.now()}_${safeName}`;
+    const { error: upErr } = await supabase.storage
+      .from("servizi-allegati")
+      .upload(path, file, { upsert: false });
+    if (upErr) {
+      toast.error("Errore caricamento file");
+      return;
+    }
+    const { error: updErr } = await supabase
+      .from("servizi")
+      .update({ allegato_path: path, allegato_nome: file.name } as any)
+      .eq("id", s.id);
+    if (updErr) {
+      toast.error("Errore aggiornamento servizio");
+      return;
+    }
+    toast.success("Allegato caricato");
+    // Update local state
+    const updated = { ...s, allegato_path: path, allegato_nome: file.name };
+    setSelected(updated);
+    setServizi((prev) => prev.map((x) => x.id === s.id ? updated : x));
+  };
+
+  const deleteAllegato = async (s: Servizio) => {
+    if (!s.allegato_path) return;
+    if (!window.confirm("Eliminare l'allegato?")) return;
+    await supabase.storage.from("servizi-allegati").remove([s.allegato_path]);
+    const { error } = await supabase
+      .from("servizi")
+      .update({ allegato_path: null, allegato_nome: null } as any)
+      .eq("id", s.id);
+    if (error) {
+      toast.error("Errore eliminazione");
+      return;
+    }
+    toast.success("Allegato eliminato");
+    const updated = { ...s, allegato_path: null, allegato_nome: null };
+    setSelected(updated);
+    setServizi((prev) => prev.map((x) => x.id === s.id ? updated : x));
+  };
+
   const exportExcel = () => {
     const headers = ["Città", "Data", "Ora", "Passeggero", "N.P", "N.bg", "T.serv", "Luogo inizio", "Itinerario", "Luogo fine", "Veicolo", "T.P", "Centro Costo", "Stato"];
     const rows = filtered.map(s => [
@@ -596,6 +685,70 @@ export default function ListaServizi() {
                     <DetailRow label="Accessori" value={selected.accessori} />
                     <DetailRow label="Note" value={selected.note} />
                     <DetailRow label="Codice" value={selected.codice} />
+
+                    <Separator className="my-2" />
+
+                    {/* Allegato */}
+                    <div className="py-2">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+                          <Paperclip className="h-3.5 w-3.5" /> Allegato per autista
+                        </span>
+                      </div>
+                      {selected.allegato_path ? (
+                        <div className="flex items-center gap-2 p-2.5 rounded-lg border border-border/60 bg-muted/30">
+                          <FileText className="h-4 w-4 text-primary shrink-0" />
+                          <button
+                            onClick={() => downloadAllegato(selected)}
+                            className="flex-1 min-w-0 text-left text-sm font-medium truncate hover:underline"
+                          >
+                            {selected.allegato_nome ?? "Allegato"}
+                          </button>
+                          {editable && (
+                            <>
+                              <label className="cursor-pointer">
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept=".png,.jpg,.jpeg,.webp,.gif,.heic,.pdf,.doc,.docx,.xls,.xlsx"
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f) uploadAllegato(selected, f);
+                                    e.target.value = "";
+                                  }}
+                                />
+                                <span className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                                  <Upload className="h-3.5 w-3.5" />
+                                </span>
+                              </label>
+                              <button
+                                onClick={() => deleteAllegato(selected)}
+                                className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ) : editable ? (
+                        <label className="flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-border hover:border-primary/40 hover:bg-muted/30 cursor-pointer transition-colors">
+                          <Upload className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Carica file (PNG, JPG, PDF, Word, Excel · max 10MB)</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".png,.jpg,.jpeg,.webp,.gif,.heic,.pdf,.doc,.docx,.xls,.xlsx"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) uploadAllegato(selected, f);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">Nessun allegato</p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Actions */}
