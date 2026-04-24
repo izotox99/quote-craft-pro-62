@@ -204,7 +204,7 @@ function LuogoField({
           </div>
         )}
       </div>
-      {speciale && dettaglio && (speciale.tipo === "fiumicino" || speciale.tipo === "ciampino") && (
+      {terminalValido && (
         <div className="flex items-center gap-2 pt-1">
           <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-md bg-accent text-accent-foreground">
             {dettaglio}
