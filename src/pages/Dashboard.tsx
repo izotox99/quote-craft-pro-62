@@ -51,6 +51,7 @@ type Servizio = {
   modificato_da_cliente: boolean | null;
   modificato_at: string | null;
   clients: { name: string; company: string | null } | null;
+  client_utenze: { nome: string; cognome: string } | null;
   autisti: { nome: string; cognome: string } | null;
   autisti_esterni: { nome: string } | null;
   veicoli: { targa: string; tipo_macchina: string | null } | null;
@@ -84,7 +85,7 @@ export default function Dashboard() {
     setLoading(true);
     const { data } = await supabase
       .from("servizi")
-      .select("*, clients(name, company), autisti(nome, cognome), autisti_esterni(nome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
+      .select("*, clients(name, company), client_utenze(nome, cognome), autisti(nome, cognome), autisti_esterni(nome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
       .gte("data_servizio", dal)
       .lte("data_servizio", al)
       .order("data_servizio", { ascending: true })
@@ -113,7 +114,8 @@ export default function Dashboard() {
         (s.clients?.company || s.clients?.name || "").toLowerCase().includes(q) ||
         (s.contatto || "").toLowerCase().includes(q) ||
         (s.codice || "").toLowerCase().includes(q) ||
-        (s.citta || "").toLowerCase().includes(q)
+        (s.citta || "").toLowerCase().includes(q) ||
+        (s.client_utenze ? `${s.client_utenze.nome} ${s.client_utenze.cognome}`.toLowerCase().includes(q) : false)
       );
     }
     return list;
@@ -230,6 +232,9 @@ export default function Dashboard() {
                   {annullatiRecenti.slice(0, 3).map(s => (
                     <li key={s.id} className="text-[11px] text-red-800 dark:text-red-300/90 truncate">
                       <span className="font-medium">{s.clients?.company || s.clients?.name || "—"}</span>
+                      {s.client_utenze && (
+                        <span className="text-red-700/80 dark:text-red-300/70"> ({s.client_utenze.nome} {s.client_utenze.cognome})</span>
+                      )}
                       {" · "}{format(parseISO(s.data_servizio), "dd/MM")}{s.ora_inizio ? ` ${s.ora_inizio}` : ""}
                       {s.luogo_inizio ? ` · ${s.luogo_inizio}` : ""}
                       <span className="text-red-600/70 dark:text-red-400/70">
@@ -410,7 +415,12 @@ export default function Dashboard() {
                             </div>
                           </TableCell>
                           <TableCell className="py-2 font-semibold italic">
-                            {s.clients?.company || s.clients?.name || "—"}
+                            <div>{s.clients?.company || s.clients?.name || "—"}</div>
+                            {s.client_utenze && (
+                              <div className="text-[10px] font-normal not-italic text-muted-foreground">
+                                Prenotato da {s.client_utenze.nome} {s.client_utenze.cognome}
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="py-2">{s.contatto || "—"}</TableCell>
                           <TableCell className="py-2 whitespace-nowrap">{s.telefono_contatto || "—"}</TableCell>
