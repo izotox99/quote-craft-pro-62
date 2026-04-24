@@ -155,7 +155,7 @@ function LuogoField({
       <Label className="text-xs font-medium text-muted-foreground">
         {label} <span className="text-destructive">*</span>
       </Label>
-      <div className="relative">
+      <div>
         <Textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -163,7 +163,7 @@ function LuogoField({
           className="rounded-lg min-h-[60px] resize-y"
         />
         {showSuggestions && (
-          <div className="absolute left-0 right-0 top-full mt-1.5 z-20 rounded-xl border border-border bg-popover shadow-lg overflow-hidden animate-in fade-in-0 slide-in-from-top-1 duration-150">
+          <div className="mt-1.5 rounded-xl border border-border bg-popover shadow-lg overflow-hidden animate-in fade-in-0 slide-in-from-top-1 duration-150">
             <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-primary bg-accent/40 border-b border-border">
               {headerText}
             </div>
