@@ -192,15 +192,18 @@ export default function ListaServizi() {
       .maybeSingle();
 
     let clientIdResolved: string | null = parentClient?.id ?? null;
+    let utenzaSingoloId: string | null = null;
     if (parentClient) {
       setIsParentClient(true);
     } else {
       const { data: utenza } = await supabase
         .from("client_utenze")
-        .select("parent_client_id")
+        .select("id, parent_client_id, tipo")
         .eq("auth_user_id", user.id)
+        .eq("attivo", true)
         .maybeSingle();
       clientIdResolved = utenza?.parent_client_id ?? null;
+      if (utenza?.tipo === "singolo") utenzaSingoloId = utenza.id;
       setIsParentClient(false);
     }
     if (!clientIdResolved) { setLoading(false); return; }
@@ -229,6 +232,10 @@ export default function ListaServizi() {
       } else {
         query = query.eq("utenza_id", utenzaFilter);
       }
+    }
+    // Utenza "singolo": vede SOLO i propri servizi, mai quelli del parent o di altre utenze
+    if (utenzaSingoloId) {
+      query = query.eq("utenza_id", utenzaSingoloId);
     }
 
     const { data } = await query;
