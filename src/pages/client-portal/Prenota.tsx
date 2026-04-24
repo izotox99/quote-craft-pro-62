@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ClientPortalLayout } from "@/components/ClientPortalLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "sonner";
-import { CalendarPlus, Send, Info, Paperclip, X } from "lucide-react";
+import { CalendarPlus, Send, Info, Paperclip, X, Plus } from "lucide-react";
 
 const ALLEGATO_ACCEPT = "image/*,.pdf,.doc,.docx,.xls,.xlsx";
 const ALLEGATO_MAX_MB = 10;
@@ -28,20 +28,11 @@ const VEICOLI_DISPONIBILI = [
   "Servizio guida",
 ];
 
-const TRANSFER_OPZIONI = [
-  "Da / Per altro Luogo",
-  "Da Aeroporto",
-  "Da Civitavecchia",
-  "Da Stazione",
-  "Interno Città",
-  "Per Aeroporto",
-  "Per Civitavecchia",
-  "Per Stazione",
-];
-
-const DISPOSIZIONE_OPZIONI = [
-  "3 Ore", "4 Ore", "5 Ore", "6 Ore", "7 Ore", "8 Ore",
-  "9 Ore", "10 Ore", "11 Ore", "12 Ore", "Mezza giornata", "Giornata intera",
+// Tipologia unica
+const TIPOLOGIA_OPZIONI = [
+  { value: "transfer_interno", label: "Transfer interno città" },
+  { value: "transfer_regionale", label: "Transfer regionale" },
+  { value: "tour", label: "Tour" },
 ];
 
 const TOUR_OPZIONI = [
@@ -58,12 +49,31 @@ const PAGAMENTO_OPZIONI = [
   { value: "carta_credito", label: "C. Credito" },
 ];
 
+// Terminal aeroporti / stazioni
+const TERMINAL_FIUMICINO = ["Terminal 1", "Terminal 3", "Arrivi", "Partenze"];
+const TERMINAL_CIAMPINO = ["Arrivi", "Partenze"];
+const STAZIONI_ROMA = ["Roma Termini", "Roma Tiburtina", "Roma Ostiense", "Roma Trastevere", "Roma Tuscolana"];
+
+type LuogoSpeciale = null | { tipo: "fiumicino" | "ciampino"; opzioni: string[] } | { tipo: "stazione"; opzioni: string[] };
+
+function detectLuogoSpeciale(testo: string): LuogoSpeciale {
+  const t = testo.toLowerCase();
+  if (t.includes("fiumicino")) return { tipo: "fiumicino", opzioni: TERMINAL_FIUMICINO };
+  if (t.includes("ciampino")) return { tipo: "ciampino", opzioni: TERMINAL_CIAMPINO };
+  if (t.includes("stazione") || t.includes("termini") || t.includes("tiburtina") || t.includes("ostiense"))
+    return { tipo: "stazione", opzioni: STAZIONI_ROMA };
+  return null;
+}
+
+type Passeggero = { id: string; nome: string; cognome: string | null; telefono: string | null; email: string | null };
+
 export default function Prenota() {
   const { user } = useAuth();
   const [clientId, setClientId] = useState<string | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [utenze, setUtenze] = useState<{ id: string; nome: string; cognome: string; cellulare: string | null; email: string }[]>([]);
+  const [passeggeri, setPasseggeri] = useState<Passeggero[]>([]);
 
   const empty = {
     data_servizio: "",
@@ -74,14 +84,14 @@ export default function Prenota() {
     n_passeggeri: "1",
     n_bagagli: "0",
     veicolo_tipo: "",
-    transfer_tipo: "",
-    disposizione_oraria: "",
+    tipologia_servizio: "", // transfer_interno | transfer_regionale | tour
     tour_tipo: "",
     luogo_inizio: "",
-    itinerario: "",
+    luogo_inizio_dettaglio: "",
     luogo_fine: "",
+    luogo_fine_dettaglio: "",
+    itinerario: "",
     info_autista: "",
-    centro_costo: "",
     note: "",
     tipo_pagamento: "",
     prezzo: "",
@@ -90,13 +100,22 @@ export default function Prenota() {
 
   const [form, setForm] = useState(empty);
   const [allegato, setAllegato] = useState<File | null>(null);
-
   const [activeUtenzaId, setActiveUtenzaId] = useState<string | null>(null);
+  const [keepPasseggero, setKeepPasseggero] = useState(false);
+  const [selectedPasseggeroId, setSelectedPasseggeroId] = useState<string>("");
+
+  const loadPasseggeri = async (cId: string) => {
+    const { data } = await supabase
+      .from("passeggeri_rubrica")
+      .select("id, nome, cognome, telefono, email")
+      .eq("client_id", cId)
+      .order("nome");
+    setPasseggeri(data ?? []);
+  };
 
   useEffect(() => {
     const load = async () => {
       if (!user) return;
-      // Try parent client first
       const { data: client } = await supabase
         .from("clients")
         .select("id, org_id")
@@ -110,7 +129,6 @@ export default function Prenota() {
         resolvedClientId = client.id;
         resolvedOrgId = client.org_id;
       } else {
-        // Utenza fallback
         const { data: utenza } = await supabase
           .from("client_utenze")
           .select("id, parent_client_id, clients:parent_client_id(id, org_id)")
@@ -134,6 +152,7 @@ export default function Prenota() {
           .eq("parent_client_id", resolvedClientId)
           .eq("attivo", true);
         setUtenze(utenzeData ?? []);
+        await loadPasseggeri(resolvedClientId);
       }
     };
     load();
@@ -153,40 +172,62 @@ export default function Prenota() {
     }
   };
 
-  // Logic: Tour esclude Transfer/Disposizione. Transfer richiede Disposizione.
-  const hasTour = !!form.tour_tipo;
-  const hasTransfer = !!form.transfer_tipo;
-
-  const handleTourChange = (v: string) => {
-    if (v === "__clear__") {
-      set("tour_tipo", "");
-    } else {
-      setForm(p => ({ ...p, tour_tipo: v, transfer_tipo: "", disposizione_oraria: "" }));
+  const handlePasseggeroSelect = (pid: string) => {
+    setSelectedPasseggeroId(pid);
+    if (pid === "__new__") {
+      setForm(p => ({ ...p, contatto: "", telefono_contatto: "", email_contatto: "" }));
+      return;
+    }
+    const p = passeggeri.find(x => x.id === pid);
+    if (p) {
+      setForm(prev => ({
+        ...prev,
+        contatto: `${p.nome}${p.cognome ? " " + p.cognome : ""}`,
+        telefono_contatto: p.telefono ?? "",
+        email_contatto: p.email ?? "",
+      }));
     }
   };
 
-  const handleTransferChange = (v: string) => {
-    if (v === "__clear__") {
-      set("transfer_tipo", "");
-    } else {
-      setForm(p => ({ ...p, transfer_tipo: v, tour_tipo: "" }));
-    }
-  };
-
-  const handleDisposizioneChange = (v: string) => {
-    if (v === "__clear__") {
-      set("disposizione_oraria", "");
-    } else {
-      setForm(p => ({ ...p, disposizione_oraria: v, tour_tipo: "" }));
-    }
-  };
-
-  // Build tipologia from selections
-  const getTipologia = (): string => {
-    if (form.tour_tipo) return "tour";
-    if (form.transfer_tipo) return "transfer";
-    if (form.disposizione_oraria) return "disposizione";
+  // Mappa tipologia UI -> enum DB
+  const getTipologiaDB = (): string => {
+    if (form.tipologia_servizio === "tour") return "tour";
+    if (form.tipologia_servizio === "transfer_interno" || form.tipologia_servizio === "transfer_regionale") return "transfer";
     return "altro";
+  };
+
+  const luogoInizioSpeciale = useMemo(() => detectLuogoSpeciale(form.luogo_inizio), [form.luogo_inizio]);
+  const luogoFineSpeciale = useMemo(() => detectLuogoSpeciale(form.luogo_fine), [form.luogo_fine]);
+
+  // Reset dettagli se non più rilevanti
+  useEffect(() => {
+    if (!luogoInizioSpeciale && form.luogo_inizio_dettaglio) set("luogo_inizio_dettaglio", "");
+  }, [luogoInizioSpeciale]);
+  useEffect(() => {
+    if (!luogoFineSpeciale && form.luogo_fine_dettaglio) set("luogo_fine_dettaglio", "");
+  }, [luogoFineSpeciale]);
+
+  const upsertPasseggero = async () => {
+    if (!clientId || !orgId || !form.contatto.trim()) return;
+    // Match per nome+telefono+email (semplice)
+    const exists = passeggeri.find(p =>
+      `${p.nome}${p.cognome ? " " + p.cognome : ""}`.toLowerCase().trim() === form.contatto.toLowerCase().trim() &&
+      (p.telefono ?? "") === (form.telefono_contatto ?? "") &&
+      (p.email ?? "") === (form.email_contatto ?? "")
+    );
+    if (exists) return;
+    const [nome, ...rest] = form.contatto.trim().split(" ");
+    const cognome = rest.join(" ") || null;
+    const { data } = await supabase.from("passeggeri_rubrica").insert({
+      org_id: orgId,
+      client_id: clientId,
+      nome,
+      cognome,
+      telefono: form.telefono_contatto || null,
+      email: form.email_contatto || null,
+      created_by: user?.id ?? null,
+    }).select("id, nome, cognome, telefono, email").single();
+    if (data) setPasseggeri(prev => [...prev, data]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -195,27 +236,43 @@ export default function Prenota() {
       toast.error("Data, passeggero e veicolo sono obbligatori");
       return;
     }
+    if (!form.tipologia_servizio) {
+      toast.error("Seleziona la tipologia di servizio");
+      return;
+    }
     if (!clientId || !orgId) return;
 
     setLoading(true);
+
+    // Componi luoghi con dettaglio (terminal/stazione)
+    const luogoInizioFinale = form.luogo_inizio_dettaglio
+      ? `${form.luogo_inizio} - ${form.luogo_inizio_dettaglio}`
+      : form.luogo_inizio;
+    const luogoFineFinale = form.luogo_fine_dettaglio
+      ? `${form.luogo_fine} - ${form.luogo_fine_dettaglio}`
+      : form.luogo_fine;
+
+    // Per il transfer_tipo salviamo un'etichetta leggibile
+    let transferTipoDB: string | null = null;
+    if (form.tipologia_servizio === "transfer_interno") transferTipoDB = "Transfer interno città";
+    else if (form.tipologia_servizio === "transfer_regionale") transferTipoDB = "Transfer regionale";
+
     const { data: inserted, error } = await supabase.from("servizi").insert({
       data_servizio: form.data_servizio,
       ora_inizio: form.ora_inizio || null,
-      tipologia: getTipologia() as any,
+      tipologia: getTipologiaDB() as any,
       contatto: form.contatto,
       telefono_contatto: form.telefono_contatto || null,
       email_contatto: form.email_contatto || null,
       n_passeggeri: parseInt(form.n_passeggeri) || 1,
       n_bagagli: parseInt(form.n_bagagli) || 0,
       veicolo_tipo: form.veicolo_tipo || null,
-      transfer_tipo: form.transfer_tipo || null,
-      disposizione_oraria: form.disposizione_oraria || null,
+      transfer_tipo: transferTipoDB,
       tour_tipo: form.tour_tipo || null,
-      luogo_inizio: form.luogo_inizio || null,
-      luogo_fine: form.luogo_fine || null,
+      luogo_inizio: luogoInizioFinale || null,
+      luogo_fine: luogoFineFinale || null,
       itinerario: form.itinerario || null,
       info_autista: form.info_autista || null,
-      centro_costo: form.centro_costo || null,
       citta: form.citta || null,
       note: form.note || null,
       tipo_pagamento: form.tipo_pagamento || null,
@@ -232,7 +289,10 @@ export default function Prenota() {
       return;
     }
 
-    // Upload allegato (se presente)
+    // Salva il passeggero in rubrica se nuovo
+    await upsertPasseggero();
+
+    // Upload allegato
     if (allegato) {
       const safeName = allegato.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `${orgId}/${inserted.id}/${Date.now()}_${safeName}`;
@@ -249,7 +309,19 @@ export default function Prenota() {
     }
 
     toast.success("Prenotazione inviata con successo!");
-    setForm(empty);
+
+    // Reset: se vuole prenotare ancora per stesso passeggero, mantieni i dati contatto
+    if (keepPasseggero) {
+      setForm({
+        ...empty,
+        contatto: form.contatto,
+        telefono_contatto: form.telefono_contatto,
+        email_contatto: form.email_contatto,
+      });
+    } else {
+      setForm(empty);
+      setSelectedPasseggeroId("");
+    }
     setAllegato(null);
     setLoading(false);
   };
@@ -305,21 +377,47 @@ export default function Prenota() {
                   <Label className="text-xs font-medium text-muted-foreground">Ora inizio <span className="text-destructive">*</span></Label>
                   <TimePicker value={form.ora_inizio} onChange={(v) => set("ora_inizio", v)} placeholder="Seleziona ora" />
                 </div>
-                <div className="space-y-1.5">
+
+                {/* Passeggero: rubrica + utenze + manuale */}
+                <div className="space-y-1.5 sm:col-span-2">
                   <Label className="text-xs font-medium text-muted-foreground">Passeggero <span className="text-destructive">*</span></Label>
-                  {utenze.length > 0 ? (
-                    <Select onValueChange={handleUtenzaSelect}>
-                      <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona utenza" /></SelectTrigger>
-                      <SelectContent>
-                        {utenze.map(u => (
-                          <SelectItem key={u.id} value={u.id}>{u.nome} {u.cognome}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Input value={form.contatto} onChange={(e) => set("contatto", e.target.value)} placeholder="Nome passeggero" className="rounded-lg h-10" />
-                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {passeggeri.length > 0 && (
+                      <Select value={selectedPasseggeroId} onValueChange={handlePasseggeroSelect}>
+                        <SelectTrigger className="rounded-lg h-10">
+                          <SelectValue placeholder="Seleziona da rubrica..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__new__">
+                            <span className="flex items-center gap-2"><Plus className="h-3.5 w-3.5" /> Nuovo passeggero</span>
+                          </SelectItem>
+                          {passeggeri.map(p => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.nome}{p.cognome ? " " + p.cognome : ""}{p.telefono ? ` · ${p.telefono}` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    {utenze.length > 0 && (
+                      <Select onValueChange={handleUtenzaSelect}>
+                        <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="...oppure utenza" /></SelectTrigger>
+                        <SelectContent>
+                          {utenze.map(u => (
+                            <SelectItem key={u.id} value={u.id}>{u.nome} {u.cognome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                  <Input
+                    value={form.contatto}
+                    onChange={(e) => set("contatto", e.target.value)}
+                    placeholder="Nome e cognome passeggero"
+                    className="rounded-lg h-10 mt-2"
+                  />
                 </div>
+
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Telefono</Label>
                   <Input value={form.telefono_contatto} onChange={(e) => set("telefono_contatto", e.target.value)} placeholder="+39..." className="rounded-lg h-10" />
@@ -336,7 +434,7 @@ export default function Prenota() {
                   <Label className="text-xs font-medium text-muted-foreground">Numero bagagli</Label>
                   <Input type="number" min="0" value={form.n_bagagli} onChange={(e) => set("n_bagagli", e.target.value)} className="rounded-lg h-10" />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 sm:col-span-2">
                   <Label className="text-xs font-medium text-muted-foreground">Veicolo <span className="text-destructive">*</span></Label>
                   <Select value={form.veicolo_tipo} onValueChange={(v) => set("veicolo_tipo", v)}>
                     <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona veicolo" /></SelectTrigger>
@@ -348,54 +446,51 @@ export default function Prenota() {
                   </Select>
                 </div>
               </div>
+
+              {/* Mantieni passeggero */}
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer pt-2 border-t border-border/40">
+                <input
+                  type="checkbox"
+                  checked={keepPasseggero}
+                  onChange={(e) => setKeepPasseggero(e.target.checked)}
+                  className="rounded accent-primary"
+                />
+                Mantieni nome, telefono ed email per la prossima prenotazione
+              </label>
             </CardContent>
           </Card>
 
-          {/* Tipo servizio: Transfer / Disposizione / Tour */}
+          {/* Tipologia servizio (UNICO select) */}
           <Card className="rounded-xl border-border/50 shadow-sm">
             <CardContent className="p-5 space-y-4">
-              <p className="text-sm font-semibold text-foreground">Tipo servizio</p>
-              <p className="text-xs text-muted-foreground -mt-2">
-                Se scegli un <strong>Tour</strong>, Transfer e Disposizione non sono selezionabili. Se scegli un <strong>Transfer</strong>, il Tour non è disponibile.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold">Scegli tipologia di servizio <span className="text-destructive">*</span></Label>
+                <Select
+                  value={form.tipologia_servizio}
+                  onValueChange={(v) => setForm(p => ({ ...p, tipologia_servizio: v, tour_tipo: v === "tour" ? p.tour_tipo : "" }))}
+                >
+                  <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona tipologia" /></SelectTrigger>
+                  <SelectContent>
+                    {TIPOLOGIA_OPZIONI.map(t => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {form.tipologia_servizio === "tour" && (
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Transfer</Label>
-                  <Select value={form.transfer_tipo || "__clear__"} onValueChange={handleTransferChange} disabled={hasTour}>
-                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="---" /></SelectTrigger>
+                  <Label className="text-xs font-medium text-muted-foreground">Tipo di Tour</Label>
+                  <Select value={form.tour_tipo} onValueChange={(v) => set("tour_tipo", v)}>
+                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona tour" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__clear__">---</SelectItem>
-                      {TRANSFER_OPZIONI.map(t => (
-                        <SelectItem key={t} value={t}>{t}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Disposizione Oraria</Label>
-                  <Select value={form.disposizione_oraria || "__clear__"} onValueChange={handleDisposizioneChange} disabled={hasTour}>
-                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="---" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__clear__">---</SelectItem>
-                      {DISPOSIZIONE_OPZIONI.map(d => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Tour</Label>
-                  <Select value={form.tour_tipo || "__clear__"} onValueChange={handleTourChange} disabled={hasTransfer || !!form.disposizione_oraria}>
-                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="---" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__clear__">---</SelectItem>
                       {TOUR_OPZIONI.map(t => (
                         <SelectItem key={t} value={t}>{t}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -405,26 +500,70 @@ export default function Prenota() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Luogo inizio <span className="text-destructive">*</span></Label>
-                  <Input value={form.luogo_inizio} onChange={(e) => set("luogo_inizio", e.target.value)} placeholder="Inserire Hotel, via, o n. volo" className="rounded-lg h-10" />
+                  <Textarea
+                    value={form.luogo_inizio}
+                    onChange={(e) => set("luogo_inizio", e.target.value)}
+                    placeholder="Inserire Hotel, via, n. volo o aeroporto/stazione"
+                    className="rounded-lg min-h-[60px] resize-y"
+                  />
+                  {luogoInizioSpeciale && (
+                    <div className="space-y-1 pt-1">
+                      <Label className="text-xs font-medium text-primary">
+                        {luogoInizioSpeciale.tipo === "stazione" ? "Quale stazione?" : "Quale terminal?"}
+                      </Label>
+                      <Select value={form.luogo_inizio_dettaglio} onValueChange={(v) => set("luogo_inizio_dettaglio", v)}>
+                        <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona..." /></SelectTrigger>
+                        <SelectContent>
+                          {luogoInizioSpeciale.opzioni.map(o => (
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Luogo fine <span className="text-destructive">*</span></Label>
-                  <Input value={form.luogo_fine} onChange={(e) => set("luogo_fine", e.target.value)} placeholder="Inserire Hotel, via, o n. volo" className="rounded-lg h-10" />
+                  <Textarea
+                    value={form.luogo_fine}
+                    onChange={(e) => set("luogo_fine", e.target.value)}
+                    placeholder="Inserire Hotel, via, n. volo o aeroporto/stazione"
+                    className="rounded-lg min-h-[60px] resize-y"
+                  />
+                  {luogoFineSpeciale && (
+                    <div className="space-y-1 pt-1">
+                      <Label className="text-xs font-medium text-primary">
+                        {luogoFineSpeciale.tipo === "stazione" ? "Quale stazione?" : "Quale terminal?"}
+                      </Label>
+                      <Select value={form.luogo_fine_dettaglio} onValueChange={(v) => set("luogo_fine_dettaglio", v)}>
+                        <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona..." /></SelectTrigger>
+                        <SelectContent>
+                          {luogoFineSpeciale.opzioni.map(o => (
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Itinerario</Label>
-                <Input value={form.itinerario} onChange={(e) => set("itinerario", e.target.value)} placeholder="Descrivi il percorso" className="rounded-lg h-10" />
+                <Textarea
+                  value={form.itinerario}
+                  onChange={(e) => set("itinerario", e.target.value)}
+                  placeholder="Descrivi il percorso, le tappe, gli orari..."
+                  className="rounded-lg min-h-[80px] resize-y"
+                />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Info autista</Label>
-                  <Input value={form.info_autista} onChange={(e) => set("info_autista", e.target.value)} placeholder="Informazioni per l'autista" className="rounded-lg h-10" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Centro di costo</Label>
-                  <Input value={form.centro_costo} onChange={(e) => set("centro_costo", e.target.value)} className="rounded-lg h-10" />
-                </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Info autista</Label>
+                <Textarea
+                  value={form.info_autista}
+                  onChange={(e) => set("info_autista", e.target.value)}
+                  placeholder="Informazioni utili per l'autista"
+                  className="rounded-lg min-h-[60px] resize-y"
+                />
               </div>
             </CardContent>
           </Card>
@@ -432,7 +571,7 @@ export default function Prenota() {
           {/* Pagamento + Note */}
           <Card className="rounded-xl border-border/50 shadow-sm">
             <CardContent className="p-5 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-medium text-muted-foreground">Tipo pagamento <span className="text-destructive">*</span></Label>
                   <Select value={form.tipo_pagamento} onValueChange={(v) => set("tipo_pagamento", v)}>
@@ -451,7 +590,7 @@ export default function Prenota() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Note</Label>
-                <Textarea value={form.note} onChange={(e) => set("note", e.target.value)} placeholder="Note aggiuntive..." className="rounded-lg min-h-[80px]" />
+                <Textarea value={form.note} onChange={(e) => set("note", e.target.value)} placeholder="Note aggiuntive..." className="rounded-lg min-h-[80px] resize-y" />
               </div>
             </CardContent>
           </Card>
