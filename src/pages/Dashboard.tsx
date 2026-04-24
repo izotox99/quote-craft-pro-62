@@ -412,7 +412,12 @@ export default function Dashboard() {
                             </div>
                           </TableCell>
                           <TableCell className="py-2 font-semibold italic">
-                            {s.clients?.company || s.clients?.name || "—"}
+                            <div>{s.clients?.company || s.clients?.name || "—"}</div>
+                            {s.client_utenze && (
+                              <div className="text-[10px] font-normal not-italic text-muted-foreground">
+                                Prenotato da {s.client_utenze.nome} {s.client_utenze.cognome}
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="py-2">{s.contatto || "—"}</TableCell>
                           <TableCell className="py-2 whitespace-nowrap">{s.telefono_contatto || "—"}</TableCell>
