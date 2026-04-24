@@ -25,22 +25,27 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
   const [clientName, setClientName] = useState("");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isParent, setIsParent] = useState(false);
+  const [autoStartTutorial, setAutoStartTutorial] = useState(false);
+  const tutorialStartRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const load = async () => {
       if (!user) return;
       const { data: client } = await supabase
         .from("clients")
-        .select("company, name")
+        .select("company, name, tutorial_completato_at")
         .eq("auth_user_id", user.id)
         .maybeSingle();
       if (client) {
         setClientName(client.company || client.name);
+        setIsParent(true);
+        if (!client.tutorial_completato_at) setAutoStartTutorial(true);
         return;
       }
       const { data: utenza } = await supabase
         .from("client_utenze")
-        .select("nome, cognome, parent_client_id")
+        .select("nome, cognome, parent_client_id, tutorial_completato_at")
         .eq("auth_user_id", user.id)
         .maybeSingle();
       if (utenza) {
@@ -51,6 +56,8 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
           .maybeSingle();
         const parentLabel = parent?.company || parent?.name || "";
         setClientName(`${utenza.nome} ${utenza.cognome}${parentLabel ? ` · ${parentLabel}` : ""}`);
+        setIsParent(false);
+        if (!utenza.tutorial_completato_at) setAutoStartTutorial(true);
       }
     };
     load();
