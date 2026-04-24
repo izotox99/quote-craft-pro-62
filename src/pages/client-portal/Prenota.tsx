@@ -89,6 +89,7 @@ export default function Prenota() {
   };
 
   const [form, setForm] = useState(empty);
+  const [allegato, setAllegato] = useState<File | null>(null);
 
   const [activeUtenzaId, setActiveUtenzaId] = useState<string | null>(null);
 
