@@ -436,7 +436,20 @@ export default function Dashboard() {
                               </div>
                             )}
                           </TableCell>
-                          <TableCell className="py-2">{s.contatto || "—"}</TableCell>
+                          <TableCell className="py-2">
+                            <div className="flex items-center gap-1.5">
+                              <span>{s.contatto || "—"}</span>
+                              {s.allegato_path && (
+                                <button
+                                  onClick={() => downloadAllegato(s)}
+                                  title={`Scarica allegato: ${s.allegato_nome ?? ""}`}
+                                  className="inline-flex items-center justify-center h-5 w-5 rounded hover:bg-primary/10 text-primary shrink-0"
+                                >
+                                  <Paperclip className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="py-2 whitespace-nowrap">{s.telefono_contatto || "—"}</TableCell>
                           <TableCell className="py-2 text-center">{s.n_passeggeri ?? 0}</TableCell>
                           <TableCell className="py-2 text-center">{s.n_bagagli ?? 0}</TableCell>
