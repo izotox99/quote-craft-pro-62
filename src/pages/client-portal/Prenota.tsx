@@ -590,14 +590,20 @@ export default function Prenota() {
                   {luogoFineSpeciale && (
                     <div className="space-y-1 pt-1">
                       <Label className="text-xs font-medium text-primary">
-                        {luogoFineSpeciale.tipo === "stazione" ? "Quale stazione?" : "Quale terminal?"}
+                        {luogoFineSpeciale.tipo === "aeroporto_generico"
+                          ? "Quale aeroporto? *"
+                          : luogoFineSpeciale.tipo === "stazione"
+                          ? "Quale stazione? *"
+                          : "A quale terminal? *"}
                       </Label>
                       <Select value={form.luogo_fine_dettaglio} onValueChange={(v) => set("luogo_fine_dettaglio", v)}>
                         <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona..." /></SelectTrigger>
                         <SelectContent>
-                          {luogoFineSpeciale.opzioni.map(o => (
-                            <SelectItem key={o} value={o}>{o}</SelectItem>
-                          ))}
+                          {luogoFineSpeciale.opzioni.map((o: any) => {
+                            const val = typeof o === "string" ? o : o.value;
+                            const lbl = typeof o === "string" ? o : o.label;
+                            return <SelectItem key={val} value={val}>{lbl}</SelectItem>;
+                          })}
                         </SelectContent>
                       </Select>
                     </div>
