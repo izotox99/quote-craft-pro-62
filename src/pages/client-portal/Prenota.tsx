@@ -75,7 +75,8 @@ function detectLuogoSpeciale(testo: string, citta: string, dettaglio: string): L
   if (/ciampino|cia\b/.test(t)) return { tipo: "ciampino", opzioni: TERMINAL_CIAMPINO };
 
   // Roma + parole aeroporto generiche → forza scelta tra FCO/CIA
-  if (isRoma && /aero?porto|airport|aerop/.test(t)) {
+  // Intercetta: aer, aereo, aero, aereoporto (refuso), aeroporto, airport, fco, cia
+  if (isRoma && /\b(aer\w*|airport|fco|cia)\b/.test(t)) {
     // Se l'utente ha già scelto un aeroporto dal dropdown lo onoriamo
     if (dettaglio === "Aeroporto Fiumicino") return { tipo: "fiumicino", opzioni: TERMINAL_FIUMICINO };
     if (dettaglio === "Aeroporto Ciampino") return { tipo: "ciampino", opzioni: TERMINAL_CIAMPINO };
