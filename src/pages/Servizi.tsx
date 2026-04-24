@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, AlertTriangle, Bell } from "lucide-react";
+import { useHorizontalWheel } from "@/hooks/use-horizontal-wheel";
 import { ModificheClientePopover } from "@/components/ModificheClientePopover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, addDays } from "date-fns";
@@ -113,6 +114,7 @@ export default function Servizi() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
   const [selectedServiziIds, setSelectedServiziIds] = useState<string[]>([]);
+  const tableScrollRef = useHorizontalWheel<HTMLDivElement>();
 
   // Filters
   const [filterDal, setFilterDal] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"));
@@ -770,7 +772,7 @@ export default function Servizi() {
         {/* DESKTOP/TABLET: schema completo */}
         <Card className="hidden md:block">
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div ref={tableScrollRef} className="h-scroll">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
