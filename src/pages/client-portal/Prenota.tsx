@@ -634,7 +634,7 @@ export default function Prenota() {
     <ClientPortalLayout>
       <div className="max-w-2xl mx-auto space-y-5 pb-24">
         <div className="flex items-center justify-between gap-3">
-          <h1 className="font-display text-2xl font-bold flex items-center gap-2">
+          <h1 className="font-display font-bold flex items-center gap-2 text-lg">
             <CalendarPlus className="h-6 w-6 text-primary" />
             Nuovo Servizio
           </h1>
