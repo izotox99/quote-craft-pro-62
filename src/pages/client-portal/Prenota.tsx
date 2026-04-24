@@ -11,7 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "sonner";
-import { CalendarPlus, Send, Info } from "lucide-react";
+import { CalendarPlus, Send, Info, Paperclip, X } from "lucide-react";
+
+const ALLEGATO_ACCEPT = "image/*,.pdf,.doc,.docx,.xls,.xlsx";
+const ALLEGATO_MAX_MB = 10;
 
 const VEICOLI_DISPONIBILI = [
   "Autovettura 3 posti",
@@ -86,6 +89,7 @@ export default function Prenota() {
   };
 
   const [form, setForm] = useState(empty);
+  const [allegato, setAllegato] = useState<File | null>(null);
 
   const [activeUtenzaId, setActiveUtenzaId] = useState<string | null>(null);
 
@@ -194,7 +198,7 @@ export default function Prenota() {
     if (!clientId || !orgId) return;
 
     setLoading(true);
-    const { error } = await supabase.from("servizi").insert({
+    const { data: inserted, error } = await supabase.from("servizi").insert({
       data_servizio: form.data_servizio,
       ora_inizio: form.ora_inizio || null,
       tipologia: getTipologia() as any,
@@ -220,14 +224,33 @@ export default function Prenota() {
       org_id: orgId,
       stato: "nuovo" as any,
       utenza_id: activeUtenzaId,
-    } as any);
+    } as any).select("id").single();
 
-    if (error) {
-      toast.error("Errore nella prenotazione: " + error.message);
-    } else {
-      toast.success("Prenotazione inviata con successo!");
-      setForm(empty);
+    if (error || !inserted) {
+      toast.error("Errore nella prenotazione: " + (error?.message ?? ""));
+      setLoading(false);
+      return;
     }
+
+    // Upload allegato (se presente)
+    if (allegato) {
+      const safeName = allegato.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${orgId}/${inserted.id}/${Date.now()}_${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from("servizi-allegati")
+        .upload(path, allegato, { contentType: allegato.type, upsert: false });
+      if (upErr) {
+        toast.error("Servizio creato ma upload allegato fallito: " + upErr.message);
+      } else {
+        await supabase.from("servizi")
+          .update({ allegato_path: path, allegato_nome: allegato.name } as any)
+          .eq("id", inserted.id);
+      }
+    }
+
+    toast.success("Prenotazione inviata con successo!");
+    setForm(empty);
+    setAllegato(null);
     setLoading(false);
   };
 
@@ -430,6 +453,49 @@ export default function Prenota() {
                 <Label className="text-xs font-medium text-muted-foreground">Note</Label>
                 <Textarea value={form.note} onChange={(e) => set("note", e.target.value)} placeholder="Note aggiuntive..." className="rounded-lg min-h-[80px]" />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Allegato per identificazione autista */}
+          <Card className="rounded-xl border-border/50 shadow-sm">
+            <CardContent className="p-5 space-y-3">
+              <div>
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <Paperclip className="h-4 w-4 text-primary" />
+                  Allegato per l'autista
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Carica una foto del passeggero o un documento (PDF, Word, Excel, immagini). L'autista lo userà per identificare la persona da prendere in carico. Max {ALLEGATO_MAX_MB}MB.
+                </p>
+              </div>
+              {allegato ? (
+                <div className="flex items-center justify-between gap-2 p-3 rounded-lg border border-border/60 bg-muted/30">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <span className="text-sm truncate">{allegato.name}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">({(allegato.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  </div>
+                  <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setAllegato(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Input
+                  type="file"
+                  accept={ALLEGATO_ACCEPT}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (!f) return;
+                    if (f.size > ALLEGATO_MAX_MB * 1024 * 1024) {
+                      toast.error(`File troppo grande. Massimo ${ALLEGATO_MAX_MB}MB.`);
+                      e.target.value = "";
+                      return;
+                    }
+                    setAllegato(f);
+                  }}
+                  className="rounded-lg h-10 cursor-pointer file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary"
+                />
+              )}
             </CardContent>
           </Card>
 

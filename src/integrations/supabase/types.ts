@@ -807,6 +807,8 @@ export type Database = {
       servizi: {
         Row: {
           accessori: string | null
+          allegato_nome: string | null
+          allegato_path: string | null
           autista_esterno_id: string | null
           autista_id: string | null
           centro_costo: string | null
@@ -851,6 +853,8 @@ export type Database = {
         }
         Insert: {
           accessori?: string | null
+          allegato_nome?: string | null
+          allegato_path?: string | null
           autista_esterno_id?: string | null
           autista_id?: string | null
           centro_costo?: string | null
@@ -895,6 +899,8 @@ export type Database = {
         }
         Update: {
           accessori?: string | null
+          allegato_nome?: string | null
+          allegato_path?: string | null
           autista_esterno_id?: string | null
           autista_id?: string | null
           centro_costo?: string | null

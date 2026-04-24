@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DatePicker } from "@/components/ui/date-picker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { AlertTriangle, Bell, Sparkles, UserPlus, XCircle } from "lucide-react";
+import { AlertTriangle, Bell, Sparkles, UserPlus, XCircle, Paperclip } from "lucide-react";
 import { format, addDays, differenceInDays, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
@@ -50,6 +50,8 @@ type Servizio = {
   autista_esterno_id: string | null;
   modificato_da_cliente: boolean | null;
   modificato_at: string | null;
+  allegato_path: string | null;
+  allegato_nome: string | null;
   clients: { name: string; company: string | null } | null;
   client_utenze: { nome: string; cognome: string } | null;
   autisti: { nome: string; cognome: string } | null;
@@ -189,6 +191,18 @@ export default function Dashboard() {
 
   const allChecked = filtered.length > 0 && selected.size === filtered.length;
   const someChecked = selected.size > 0 && selected.size < filtered.length;
+
+  const downloadAllegato = async (s: Servizio) => {
+    if (!s.allegato_path) return;
+    const { data, error } = await supabase.storage
+      .from("servizi-allegati")
+      .createSignedUrl(s.allegato_path, 60);
+    if (error || !data) {
+      toast.error("Impossibile scaricare il file");
+      return;
+    }
+    window.open(data.signedUrl, "_blank");
+  };
 
   return (
     <DashboardLayout>
@@ -422,7 +436,20 @@ export default function Dashboard() {
                               </div>
                             )}
                           </TableCell>
-                          <TableCell className="py-2">{s.contatto || "—"}</TableCell>
+                          <TableCell className="py-2">
+                            <div className="flex items-center gap-1.5">
+                              <span>{s.contatto || "—"}</span>
+                              {s.allegato_path && (
+                                <button
+                                  onClick={() => downloadAllegato(s)}
+                                  title={`Scarica allegato: ${s.allegato_nome ?? ""}`}
+                                  className="inline-flex items-center justify-center h-5 w-5 rounded hover:bg-primary/10 text-primary shrink-0"
+                                >
+                                  <Paperclip className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell className="py-2 whitespace-nowrap">{s.telefono_contatto || "—"}</TableCell>
                           <TableCell className="py-2 text-center">{s.n_passeggeri ?? 0}</TableCell>
                           <TableCell className="py-2 text-center">{s.n_bagagli ?? 0}</TableCell>
