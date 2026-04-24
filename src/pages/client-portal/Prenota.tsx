@@ -75,17 +75,26 @@ function detectLuogoSpeciale(testo: string, citta: string, dettaglio: string): L
   if (/ciampino|cia\b/.test(t)) return { tipo: "ciampino", opzioni: TERMINAL_CIAMPINO };
 
   // Roma + parole aeroporto generiche → forza scelta tra FCO/CIA
-  // Intercetta: aer, aereo, aero, aereoporto (refuso), aeroporto, airport, fco, cia
-  if (isRoma && /\b(aer\w*|airport|fco|cia)\b/.test(t)) {
-    // Se l'utente ha già scelto un aeroporto dal dropdown lo onoriamo
+  // Intercetta anche refusi/parziali: aer, aere, aereo, aereoporto, aeroporto, aeroport, airport
+  const aeroportoGenericoMatch =
+    t.includes("aer") ||
+    t.includes("aere") ||
+    t.includes("aereo") ||
+    t.includes("aereoporto") ||
+    t.includes("aeroporto") ||
+    t.includes("aeroport") ||
+    t.includes("airport");
+
+  if (isRoma && aeroportoGenericoMatch) {
     if (dettaglio === "Aeroporto Fiumicino") return { tipo: "fiumicino", opzioni: TERMINAL_FIUMICINO };
     if (dettaglio === "Aeroporto Ciampino") return { tipo: "ciampino", opzioni: TERMINAL_CIAMPINO };
     return { tipo: "aeroporto_generico", opzioni: AEROPORTI_ROMA };
   }
 
   // Stazioni
-  if (/stazione|termini|tiburtina|ostiense|trastevere|tuscolana/.test(t))
+  if (/stazione|termini|tiburtina|ostiense|trastevere|tuscolana/.test(t)) {
     return { tipo: "stazione", opzioni: STAZIONI_ROMA };
+  }
 
   return null;
 }
