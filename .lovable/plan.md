@@ -1,59 +1,98 @@
 
+# Piano: Semplificare la prenotazione con wizard a step
 
-## Security Hardening Plan
+## Obiettivo
+Trasformare il form attuale (single-page, ~10 campi visibili insieme) in un **wizard a 5 step guidati** mantenendo **gli stessi identici dati richiesti** dal database. Aggiungere due scorciatoie per ridurre il lavoro ripetitivo: **"Duplica ultima prenotazione"** e **autocomplete passeggero** dalla rubrica.
 
-The security scan found 8 findings (2 errors, 4 warnings, 2 info). The existing RLS foundation is solid — all tables have RLS enabled, roles are in a separate table, and `has_role()`/`get_user_org_id()` security definer functions exist. Here's what needs hardening:
+Nessuna modifica al database — solo riorganizzazione UI/UX della pagina `src/pages/client-portal/Prenota.tsx`.
 
-### 1. Enable Leaked Password Protection
-Configure auth to reject passwords found in known breach databases.
+---
 
-### 2. Add Password Protection for Shared Proposals (Error)
-Shared proposals currently expose pricing and content to anyone with the link. Add optional password protection:
-- **Migration**: Add `share_password_hash` column to `proposals` table
-- **Edge function**: `verify-share-password` — accepts share_id + password, returns a signed short-lived token
-- **Update RLS**: Keep existing public SELECT for non-password-protected proposals; password-protected ones require verification through the edge function
-- **Frontend**: Update `PublicProposal.tsx` to show a password gate when `share_password_hash` is set; update `ProposalDetail.tsx` to let users set a share password
+## 1. Struttura del wizard (5 step)
 
-### 3. Add Share Link Expiration (Error)
-- **Migration**: Add `share_expires_at` column to `proposals`
-- **Update RLS**: Modify "Anyone can view shared proposals" policy to check `share_expires_at IS NULL OR share_expires_at > now()`
-- **Frontend**: Add expiration date picker in proposal sharing UI
+In cima alla pagina: barra di progresso minimale stile Notion (`Step 2 di 5 · Tragitto`) + bottoni `Indietro` / `Continua` in basso. Ogni step mostra solo i campi di quella sezione, validati prima di procedere.
 
-### 4. Restrict Client Contact Info by Role (Warning)
-- Create a view `clients_public` that excludes `email` and `phone` for non-admin/manager users
-- Or add role-based filtering in the application layer since all org members currently see all client fields
+| # | Titolo step | Campi inclusi |
+|---|---|---|
+| 1 | **Quando** | `data_servizio`, `ora_inizio` |
+| 2 | **Dove** | `citta`, `luogo_inizio` (con detection aeroporti/stazioni esistente), `luogo_fine`, `itinerario` |
+| 3 | **Servizio** | `tipologia` (Transfer interno / regionale / Tour), `tour_tipo` (se Tour), `veicolo_tipo`, `n_passeggeri`, `n_bagagli`, `accessori` |
+| 4 | **Passeggero** | `contatto` (nome), `telefono_contatto`, `email_contatto` — con **autocomplete dalla rubrica `passeggeri_rubrica`** |
+| 5 | **Riepilogo & extra** | `tipo_pagamento`, `info_autista`, `note`, allegato → riepilogo completo + pulsante **"Conferma prenotazione"** |
 
-### 5. Anonymize IP in Proposal Events (Warning)
-- Truncate IP addresses before storing (remove last octet) in `PublicProposal.tsx`
-- Add a privacy notice to the public proposal page
+**Validazione per step**: blocca `Continua` se mancano i campi obbligatori (es. step 1: data + ora; step 2: città + luogo inizio; step 4: nome contatto).
 
-### 6. Align Proposal Version Access with Proposal Access (Info)
-- **Migration**: Update `proposal_versions` RLS to allow managers/admins to view versions of proposals they can access:
-```sql
-CREATE POLICY "Managers/admins can view org proposal versions"
-ON proposal_versions FOR SELECT
-USING (EXISTS (
-  SELECT 1 FROM proposals
-  WHERE proposals.id = proposal_versions.proposal_id
-  AND proposals.org_id = get_user_org_id(auth.uid())
-  AND (has_role(auth.uid(), 'admin') OR has_role(auth.uid(), 'manager'))
-));
+---
+
+## 2. Pulsante "Duplica ultima prenotazione"
+
+In cima alla pagina (sopra lo step 1), card compatta:
+
+```
+┌─────────────────────────────────────────────────┐
+│ 🔄  Ripeti l'ultima prenotazione                │
+│     Transfer interno · Roma · 18 apr 2026       │
+│     [ Duplica e modifica ]                      │
+└─────────────────────────────────────────────────┘
 ```
 
-### 7. Add Role Change Audit Logging (Info)
-- **Migration**: Create `audit_logs` table with RLS (admin SELECT only, insert via trigger)
-- **Migration**: Add trigger on `user_roles` for INSERT/UPDATE/DELETE that logs changes to `audit_logs`
+**Logica**:
+- Al mount, query `servizi` filtrata per `client_id` o `utenza_id` corrente, `order by created_at desc limit 1`.
+- Se esiste, mostra la card con un riassunto (tipologia + città + data).
+- Click su "Duplica e modifica" → precompila **tutti** i campi del wizard tranne `data_servizio` (default = oggi) e `ora_inizio` (svuotato), poi salta direttamente allo **step 5 (riepilogo)** così l'utente verifica e conferma. Può tornare indietro con `Indietro` se vuole cambiare qualcosa.
+- L'allegato NON viene duplicato (file diverso ogni volta).
 
-### 8. Input Validation & Frontend Security
-- Sanitize all user inputs before database writes (proposal content, client notes)
-- Add rate limiting awareness on auth pages (already handled by backend, but add UI feedback)
-- Ensure no sensitive data in localStorage beyond the session token
+---
 
-### Files to Change
-- **Migrations**: 3-4 migrations for schema changes (share_password_hash, share_expires_at, audit_logs table + trigger, updated RLS policies)
-- **New edge function**: `verify-share-password`
-- **`src/pages/PublicProposal.tsx`**: Password gate, IP anonymization, privacy notice
-- **`src/pages/ProposalDetail.tsx`**: Share password + expiration UI
-- **`src/pages/ProposalBuilder.tsx`**: Share expiration option
-- **Auth config**: Enable leaked password protection
+## 3. Autocomplete passeggero (step 4)
 
+Nel campo `contatto` dello step 4: mentre l'utente digita, mostra suggerimenti dalla rubrica `passeggeri_rubrica` (già esistente, con RLS per parent client e utenze).
+
+- Input con dropdown sotto (stessa estetica del `LuogoField` esistente).
+- Al click su un passeggero: precompila automaticamente nome, telefono, email.
+- Sotto l'input: link `+ Salva nuovo passeggero in rubrica` se il nome digitato non esiste già — al submit del wizard, viene anche inserito in `passeggeri_rubrica` (oltre che salvato nel servizio).
+
+---
+
+## 4. UI/UX dettagli
+
+- **Header wizard**: titolo grande step corrente + sottotitolo grigio (es. *"Quando vuoi il servizio?"*) + barra di progresso a 5 segmenti (Plus Jakarta Sans, in linea con il design system Notion-like del progetto).
+- **Footer fisso**: `[← Indietro]` a sinistra, `[Continua →]` a destra. All'ultimo step diventa `[Conferma prenotazione]` con icona `Send`.
+- **Animazione step**: fade + slide-in da destra (`animate-in fade-in-0 slide-in-from-right-2`) quando si avanza, viceversa quando si torna indietro.
+- **Mobile**: stesso layout (già single-column), footer sticky in basso.
+- **Riepilogo step 5**: mostra tutti i dati raccolti in una card a 2 colonne con etichette grigie + valori in grassetto, e link "Modifica" accanto a ciascuna sezione che riporta allo step relativo.
+
+---
+
+## 5. Implementazione tecnica
+
+**File modificato**: `src/pages/client-portal/Prenota.tsx` (riscrittura della struttura, mantenendo tutta la logica esistente di submit, detection luoghi, allegato, passeggeri rubrica).
+
+**State aggiuntivo**:
+```ts
+const [step, setStep] = useState(1);
+const [ultimoServizio, setUltimoServizio] = useState<Servizio | null>(null);
+const [passeggeriSuggeriti, setPasseggeriSuggeriti] = useState<Passeggero[]>([]);
+```
+
+**Funzioni nuove**:
+- `caricaUltimoServizio()` — query Supabase al mount.
+- `duplicaUltimo()` — copia campi nello state e va a `setStep(5)`.
+- `validateStep(n)` — ritorna `boolean` + toast errore se mancano campi.
+- `handleNext()` / `handleBack()` — con validazione.
+
+**Nessuna modifica a**:
+- Database / RLS / migrazioni.
+- Edge functions.
+- Logica di submit (`handleSubmit` rimane identica, viene solo richiamata al click finale).
+- Componenti `LuogoField`, detection aeroporti, dropzone allegato — restano come sono.
+
+---
+
+## Cosa NON cambia
+- I dati salvati su `servizi` sono **esattamente gli stessi** di adesso.
+- Le RLS, i permessi utenze (singolo/gruppo), il limite 12h, lo stato `nuovo` → tutto invariato.
+- La rubrica `passeggeri_rubrica` esiste già, viene solo letta + opzionalmente arricchita.
+
+## Risultato
+L'utente vede 2-4 campi per volta invece di 15+, può ripetere l'ultima prenotazione in 2 click, e il sistema impara i passeggeri ricorrenti. Stesso database, esperienza molto più snella.
