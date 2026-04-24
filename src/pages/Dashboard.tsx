@@ -232,6 +232,9 @@ export default function Dashboard() {
                   {annullatiRecenti.slice(0, 3).map(s => (
                     <li key={s.id} className="text-[11px] text-red-800 dark:text-red-300/90 truncate">
                       <span className="font-medium">{s.clients?.company || s.clients?.name || "—"}</span>
+                      {s.client_utenze && (
+                        <span className="text-red-700/80 dark:text-red-300/70"> ({s.client_utenze.nome} {s.client_utenze.cognome})</span>
+                      )}
                       {" · "}{format(parseISO(s.data_servizio), "dd/MM")}{s.ora_inizio ? ` ${s.ora_inizio}` : ""}
                       {s.luogo_inizio ? ` · ${s.luogo_inizio}` : ""}
                       <span className="text-red-600/70 dark:text-red-400/70">
