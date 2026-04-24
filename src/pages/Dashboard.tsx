@@ -73,6 +73,26 @@ function buildTipoServ(s: Servizio) {
   return parts.join(" · ") || "—";
 }
 
+/** Splitta "Luogo - Dettaglio (es. Terminal 1 / Binario 5)" per evidenziare il dettaglio. */
+function splitLuogoDettaglio(luogo: string | null): { main: string; dettaglio: string | null } {
+  if (!luogo) return { main: "—", dettaglio: null };
+  const idx = luogo.indexOf(" - ");
+  if (idx === -1) return { main: luogo, dettaglio: null };
+  return { main: luogo.slice(0, idx), dettaglio: luogo.slice(idx + 3) };
+}
+
+function LuogoCell({ luogo }: { luogo: string | null }) {
+  const { main, dettaglio } = splitLuogoDettaglio(luogo);
+  return (
+    <div className="max-w-[220px]" title={luogo || ""}>
+      <div className="truncate">{main}</div>
+      {dettaglio && (
+        <div className="text-[10px] font-medium text-primary truncate">{dettaglio}</div>
+      )}
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
   const [servizi, setServizi] = useState<Servizio[]>([]);
@@ -454,9 +474,9 @@ export default function Dashboard() {
                           <TableCell className="py-2 text-center">{s.n_passeggeri ?? 0}</TableCell>
                           <TableCell className="py-2 text-center">{s.n_bagagli ?? 0}</TableCell>
                           <TableCell className="py-2">{buildTipoServ(s)}</TableCell>
-                          <TableCell className="py-2 max-w-[200px] truncate" title={s.luogo_inizio || ""}>{s.luogo_inizio || "—"}</TableCell>
+                          <TableCell className="py-2"><LuogoCell luogo={s.luogo_inizio} /></TableCell>
                           <TableCell className="py-2 max-w-[200px] truncate" title={s.itinerario || ""}>{s.itinerario || "—"}</TableCell>
-                          <TableCell className="py-2 max-w-[200px] truncate" title={s.luogo_fine || ""}>{s.luogo_fine || "—"}</TableCell>
+                          <TableCell className="py-2"><LuogoCell luogo={s.luogo_fine} /></TableCell>
                           <TableCell className="py-2 max-w-[180px] truncate" title={s.info_autista || ""}>{s.info_autista || "—"}</TableCell>
                           <TableCell className="py-2">{s.accessori || "—"}</TableCell>
                           <TableCell className="py-2">{s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—")}</TableCell>
