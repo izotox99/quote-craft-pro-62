@@ -53,15 +53,39 @@ const PAGAMENTO_OPZIONI = [
 const TERMINAL_FIUMICINO = ["Terminal 1", "Terminal 3", "Arrivi", "Partenze"];
 const TERMINAL_CIAMPINO = ["Arrivi", "Partenze"];
 const STAZIONI_ROMA = ["Roma Termini", "Roma Tiburtina", "Roma Ostiense", "Roma Trastevere", "Roma Tuscolana"];
+const AEROPORTI_ROMA = [
+  { value: "Aeroporto Fiumicino", label: "Aeroporto di Fiumicino (FCO)" },
+  { value: "Aeroporto Ciampino", label: "Aeroporto di Ciampino (CIA)" },
+];
 
-type LuogoSpeciale = null | { tipo: "fiumicino" | "ciampino"; opzioni: string[] } | { tipo: "stazione"; opzioni: string[] };
+type LuogoSpeciale =
+  | null
+  | { tipo: "aeroporto_generico"; opzioni: { value: string; label: string }[] }
+  | { tipo: "fiumicino" | "ciampino"; opzioni: string[] }
+  | { tipo: "stazione"; opzioni: string[] };
 
-function detectLuogoSpeciale(testo: string): LuogoSpeciale {
-  const t = testo.toLowerCase();
-  if (t.includes("fiumicino")) return { tipo: "fiumicino", opzioni: TERMINAL_FIUMICINO };
-  if (t.includes("ciampino")) return { tipo: "ciampino", opzioni: TERMINAL_CIAMPINO };
-  if (t.includes("stazione") || t.includes("termini") || t.includes("tiburtina") || t.includes("ostiense"))
+function detectLuogoSpeciale(testo: string, citta: string, dettaglio: string): LuogoSpeciale {
+  const t = testo.toLowerCase().trim();
+  if (!t) return null;
+  const isRoma = citta === "Roma";
+
+  // Match esplicito Fiumicino
+  if (/fiumicino|fco/.test(t)) return { tipo: "fiumicino", opzioni: TERMINAL_FIUMICINO };
+  // Match esplicito Ciampino
+  if (/ciampino|cia\b/.test(t)) return { tipo: "ciampino", opzioni: TERMINAL_CIAMPINO };
+
+  // Roma + parole aeroporto generiche → forza scelta tra FCO/CIA
+  if (isRoma && /aero?porto|airport|aerop/.test(t)) {
+    // Se l'utente ha già scelto un aeroporto dal dropdown lo onoriamo
+    if (dettaglio === "Aeroporto Fiumicino") return { tipo: "fiumicino", opzioni: TERMINAL_FIUMICINO };
+    if (dettaglio === "Aeroporto Ciampino") return { tipo: "ciampino", opzioni: TERMINAL_CIAMPINO };
+    return { tipo: "aeroporto_generico", opzioni: AEROPORTI_ROMA };
+  }
+
+  // Stazioni
+  if (/stazione|termini|tiburtina|ostiense|trastevere|tuscolana/.test(t))
     return { tipo: "stazione", opzioni: STAZIONI_ROMA };
+
   return null;
 }
 
