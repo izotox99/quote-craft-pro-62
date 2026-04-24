@@ -220,8 +220,14 @@ export default function Prenota() {
     return "altro";
   };
 
-  const luogoInizioSpeciale = useMemo(() => detectLuogoSpeciale(form.luogo_inizio), [form.luogo_inizio]);
-  const luogoFineSpeciale = useMemo(() => detectLuogoSpeciale(form.luogo_fine), [form.luogo_fine]);
+  const luogoInizioSpeciale = useMemo(
+    () => detectLuogoSpeciale(form.luogo_inizio, form.citta, form.luogo_inizio_dettaglio),
+    [form.luogo_inizio, form.citta, form.luogo_inizio_dettaglio]
+  );
+  const luogoFineSpeciale = useMemo(
+    () => detectLuogoSpeciale(form.luogo_fine, form.citta, form.luogo_fine_dettaglio),
+    [form.luogo_fine, form.citta, form.luogo_fine_dettaglio]
+  );
 
   // Reset dettagli se non più rilevanti
   useEffect(() => {
