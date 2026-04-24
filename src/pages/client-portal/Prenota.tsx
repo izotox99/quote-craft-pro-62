@@ -198,7 +198,7 @@ export default function Prenota() {
     if (!clientId || !orgId) return;
 
     setLoading(true);
-    const { error } = await supabase.from("servizi").insert({
+    const { data: inserted, error } = await supabase.from("servizi").insert({
       data_servizio: form.data_servizio,
       ora_inizio: form.ora_inizio || null,
       tipologia: getTipologia() as any,
@@ -224,14 +224,33 @@ export default function Prenota() {
       org_id: orgId,
       stato: "nuovo" as any,
       utenza_id: activeUtenzaId,
-    } as any);
+    } as any).select("id").single();
 
-    if (error) {
-      toast.error("Errore nella prenotazione: " + error.message);
-    } else {
-      toast.success("Prenotazione inviata con successo!");
-      setForm(empty);
+    if (error || !inserted) {
+      toast.error("Errore nella prenotazione: " + (error?.message ?? ""));
+      setLoading(false);
+      return;
     }
+
+    // Upload allegato (se presente)
+    if (allegato) {
+      const safeName = allegato.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${orgId}/${inserted.id}/${Date.now()}_${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from("servizi-allegati")
+        .upload(path, allegato, { contentType: allegato.type, upsert: false });
+      if (upErr) {
+        toast.error("Servizio creato ma upload allegato fallito: " + upErr.message);
+      } else {
+        await supabase.from("servizi")
+          .update({ allegato_path: path, allegato_nome: allegato.name } as any)
+          .eq("id", inserted.id);
+      }
+    }
+
+    toast.success("Prenotazione inviata con successo!");
+    setForm(empty);
+    setAllegato(null);
     setLoading(false);
   };
 
