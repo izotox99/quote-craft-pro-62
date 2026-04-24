@@ -114,7 +114,8 @@ export default function Dashboard() {
         (s.clients?.company || s.clients?.name || "").toLowerCase().includes(q) ||
         (s.contatto || "").toLowerCase().includes(q) ||
         (s.codice || "").toLowerCase().includes(q) ||
-        (s.citta || "").toLowerCase().includes(q)
+        (s.citta || "").toLowerCase().includes(q) ||
+        (s.client_utenze ? `${s.client_utenze.nome} ${s.client_utenze.cognome}`.toLowerCase().includes(q) : false)
       );
     }
     return list;
