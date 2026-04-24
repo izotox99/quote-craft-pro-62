@@ -11,6 +11,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AlertTriangle, Bell, Sparkles, UserPlus, XCircle, Paperclip } from "lucide-react";
+import { useHorizontalWheel } from "@/hooks/use-horizontal-wheel";
 import { format, addDays, differenceInDays, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
@@ -102,6 +103,7 @@ export default function Dashboard() {
   const [statoFilter, setStatoFilter] = useState<string>("tutti");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const tableScrollRef = useHorizontalWheel<HTMLDivElement>();
 
   const load = async () => {
     setLoading(true);
@@ -378,7 +380,7 @@ export default function Dashboard() {
         {/* Table */}
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div ref={tableScrollRef} className="h-scroll">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
