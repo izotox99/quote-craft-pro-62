@@ -122,6 +122,18 @@ export default function Dashboard() {
     setSelected(new Set());
   }, [user, dal, al]);
 
+  // Realtime: aggiorna la dashboard quando un cliente modifica/annulla un servizio
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel("dashboard-servizi")
+      .on("postgres_changes", { event: "*", schema: "public", table: "servizi" }, () => {
+        load();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, dal, al]);
+
   const filtered = useMemo(() => {
     let list = servizi;
     // Default: nascondi gli annullati dalla lista principale
