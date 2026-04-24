@@ -192,6 +192,18 @@ export default function Dashboard() {
   const allChecked = filtered.length > 0 && selected.size === filtered.length;
   const someChecked = selected.size > 0 && selected.size < filtered.length;
 
+  const downloadAllegato = async (s: Servizio) => {
+    if (!s.allegato_path) return;
+    const { data, error } = await supabase.storage
+      .from("servizi-allegati")
+      .createSignedUrl(s.allegato_path, 60);
+    if (error || !data) {
+      toast.error("Impossibile scaricare il file");
+      return;
+    }
+    window.open(data.signedUrl, "_blank");
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-4">
