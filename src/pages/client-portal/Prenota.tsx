@@ -270,6 +270,27 @@ export default function Prenota() {
       toast.error("Seleziona la tipologia di servizio");
       return;
     }
+    // Forza scelta terminal/aeroporto/stazione quando rilevato
+    if (luogoInizioSpeciale && !form.luogo_inizio_dettaglio) {
+      toast.error(
+        luogoInizioSpeciale.tipo === "aeroporto_generico"
+          ? "Specifica quale aeroporto per il luogo di inizio"
+          : luogoInizioSpeciale.tipo === "stazione"
+          ? "Specifica quale stazione per il luogo di inizio"
+          : "Specifica il terminal per il luogo di inizio"
+      );
+      return;
+    }
+    if (luogoFineSpeciale && !form.luogo_fine_dettaglio) {
+      toast.error(
+        luogoFineSpeciale.tipo === "aeroporto_generico"
+          ? "Specifica quale aeroporto per il luogo di fine"
+          : luogoFineSpeciale.tipo === "stazione"
+          ? "Specifica quale stazione per il luogo di fine"
+          : "Specifica il terminal per il luogo di fine"
+      );
+      return;
+    }
     if (!clientId || !orgId) return;
 
     setLoading(true);
