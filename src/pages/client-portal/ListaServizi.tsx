@@ -435,6 +435,8 @@ export default function ListaServizi() {
     setSelected(updated);
     setServizi((prev) => prev.map((x) => x.id === s.id ? updated : x));
   };
+
+  const exportExcel = () => {
     const headers = ["Città", "Data", "Ora", "Passeggero", "N.P", "N.bg", "T.serv", "Luogo inizio", "Itinerario", "Luogo fine", "Veicolo", "T.P", "Centro Costo", "Stato"];
     const rows = filtered.map(s => [
       s.citta ?? "", s.data_servizio, s.ora_inizio ?? "", s.contatto ?? "", s.n_passeggeri ?? "",
