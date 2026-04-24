@@ -47,12 +47,15 @@ export default function ClientLogin() {
 
       // Edge function returned a non-2xx: extract specific error message
       if (fnErr) {
-        let msg = "Credenziali non valide";
+        let msg = "Email o password non corretti";
         const ctx = (fnErr as { context?: Response }).context;
-        if (ctx && typeof ctx.json === "function") {
+        if (ctx && typeof ctx.text === "function") {
           try {
-            const body = await ctx.json();
-            if (body?.error) msg = body.error;
+            const raw = await ctx.text();
+            if (raw) {
+              const body = JSON.parse(raw);
+              if (body?.error) msg = body.error;
+            }
           } catch {
             // ignore parse errors, keep default
           }
