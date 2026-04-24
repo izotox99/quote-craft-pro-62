@@ -883,7 +883,8 @@ export default function Prenota() {
                   )}
                   {form.contatto.trim() && !passeggeroEsiste && (
                     <p className="text-xs text-muted-foreground pt-1">
-                      <Plus className="h-3 w-3 inline mr-0.5" /> Nuovo passeggero — verrà salvato in rubrica
+                      <Plus className="h-3 w-3 inline mr-0.5" />
+                      Questo passeggero non è in rubrica: lo aggiungeremo automaticamente al salvataggio, così la prossima volta lo trovi subito.
                     </p>
                   )}
                 </div>
