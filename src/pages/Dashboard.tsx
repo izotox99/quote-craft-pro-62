@@ -51,6 +51,7 @@ type Servizio = {
   modificato_da_cliente: boolean | null;
   modificato_at: string | null;
   clients: { name: string; company: string | null } | null;
+  client_utenze: { nome: string; cognome: string } | null;
   autisti: { nome: string; cognome: string } | null;
   autisti_esterni: { nome: string } | null;
   veicoli: { targa: string; tipo_macchina: string | null } | null;
