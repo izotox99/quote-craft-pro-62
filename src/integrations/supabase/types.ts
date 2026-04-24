@@ -585,6 +585,56 @@ export type Database = {
         }
         Relationships: []
       }
+      passeggeri_rubrica: {
+        Row: {
+          client_id: string
+          cognome: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          nome: string
+          note: string | null
+          org_id: string
+          telefono: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          cognome?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          note?: string | null
+          org_id: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          cognome?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          note?: string | null
+          org_id?: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "passeggeri_rubrica_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
