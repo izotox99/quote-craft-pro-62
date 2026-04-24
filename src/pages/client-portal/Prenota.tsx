@@ -746,21 +746,34 @@ export default function Prenota() {
                   </Button>
                 </div>
               ) : (
-                <Input
-                  type="file"
-                  accept={ALLEGATO_ACCEPT}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    if (f.size > ALLEGATO_MAX_MB * 1024 * 1024) {
-                      toast.error(`File troppo grande. Massimo ${ALLEGATO_MAX_MB}MB.`);
-                      e.target.value = "";
-                      return;
-                    }
-                    setAllegato(f);
-                  }}
-                  className="rounded-lg h-10 cursor-pointer file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary"
-                />
+                <label
+                  htmlFor="allegato-input"
+                  className="flex items-center gap-3 p-3 rounded-lg border-2 border-dashed border-border hover:border-primary/50 hover:bg-accent/30 transition-colors cursor-pointer group"
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0 group-hover:bg-primary/15 transition-colors">
+                    <Plus className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">Scegli un file</p>
+                    <p className="text-xs text-muted-foreground">PDF, Word, Excel o immagini · max {ALLEGATO_MAX_MB}MB</p>
+                  </div>
+                  <input
+                    id="allegato-input"
+                    type="file"
+                    accept={ALLEGATO_ACCEPT}
+                    className="sr-only"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (!f) return;
+                      if (f.size > ALLEGATO_MAX_MB * 1024 * 1024) {
+                        toast.error(`File troppo grande. Massimo ${ALLEGATO_MAX_MB}MB.`);
+                        e.target.value = "";
+                        return;
+                      }
+                      setAllegato(f);
+                    }}
+                  />
+                </label>
               )}
             </CardContent>
           </Card>
