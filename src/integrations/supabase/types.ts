@@ -540,6 +540,67 @@ export type Database = {
           },
         ]
       }
+      notifiche: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          id: string
+          letta: boolean
+          messaggio: string | null
+          org_id: string
+          servizio_id: string | null
+          tipo: string
+          titolo: string
+          utenza_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          letta?: boolean
+          messaggio?: string | null
+          org_id: string
+          servizio_id?: string | null
+          tipo: string
+          titolo: string
+          utenza_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          id?: string
+          letta?: boolean
+          messaggio?: string | null
+          org_id?: string
+          servizio_id?: string | null
+          tipo?: string
+          titolo?: string
+          utenza_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifiche_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifiche_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifiche_utenza_id_fkey"
+            columns: ["utenza_id"]
+            isOneToOne: false
+            referencedRelation: "client_utenze"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           address: string | null
@@ -1200,6 +1261,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_servizi_annullati: { Args: never; Returns: undefined }
       get_active_utenza_id: { Args: { _user_id: string }; Returns: string }
       get_client_org_id: { Args: { _user_id: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }

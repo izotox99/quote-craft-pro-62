@@ -15,6 +15,7 @@ import {
   Users2, Fuel, ClipboardCheck, ClipboardList, TrendingUp, FilePlus, FileText as FileTextIcon, CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NotificheBell } from "@/components/NotificheBell";
 
 const clientSubItems = [
   { to: "/clients", icon: List, label: "Lista clienti" },
@@ -167,6 +168,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </nav>
 
           <div className="flex items-center gap-2 ml-auto md:ml-0">
+            <NotificheBell />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full border border-border/50">
