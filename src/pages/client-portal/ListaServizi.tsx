@@ -360,7 +360,81 @@ export default function ListaServizi() {
     }
   };
 
-  const exportExcel = () => {
+  const downloadAllegato = async (s: Servizio) => {
+    if (!s.allegato_path) return;
+    const { data, error } = await supabase.storage
+      .from("servizi-allegati")
+      .createSignedUrl(s.allegato_path, 60);
+    if (error || !data?.signedUrl) {
+      toast.error("Impossibile scaricare l'allegato");
+      return;
+    }
+    window.open(data.signedUrl, "_blank");
+  };
+
+  const uploadAllegato = async (s: Servizio, file: File) => {
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      toast.error("Formato non supportato (PNG, JPG, PDF, Word, Excel)");
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File troppo grande (max 10MB)");
+      return;
+    }
+    // Resolve org_id
+    let orgId = s.org_id;
+    if (!orgId) {
+      const { data: srv } = await supabase.from("servizi").select("org_id").eq("id", s.id).maybeSingle();
+      orgId = srv?.org_id ?? null;
+    }
+    if (!orgId) { toast.error("Errore: organizzazione non trovata"); return; }
+
+    // Remove old file if present
+    if (s.allegato_path) {
+      await supabase.storage.from("servizi-allegati").remove([s.allegato_path]);
+    }
+
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${orgId}/${s.id}/${Date.now()}_${safeName}`;
+    const { error: upErr } = await supabase.storage
+      .from("servizi-allegati")
+      .upload(path, file, { upsert: false });
+    if (upErr) {
+      toast.error("Errore caricamento file");
+      return;
+    }
+    const { error: updErr } = await supabase
+      .from("servizi")
+      .update({ allegato_path: path, allegato_nome: file.name } as any)
+      .eq("id", s.id);
+    if (updErr) {
+      toast.error("Errore aggiornamento servizio");
+      return;
+    }
+    toast.success("Allegato caricato");
+    // Update local state
+    const updated = { ...s, allegato_path: path, allegato_nome: file.name };
+    setSelected(updated);
+    setServizi((prev) => prev.map((x) => x.id === s.id ? updated : x));
+  };
+
+  const deleteAllegato = async (s: Servizio) => {
+    if (!s.allegato_path) return;
+    if (!window.confirm("Eliminare l'allegato?")) return;
+    await supabase.storage.from("servizi-allegati").remove([s.allegato_path]);
+    const { error } = await supabase
+      .from("servizi")
+      .update({ allegato_path: null, allegato_nome: null } as any)
+      .eq("id", s.id);
+    if (error) {
+      toast.error("Errore eliminazione");
+      return;
+    }
+    toast.success("Allegato eliminato");
+    const updated = { ...s, allegato_path: null, allegato_nome: null };
+    setSelected(updated);
+    setServizi((prev) => prev.map((x) => x.id === s.id ? updated : x));
+  };
     const headers = ["Città", "Data", "Ora", "Passeggero", "N.P", "N.bg", "T.serv", "Luogo inizio", "Itinerario", "Luogo fine", "Veicolo", "T.P", "Centro Costo", "Stato"];
     const rows = filtered.map(s => [
       s.citta ?? "", s.data_servizio, s.ora_inizio ?? "", s.contatto ?? "", s.n_passeggeri ?? "",
