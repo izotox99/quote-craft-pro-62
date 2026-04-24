@@ -50,6 +50,8 @@ type Servizio = {
   autista_esterno_id: string | null;
   modificato_da_cliente: boolean | null;
   modificato_at: string | null;
+  allegato_path: string | null;
+  allegato_nome: string | null;
   clients: { name: string; company: string | null } | null;
   client_utenze: { nome: string; cognome: string } | null;
   autisti: { nome: string; cognome: string } | null;
