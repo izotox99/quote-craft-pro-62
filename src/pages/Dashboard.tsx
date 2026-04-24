@@ -103,6 +103,7 @@ export default function Dashboard() {
   const [statoFilter, setStatoFilter] = useState<string>("tutti");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const tableScrollRef = useHorizontalWheel<HTMLDivElement>();
 
   const load = async () => {
     setLoading(true);
