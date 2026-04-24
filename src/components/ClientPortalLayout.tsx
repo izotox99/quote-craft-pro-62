@@ -1,20 +1,21 @@
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   CalendarPlus, List, Users, BookOpen, FileText,
-  LogOut, Menu, X, Car, ChevronRight
+  LogOut, Menu, X, Car, ChevronRight, HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PortalTutorial } from "@/components/PortalTutorial";
 
 const navItems = [
-  { label: "Prenota", icon: CalendarPlus, path: "/client-portal/prenota" },
-  { label: "Lista Servizi", icon: List, path: "/client-portal" },
-  { label: "Utenze", icon: Users, path: "/client-portal/utenze" },
-  { label: "Tariffario", icon: BookOpen, path: "/client-portal/tariffario" },
-  { label: "Fatture", icon: FileText, path: "/client-portal/fatture" },
+  { label: "Prenota", icon: CalendarPlus, path: "/client-portal/prenota", tour: "prenota" },
+  { label: "Lista Servizi", icon: List, path: "/client-portal", tour: "servizi" },
+  { label: "Utenze", icon: Users, path: "/client-portal/utenze", tour: "utenze", parentOnly: true },
+  { label: "Tariffario", icon: BookOpen, path: "/client-portal/tariffario", tour: "tariffario" },
+  { label: "Fatture", icon: FileText, path: "/client-portal/fatture", tour: "fatture" },
 ];
 
 export function ClientPortalLayout({ children }: { children: ReactNode }) {
