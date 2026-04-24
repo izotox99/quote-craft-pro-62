@@ -85,7 +85,7 @@ export default function Dashboard() {
     setLoading(true);
     const { data } = await supabase
       .from("servizi")
-      .select("*, clients(name, company), autisti(nome, cognome), autisti_esterni(nome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
+      .select("*, clients(name, company), client_utenze(nome, cognome), autisti(nome, cognome), autisti_esterni(nome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
       .gte("data_servizio", dal)
       .lte("data_servizio", al)
       .order("data_servizio", { ascending: true })
