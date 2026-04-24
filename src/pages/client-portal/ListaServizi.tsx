@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TimePicker } from "@/components/ui/time-picker";
-import { Search, Download, CalendarDays, Pencil, XCircle, Info, ChevronRight, MapPin, Clock, Users, Car, Lock } from "lucide-react";
+import { Search, Download, CalendarDays, Pencil, XCircle, Info, ChevronRight, MapPin, Clock, Users, Car, Lock, Paperclip, Upload, Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
