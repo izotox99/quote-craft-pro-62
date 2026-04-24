@@ -854,7 +854,12 @@ export default function Prenota() {
                     onBlur={() => setTimeout(() => setShowPasseggeroSuggest(false), 200)}
                     placeholder="Inizia a digitare per cercare in rubrica..."
                     className="rounded-lg h-10"
-                    autoComplete="off"
+                    name={`passeggero-${Math.random().toString(36).slice(2, 8)}`}
+                    autoComplete="new-password"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-form-type="other"
                   />
                   {showPasseggeroSuggest && passeggeriFiltrati.length > 0 && (
                     <div className="absolute z-10 left-0 right-0 top-full mt-1 rounded-xl border border-border bg-popover shadow-lg overflow-hidden animate-in fade-in-0 slide-in-from-top-1 duration-150">
