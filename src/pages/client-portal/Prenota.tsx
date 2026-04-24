@@ -127,12 +127,27 @@ function LuogoField({
   onDettaglioChange: (v: string) => void;
   speciale: LuogoSpeciale;
 }) {
+  // Verifica se il dettaglio attuale è un terminal valido per FCO/CIA
+  const terminalValido =
+    !!dettaglio &&
+    (speciale?.tipo === "fiumicino"
+      ? TERMINAL_FIUMICINO.includes(dettaglio)
+      : speciale?.tipo === "ciampino"
+      ? TERMINAL_CIAMPINO.includes(dettaglio)
+      : false);
+
   const handlePick = (val: string, lbl: string) => {
     if (!speciale) return;
-    if (speciale.tipo === "aeroporto_generico" || speciale.tipo === "stazione") {
+    if (speciale.tipo === "aeroporto_generico") {
+      // Sostituisce il testo col nome aeroporto e marca quale (FCO/CIA).
+      // Resetto il dettaglio così detectLuogoSpeciale promuove a fiumicino/ciampino
+      // e il prossimo render mostra subito i terminal.
       onChange(lbl);
-      if (speciale.tipo === "aeroporto_generico") onDettaglioChange(val);
+      onDettaglioChange(val);
+    } else if (speciale.tipo === "stazione") {
+      onChange(lbl);
     } else {
+      // fiumicino o ciampino: salviamo il terminal scelto
       onDettaglioChange(val);
     }
   };
@@ -141,7 +156,7 @@ function LuogoField({
     !!speciale &&
     (speciale.tipo === "aeroporto_generico" ||
       speciale.tipo === "stazione" ||
-      ((speciale.tipo === "fiumicino" || speciale.tipo === "ciampino") && !dettaglio));
+      ((speciale.tipo === "fiumicino" || speciale.tipo === "ciampino") && !terminalValido));
 
   const headerText =
     !speciale
