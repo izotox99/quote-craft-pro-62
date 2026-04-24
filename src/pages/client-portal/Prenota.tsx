@@ -136,6 +136,10 @@ function LuogoField({
       ? TERMINAL_CIAMPINO.includes(dettaglio)
       : false);
 
+  // Verifica se il valore corrente è già una stazione confermata
+  const stazioneConfermata =
+    speciale?.tipo === "stazione" && STAZIONI_ROMA.includes(value.trim());
+
   const handlePick = (val: string, lbl: string) => {
     if (!speciale) return;
     if (speciale.tipo === "aeroporto_generico") {
@@ -145,7 +149,10 @@ function LuogoField({
       onChange(lbl);
       onDettaglioChange(val);
     } else if (speciale.tipo === "stazione") {
+      // Sostituisce il testo con la stazione esatta. Lasciamo dettaglio vuoto:
+      // la presenza del nome esatto in STAZIONI_ROMA chiude il menu.
       onChange(lbl);
+      onDettaglioChange("");
     } else {
       // fiumicino o ciampino: salviamo il terminal scelto
       onDettaglioChange(val);
@@ -154,8 +161,8 @@ function LuogoField({
 
   const showSuggestions =
     !!speciale &&
-    (speciale.tipo === "aeroporto_generico" ||
-      speciale.tipo === "stazione" ||
+    ((speciale.tipo === "aeroporto_generico") ||
+      (speciale.tipo === "stazione" && !stazioneConfermata) ||
       ((speciale.tipo === "fiumicino" || speciale.tipo === "ciampino") && !terminalValido));
 
   const headerText =
