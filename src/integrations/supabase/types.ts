@@ -279,6 +279,7 @@ export type Database = {
           password: string | null
           password_hash: string
           tipo: Database["public"]["Enums"]["utenza_tipo"]
+          tutorial_completato_at: string | null
           updated_at: string
         }
         Insert: {
@@ -294,6 +295,7 @@ export type Database = {
           password?: string | null
           password_hash: string
           tipo?: Database["public"]["Enums"]["utenza_tipo"]
+          tutorial_completato_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -309,6 +311,7 @@ export type Database = {
           password?: string | null
           password_hash?: string
           tipo?: Database["public"]["Enums"]["utenza_tipo"]
+          tutorial_completato_at?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -352,6 +355,7 @@ export type Database = {
           telefono_urg2_nota: string | null
           telefono_urg3: string | null
           telefono_urg3_nota: string | null
+          tutorial_completato_at: string | null
           updated_at: string
         }
         Insert: {
@@ -384,6 +388,7 @@ export type Database = {
           telefono_urg2_nota?: string | null
           telefono_urg3?: string | null
           telefono_urg3_nota?: string | null
+          tutorial_completato_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -416,6 +421,7 @@ export type Database = {
           telefono_urg2_nota?: string | null
           telefono_urg3?: string | null
           telefono_urg3_nota?: string | null
+          tutorial_completato_at?: string | null
           updated_at?: string
         }
         Relationships: [

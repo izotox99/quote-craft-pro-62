@@ -1,20 +1,21 @@
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   CalendarPlus, List, Users, BookOpen, FileText,
-  LogOut, Menu, X, Car, ChevronRight
+  LogOut, Menu, X, Car, ChevronRight, HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PortalTutorial } from "@/components/PortalTutorial";
 
 const navItems = [
-  { label: "Prenota", icon: CalendarPlus, path: "/client-portal/prenota" },
-  { label: "Lista Servizi", icon: List, path: "/client-portal" },
-  { label: "Utenze", icon: Users, path: "/client-portal/utenze" },
-  { label: "Tariffario", icon: BookOpen, path: "/client-portal/tariffario" },
-  { label: "Fatture", icon: FileText, path: "/client-portal/fatture" },
+  { label: "Prenota", icon: CalendarPlus, path: "/client-portal/prenota", tour: "prenota" },
+  { label: "Lista Servizi", icon: List, path: "/client-portal", tour: "servizi" },
+  { label: "Utenze", icon: Users, path: "/client-portal/utenze", tour: "utenze", parentOnly: true },
+  { label: "Tariffario", icon: BookOpen, path: "/client-portal/tariffario", tour: "tariffario" },
+  { label: "Fatture", icon: FileText, path: "/client-portal/fatture", tour: "fatture" },
 ];
 
 export function ClientPortalLayout({ children }: { children: ReactNode }) {
@@ -24,22 +25,27 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
   const [clientName, setClientName] = useState("");
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isParent, setIsParent] = useState(false);
+  const [autoStartTutorial, setAutoStartTutorial] = useState(false);
+  const tutorialStartRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const load = async () => {
       if (!user) return;
       const { data: client } = await supabase
         .from("clients")
-        .select("company, name")
+        .select("company, name, tutorial_completato_at")
         .eq("auth_user_id", user.id)
         .maybeSingle();
       if (client) {
         setClientName(client.company || client.name);
+        setIsParent(true);
+        if (!client.tutorial_completato_at) setAutoStartTutorial(true);
         return;
       }
       const { data: utenza } = await supabase
         .from("client_utenze")
-        .select("nome, cognome, parent_client_id")
+        .select("nome, cognome, parent_client_id, tutorial_completato_at")
         .eq("auth_user_id", user.id)
         .maybeSingle();
       if (utenza) {
@@ -50,6 +56,8 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
           .maybeSingle();
         const parentLabel = parent?.company || parent?.name || "";
         setClientName(`${utenza.nome} ${utenza.cognome}${parentLabel ? ` · ${parentLabel}` : ""}`);
+        setIsParent(false);
+        if (!utenza.tutorial_completato_at) setAutoStartTutorial(true);
       }
     };
     load();
@@ -75,11 +83,12 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
 
       {/* Nav */}
       <nav className="flex-1 py-2 px-2 space-y-0.5">
-        {navItems.map((item) => {
+        {navItems.filter(i => !i.parentOnly || isParent).map((item) => {
           const active = location.pathname === item.path;
           return (
             <button
               key={item.path}
+              data-tour={item.tour}
               onClick={() => { navigate(item.path); setMobileOpen(false); }}
               className={cn(
                 "w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
@@ -147,6 +156,15 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
               Benvenuto, <span className="text-foreground">{clientName}</span>
             </span>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            title="Rivedi tutorial"
+            onClick={() => tutorialStartRef.current?.()}
+          >
+            <HelpCircle className="h-4 w-4" />
+          </Button>
         </header>
 
         {/* Content */}
@@ -154,6 +172,12 @@ export function ClientPortalLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+
+      <PortalTutorial
+        autoStart={autoStartTutorial}
+        showUtenze={isParent}
+        onReady={(start) => { tutorialStartRef.current = start; }}
+      />
     </div>
   );
 }
