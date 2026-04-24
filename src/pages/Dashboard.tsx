@@ -379,7 +379,7 @@ export default function Dashboard() {
         {/* Table */}
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <div ref={tableScrollRef} className="h-scroll">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/40">
