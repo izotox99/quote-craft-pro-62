@@ -685,6 +685,70 @@ export default function ListaServizi() {
                     <DetailRow label="Accessori" value={selected.accessori} />
                     <DetailRow label="Note" value={selected.note} />
                     <DetailRow label="Codice" value={selected.codice} />
+
+                    <Separator className="my-2" />
+
+                    {/* Allegato */}
+                    <div className="py-2">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+                          <Paperclip className="h-3.5 w-3.5" /> Allegato per autista
+                        </span>
+                      </div>
+                      {selected.allegato_path ? (
+                        <div className="flex items-center gap-2 p-2.5 rounded-lg border border-border/60 bg-muted/30">
+                          <FileText className="h-4 w-4 text-primary shrink-0" />
+                          <button
+                            onClick={() => downloadAllegato(selected)}
+                            className="flex-1 min-w-0 text-left text-sm font-medium truncate hover:underline"
+                          >
+                            {selected.allegato_nome ?? "Allegato"}
+                          </button>
+                          {editable && (
+                            <>
+                              <label className="cursor-pointer">
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept=".png,.jpg,.jpeg,.webp,.gif,.heic,.pdf,.doc,.docx,.xls,.xlsx"
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    if (f) uploadAllegato(selected, f);
+                                    e.target.value = "";
+                                  }}
+                                />
+                                <span className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
+                                  <Upload className="h-3.5 w-3.5" />
+                                </span>
+                              </label>
+                              <button
+                                onClick={() => deleteAllegato(selected)}
+                                className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      ) : editable ? (
+                        <label className="flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-border hover:border-primary/40 hover:bg-muted/30 cursor-pointer transition-colors">
+                          <Upload className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Carica file (PNG, JPG, PDF, Word, Excel · max 10MB)</span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".png,.jpg,.jpeg,.webp,.gif,.heic,.pdf,.doc,.docx,.xls,.xlsx"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) uploadAllegato(selected, f);
+                              e.target.value = "";
+                            }}
+                          />
+                        </label>
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">Nessun allegato</p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Actions */}
