@@ -432,51 +432,17 @@ export default function Prenota() {
     if (data) setPasseggeri(prev => [...prev, data]);
   };
 
-  // Duplica ultima prenotazione
+  // Riprendi nominativi ultima prenotazione (solo passeggero)
   const duplicaUltimo = () => {
     if (!ultimoServizio) return;
     const u = ultimoServizio;
-    // Recupera tipologia UI dal transfer_tipo o tour_tipo
-    let tipologiaUI = "";
-    if (u.tour_tipo) tipologiaUI = "tour";
-    else if (u.transfer_tipo === "Transfer regionale") tipologiaUI = "transfer_regionale";
-    else if (u.transfer_tipo === "Transfer interno città") tipologiaUI = "transfer_interno";
-
-    // Splitta luogo "X - Y" in base + dettaglio (se contiene " - ")
-    const splitLuogo = (s: string | null): [string, string] => {
-      if (!s) return ["", ""];
-      const idx = s.lastIndexOf(" - ");
-      if (idx === -1) return [s, ""];
-      return [s.substring(0, idx), s.substring(idx + 3)];
-    };
-    const [li, lid] = splitLuogo(u.luogo_inizio);
-    const [lf, lfd] = splitLuogo(u.luogo_fine);
-
-    setForm({
-      data_servizio: format(new Date(), "yyyy-MM-dd"),
-      ora_inizio: "",
+    setForm(prev => ({
+      ...prev,
       contatto: u.contatto ?? "",
       telefono_contatto: u.telefono_contatto ?? "",
       email_contatto: u.email_contatto ?? "",
-      n_passeggeri: String(u.n_passeggeri ?? 1),
-      n_bagagli: String(u.n_bagagli ?? 0),
-      veicolo_tipo: u.veicolo_tipo ?? "",
-      tipologia_servizio: tipologiaUI,
-      tour_tipo: u.tour_tipo ?? "",
-      luogo_inizio: li,
-      luogo_inizio_dettaglio: lid,
-      luogo_fine: lf,
-      luogo_fine_dettaglio: lfd,
-      itinerario: u.itinerario ?? "",
-      info_autista: u.info_autista ?? "",
-      note: u.note ?? "",
-      tipo_pagamento: u.tipo_pagamento ?? "",
-      prezzo: u.prezzo != null ? String(u.prezzo) : "",
-      citta: u.citta ?? "",
-      accessori: u.accessori ?? "",
-    });
-    setStep(5);
-    toast.success("Prenotazione duplicata. Imposta data/ora e conferma.");
+    }));
+    toast.success("Nominativi passeggero ripresi dall'ultima prenotazione.");
   };
 
   // Validazione step
@@ -640,23 +606,23 @@ export default function Prenota() {
           </h1>
         </div>
 
-        {/* Card Duplica ultima prenotazione */}
-        {ultimoServizio && step === 1 && (
+        {/* Card Riprendi nominativi ultima prenotazione */}
+        {ultimoServizio && ultimoServizio.contatto && step === 1 && (
           <Card className="rounded-xl border-primary/30 bg-gradient-to-br from-primary/5 to-accent/30 shadow-sm">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary shrink-0">
                 <RotateCcw className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground">Ripeti l'ultima prenotazione</p>
+                <p className="text-sm font-semibold text-foreground">Usa l'ultimo passeggero</p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {ultimoServizio.transfer_tipo || ultimoServizio.tour_tipo || "Servizio"}
-                  {ultimoServizio.citta ? ` · ${ultimoServizio.citta}` : ""}
-                  {ultimoServizio.data_servizio ? ` · ${format(parse(ultimoServizio.data_servizio, "yyyy-MM-dd", new Date()), "d MMM yyyy", { locale: it })}` : ""}
+                  {ultimoServizio.contatto}
+                  {ultimoServizio.telefono_contatto ? ` · ${ultimoServizio.telefono_contatto}` : ""}
+                  {ultimoServizio.email_contatto ? ` · ${ultimoServizio.email_contatto}` : ""}
                 </p>
               </div>
               <Button type="button" size="sm" onClick={duplicaUltimo} className="rounded-lg shrink-0">
-                Duplica
+                Riprendi
               </Button>
             </CardContent>
           </Card>
