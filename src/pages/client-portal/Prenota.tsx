@@ -831,20 +831,6 @@ export default function Prenota() {
           {step === 4 && (
             <Card className="rounded-xl border-border/50 shadow-sm">
               <CardContent className="p-5 space-y-4">
-                {utenze.length > 0 && (
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Compila da utenza (opzionale)</Label>
-                    <Select onValueChange={handleUtenzaSelect}>
-                      <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Scegli utenza..." /></SelectTrigger>
-                      <SelectContent>
-                        {utenze.map(u => (
-                          <SelectItem key={u.id} value={u.id}>{u.nome} {u.cognome}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
                 <div className="space-y-1.5 relative">
                   <Label className="text-xs font-medium text-muted-foreground">Nome passeggero <span className="text-destructive">*</span></Label>
                   <Input
