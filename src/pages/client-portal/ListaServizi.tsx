@@ -336,7 +336,8 @@ export default function ListaServizi() {
     });
 
     if (error) {
-      toast.error("Errore nel salvataggio");
+      console.error("[handleSaveEdit] RPC error:", error);
+      toast.error(`Errore: ${error.message}`);
     } else {
       toast.success("Servizio aggiornato");
       setEditOpen(false);
