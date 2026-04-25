@@ -27,6 +27,10 @@ import {
   CheckCircle2,
   RotateCcw,
   Pencil,
+  Search,
+  UserPlus,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { format, parse } from "date-fns";
 import { it } from "date-fns/locale";
