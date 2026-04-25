@@ -432,51 +432,17 @@ export default function Prenota() {
     if (data) setPasseggeri(prev => [...prev, data]);
   };
 
-  // Duplica ultima prenotazione
+  // Riprendi nominativi ultima prenotazione (solo passeggero)
   const duplicaUltimo = () => {
     if (!ultimoServizio) return;
     const u = ultimoServizio;
-    // Recupera tipologia UI dal transfer_tipo o tour_tipo
-    let tipologiaUI = "";
-    if (u.tour_tipo) tipologiaUI = "tour";
-    else if (u.transfer_tipo === "Transfer regionale") tipologiaUI = "transfer_regionale";
-    else if (u.transfer_tipo === "Transfer interno città") tipologiaUI = "transfer_interno";
-
-    // Splitta luogo "X - Y" in base + dettaglio (se contiene " - ")
-    const splitLuogo = (s: string | null): [string, string] => {
-      if (!s) return ["", ""];
-      const idx = s.lastIndexOf(" - ");
-      if (idx === -1) return [s, ""];
-      return [s.substring(0, idx), s.substring(idx + 3)];
-    };
-    const [li, lid] = splitLuogo(u.luogo_inizio);
-    const [lf, lfd] = splitLuogo(u.luogo_fine);
-
-    setForm({
-      data_servizio: format(new Date(), "yyyy-MM-dd"),
-      ora_inizio: "",
+    setForm(prev => ({
+      ...prev,
       contatto: u.contatto ?? "",
       telefono_contatto: u.telefono_contatto ?? "",
       email_contatto: u.email_contatto ?? "",
-      n_passeggeri: String(u.n_passeggeri ?? 1),
-      n_bagagli: String(u.n_bagagli ?? 0),
-      veicolo_tipo: u.veicolo_tipo ?? "",
-      tipologia_servizio: tipologiaUI,
-      tour_tipo: u.tour_tipo ?? "",
-      luogo_inizio: li,
-      luogo_inizio_dettaglio: lid,
-      luogo_fine: lf,
-      luogo_fine_dettaglio: lfd,
-      itinerario: u.itinerario ?? "",
-      info_autista: u.info_autista ?? "",
-      note: u.note ?? "",
-      tipo_pagamento: u.tipo_pagamento ?? "",
-      prezzo: u.prezzo != null ? String(u.prezzo) : "",
-      citta: u.citta ?? "",
-      accessori: u.accessori ?? "",
-    });
-    setStep(5);
-    toast.success("Prenotazione duplicata. Imposta data/ora e conferma.");
+    }));
+    toast.success("Nominativi passeggero ripresi dall'ultima prenotazione.");
   };
 
   // Validazione step
