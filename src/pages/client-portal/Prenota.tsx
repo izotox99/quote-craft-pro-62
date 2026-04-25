@@ -606,23 +606,23 @@ export default function Prenota() {
           </h1>
         </div>
 
-        {/* Card Duplica ultima prenotazione */}
-        {ultimoServizio && step === 1 && (
+        {/* Card Riprendi nominativi ultima prenotazione */}
+        {ultimoServizio && ultimoServizio.contatto && step === 1 && (
           <Card className="rounded-xl border-primary/30 bg-gradient-to-br from-primary/5 to-accent/30 shadow-sm">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary shrink-0">
                 <RotateCcw className="h-5 w-5" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground">Ripeti l'ultima prenotazione</p>
+                <p className="text-sm font-semibold text-foreground">Usa l'ultimo passeggero</p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {ultimoServizio.transfer_tipo || ultimoServizio.tour_tipo || "Servizio"}
-                  {ultimoServizio.citta ? ` · ${ultimoServizio.citta}` : ""}
-                  {ultimoServizio.data_servizio ? ` · ${format(parse(ultimoServizio.data_servizio, "yyyy-MM-dd", new Date()), "d MMM yyyy", { locale: it })}` : ""}
+                  {ultimoServizio.contatto}
+                  {ultimoServizio.telefono_contatto ? ` · ${ultimoServizio.telefono_contatto}` : ""}
+                  {ultimoServizio.email_contatto ? ` · ${ultimoServizio.email_contatto}` : ""}
                 </p>
               </div>
               <Button type="button" size="sm" onClick={duplicaUltimo} className="rounded-lg shrink-0">
-                Duplica
+                Riprendi
               </Button>
             </CardContent>
           </Card>
