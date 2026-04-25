@@ -27,6 +27,10 @@ import {
   CheckCircle2,
   RotateCcw,
   Pencil,
+  Search,
+  UserPlus,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { format, parse } from "date-fns";
 import { it } from "date-fns/locale";
@@ -800,63 +804,109 @@ export default function Prenota() {
           {/* STEP 4: Passeggero con autocomplete */}
           {step === 4 && (
             <Card className="rounded-xl border-border/50 shadow-sm">
-              <CardContent className="p-5 space-y-4">
-                <div className="space-y-1.5 relative">
-                  <Label className="text-xs font-medium text-muted-foreground">Nome passeggero <span className="text-destructive">*</span></Label>
-                  <Input
-                    value={form.contatto}
-                    onChange={(e) => { set("contatto", e.target.value); setShowPasseggeroSuggest(true); }}
-                    onFocus={() => setShowPasseggeroSuggest(true)}
-                    onBlur={() => setTimeout(() => setShowPasseggeroSuggest(false), 200)}
-                    placeholder="Inizia a digitare per cercare in rubrica..."
-                    className="rounded-lg h-10"
-                    name={`passeggero-${Math.random().toString(36).slice(2, 8)}`}
-                    autoComplete="new-password"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    data-lpignore="true"
-                    data-form-type="other"
-                  />
-                  {showPasseggeroSuggest && passeggeriFiltrati.length > 0 && (
-                    <div className="absolute z-10 left-0 right-0 top-full mt-1 rounded-xl border border-border bg-popover shadow-lg overflow-hidden animate-in fade-in-0 slide-in-from-top-1 duration-150">
-                      <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-primary bg-accent/40 border-b border-border">
-                        Dalla rubrica
+              <CardContent className="p-5 space-y-5">
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    Nome passeggero <span className="text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      value={form.contatto}
+                      onChange={(e) => set("contatto", e.target.value)}
+                      placeholder="Cerca o digita un nuovo nome…"
+                      className="rounded-lg h-11 pl-9 pr-9"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      data-lpignore="true"
+                      data-form-type="other"
+                    />
+                    {form.contatto && (
+                      <button
+                        type="button"
+                        onClick={() => { set("contatto", ""); set("telefono_contatto", ""); set("email_contatto", ""); }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition"
+                        aria-label="Cancella"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Lista rubrica — sempre visibile sotto il campo */}
+                  {passeggeri.length > 0 && (
+                    <div className="rounded-xl border border-border bg-card overflow-hidden">
+                      <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40 border-b border-border flex items-center justify-between">
+                        <span>Dalla rubrica</span>
+                        <span className="text-[10px] font-normal normal-case">
+                          {passeggeriFiltrati.length} {passeggeriFiltrati.length === 1 ? "risultato" : "risultati"}
+                        </span>
                       </div>
-                      <ul className="max-h-60 overflow-y-auto py-1">
-                        {passeggeriFiltrati.map(p => (
-                          <li key={p.id}>
-                            <button
-                              type="button"
-                              onMouseDown={(e) => { e.preventDefault(); selezionaPasseggero(p); }}
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
-                            >
-                              <div className="font-medium">{p.nome}{p.cognome ? " " + p.cognome : ""}</div>
-                              {(p.telefono || p.email) && (
-                                <div className="text-xs text-muted-foreground truncate">
-                                  {[p.telefono, p.email].filter(Boolean).join(" · ")}
-                                </div>
-                              )}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
+                      {passeggeriFiltrati.length > 0 ? (
+                        <ul className="max-h-64 overflow-y-auto divide-y divide-border/60">
+                          {passeggeriFiltrati.map(p => {
+                            const fullName = `${p.nome}${p.cognome ? " " + p.cognome : ""}`;
+                            const isSelected =
+                              form.contatto.trim().toLowerCase() === fullName.toLowerCase().trim();
+                            return (
+                              <li key={p.id}>
+                                <button
+                                  type="button"
+                                  onClick={() => selezionaPasseggero(p)}
+                                  className={`w-full text-left px-3 py-2.5 text-sm transition-colors flex items-center gap-3 ${
+                                    isSelected ? "bg-primary/10" : "hover:bg-accent"
+                                  }`}
+                                >
+                                  <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
+                                    {p.nome.charAt(0).toUpperCase()}
+                                    {p.cognome ? p.cognome.charAt(0).toUpperCase() : ""}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-medium truncate flex items-center gap-2">
+                                      {fullName}
+                                      {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />}
+                                    </div>
+                                    {(p.telefono || p.email) && (
+                                      <div className="text-xs text-muted-foreground truncate">
+                                        {[p.telefono, p.email].filter(Boolean).join(" · ")}
+                                      </div>
+                                    )}
+                                  </div>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      ) : (
+                        <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                          Nessun passeggero trovato in rubrica
+                        </div>
+                      )}
                     </div>
                   )}
+
                   {form.contatto.trim() && !passeggeroEsiste && (
-                    <p className="text-xs text-muted-foreground pt-1">
-                      <Plus className="h-3 w-3 inline mr-0.5" />
-                      Questo passeggero non è in rubrica: lo aggiungeremo automaticamente al salvataggio, così la prossima volta lo trovi subito.
-                    </p>
+                    <div className="flex items-start gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs text-foreground">
+                      <UserPlus className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <span>
+                        <strong className="font-semibold">{form.contatto}</strong> non è in rubrica — lo salveremo automaticamente al termine così la prossima volta lo trovi subito.
+                      </span>
+                    </div>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Telefono</Label>
-                    <Input value={form.telefono_contatto} onChange={(e) => set("telefono_contatto", e.target.value)} placeholder="+39..." className="rounded-lg h-10" />
+                    <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                      <Phone className="h-3 w-3" /> Telefono
+                    </Label>
+                    <Input value={form.telefono_contatto} onChange={(e) => set("telefono_contatto", e.target.value)} placeholder="+39…" className="rounded-lg h-10" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Email</Label>
+                    <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                      <Mail className="h-3 w-3" /> Email
+                    </Label>
                     <Input type="email" value={form.email_contatto} onChange={(e) => set("email_contatto", e.target.value)} placeholder="email@esempio.com" className="rounded-lg h-10" />
                   </div>
                 </div>
