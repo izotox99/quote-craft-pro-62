@@ -265,19 +265,21 @@ export default function ListaServizi() {
 
   const openEdit = (s: Servizio) => {
     setSelected(s);
+    const inizio = splitLuogo(s.luogo_inizio);
+    const fine = splitLuogo(s.luogo_fine);
     setEditForm({
       data_servizio: s.data_servizio ?? "",
       ora_inizio: s.ora_inizio ?? "",
       citta: s.citta ?? "",
       n_passeggeri: String(s.n_passeggeri ?? 1),
       n_bagagli: String(s.n_bagagli ?? 0),
-      tipologia: s.tipologia ?? "",
-      transfer_tipo: s.transfer_tipo ?? "",
-      disposizione_oraria: s.disposizione_oraria ?? "",
+      tipologia: tipologiaFromDB(s.tipologia, s.transfer_tipo),
       tour_tipo: s.tour_tipo ?? "",
       veicolo_tipo: s.veicolo_tipo ?? "",
-      luogo_inizio: s.luogo_inizio ?? "",
-      luogo_fine: s.luogo_fine ?? "",
+      luogo_inizio: inizio.base,
+      luogo_inizio_dettaglio: inizio.dettaglio,
+      luogo_fine: fine.base,
+      luogo_fine_dettaglio: fine.dettaglio,
       itinerario: s.itinerario ?? "",
       info_autista: s.info_autista ?? "",
       tipo_pagamento: s.tipo_pagamento ?? "",
@@ -292,6 +294,9 @@ export default function ListaServizi() {
   const handleSaveEdit = async () => {
     if (!selected) return;
 
+    const luogoInizioFinale = joinLuogo(editForm.luogo_inizio, editForm.luogo_inizio_dettaglio);
+    const luogoFineFinale = joinLuogo(editForm.luogo_fine, editForm.luogo_fine_dettaglio);
+
     const { error } = await supabase.rpc("client_portal_update_servizio", {
       _servizio_id: selected.id,
       _data_servizio: editForm.data_servizio || null,
@@ -299,13 +304,13 @@ export default function ListaServizi() {
       _citta: editForm.citta || null,
       _n_passeggeri: editForm.n_passeggeri ? parseInt(editForm.n_passeggeri) : null,
       _n_bagagli: editForm.n_bagagli ? parseInt(editForm.n_bagagli) : null,
-      _tipologia: (editForm.tipologia || null) as any,
-      _transfer_tipo: editForm.tipologia === "transfer" ? (editForm.transfer_tipo || null) : null,
-      _disposizione_oraria: editForm.tipologia === "disposizione" ? (editForm.disposizione_oraria || null) : null,
+      _tipologia: (tipologiaToDB(editForm.tipologia) || null) as any,
+      _transfer_tipo: transferTipoForDB(editForm.tipologia),
+      _disposizione_oraria: null,
       _tour_tipo: editForm.tipologia === "tour" ? (editForm.tour_tipo || null) : null,
       _veicolo_tipo: editForm.veicolo_tipo || null,
-      _luogo_inizio: editForm.luogo_inizio || null,
-      _luogo_fine: editForm.luogo_fine || null,
+      _luogo_inizio: luogoInizioFinale || null,
+      _luogo_fine: luogoFineFinale || null,
       _itinerario: editForm.itinerario || null,
       _info_autista: editForm.info_autista || null,
       _tipo_pagamento: editForm.tipo_pagamento || null,
