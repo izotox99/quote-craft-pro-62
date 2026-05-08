@@ -12,7 +12,19 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { TimePicker } from "@/components/ui/time-picker";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
+import {
+  VEICOLI_DISPONIBILI,
+  TIPOLOGIA_OPZIONI,
+  TOUR_OPZIONI,
+  PAGAMENTO_OPZIONI,
+  CITTA_OPZIONI,
+  detectLuogoSpeciale,
+  LuogoField,
+  tipologiaToDB,
+  transferTipoForDB,
+} from "@/lib/booking-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
