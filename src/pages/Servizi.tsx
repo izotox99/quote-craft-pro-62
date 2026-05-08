@@ -12,7 +12,19 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { TimePicker } from "@/components/ui/time-picker";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
+import {
+  VEICOLI_DISPONIBILI,
+  TIPOLOGIA_OPZIONI,
+  TOUR_OPZIONI,
+  PAGAMENTO_OPZIONI,
+  CITTA_OPZIONI,
+  detectLuogoSpeciale,
+  LuogoField,
+  tipologiaToDB,
+  transferTipoForDB,
+} from "@/lib/booking-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -131,15 +143,23 @@ export default function Servizi() {
   // New service form
   const [form, setForm] = useState({
     data_servizio: format(new Date(), "yyyy-MM-dd"),
+    ora_inizio: "",
     citta: "",
     luogo_inizio: "",
+    luogo_inizio_dettaglio: "",
     luogo_fine: "",
+    luogo_fine_dettaglio: "",
     itinerario: "",
     stato: "nuovo" as string,
-    tipologia: "transfer" as string,
+    tipologia_servizio: "" as string, // transfer_interno | transfer_regionale | tour
+    tour_tipo: "",
+    veicolo_tipo: "", // tipo veicolo (catalogo booking)
+    tipo_pagamento: "",
+    prezzo: "",
     client_id: "",
     contatto: "",
     telefono_contatto: "",
+    email_contatto: "",
     autista_id: "",
     veicolo_id: "",
     fornitore_cs_id: "",
@@ -155,6 +175,15 @@ export default function Servizi() {
     costo_commissione: 0,
     note: "",
   });
+
+  const luogoInizioSpeciale = useMemo(
+    () => detectLuogoSpeciale(form.luogo_inizio, form.citta, form.luogo_inizio_dettaglio),
+    [form.luogo_inizio, form.citta, form.luogo_inizio_dettaglio]
+  );
+  const luogoFineSpeciale = useMemo(
+    () => detectLuogoSpeciale(form.luogo_fine, form.citta, form.luogo_fine_dettaglio),
+    [form.luogo_fine, form.citta, form.luogo_fine_dettaglio]
+  );
 
   const loadLookups = async () => {
     const [c, a, v, f] = await Promise.all([
@@ -219,16 +248,33 @@ export default function Servizi() {
   const handleSearch = () => loadServizi();
 
   const handleCreate = async () => {
+    if (!form.citta) { toast.error("Seleziona la città"); return; }
+    if (!form.tipologia_servizio) { toast.error("Seleziona la tipologia di servizio"); return; }
+
+    const luogoInizioFinale = form.luogo_inizio_dettaglio
+      ? `${form.luogo_inizio} - ${form.luogo_inizio_dettaglio}`
+      : form.luogo_inizio;
+    const luogoFineFinale = form.luogo_fine_dettaglio
+      ? `${form.luogo_fine} - ${form.luogo_fine_dettaglio}`
+      : form.luogo_fine;
+
     const insertData: Record<string, unknown> = {
       data_servizio: form.data_servizio,
+      ora_inizio: form.ora_inizio || null,
       citta: form.citta || null,
-      luogo_inizio: form.luogo_inizio || null,
-      luogo_fine: form.luogo_fine || null,
+      luogo_inizio: luogoInizioFinale || null,
+      luogo_fine: luogoFineFinale || null,
       itinerario: form.itinerario || null,
       stato: form.stato,
-      tipologia: form.tipologia,
+      tipologia: tipologiaToDB(form.tipologia_servizio),
+      transfer_tipo: transferTipoForDB(form.tipologia_servizio),
+      tour_tipo: form.tipologia_servizio === "tour" ? (form.tour_tipo || null) : null,
+      veicolo_tipo: form.veicolo_tipo || null,
+      tipo_pagamento: form.tipo_pagamento || null,
+      prezzo: form.prezzo ? parseFloat(form.prezzo) : null,
       contatto: form.contatto || null,
       telefono_contatto: form.telefono_contatto || null,
+      email_contatto: form.email_contatto || null,
       n_passeggeri: form.n_passeggeri,
       n_bagagli: form.n_bagagli,
       accessori: form.accessori || null,
@@ -406,24 +452,97 @@ export default function Servizi() {
               </DialogHeader>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label>Data Servizio</Label>
+                  <Label>Data Servizio <span className="text-destructive">*</span></Label>
                   <DatePicker value={form.data_servizio} onChange={(v) => setForm({ ...form, data_servizio: v })} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Città</Label>
-                  <Input value={form.citta} onChange={e => setForm({ ...form, citta: e.target.value })} />
+                  <Label>Ora Inizio</Label>
+                  <TimePicker value={form.ora_inizio} onChange={(v) => setForm({ ...form, ora_inizio: v })} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Luogo Inizio</Label>
-                  <Input value={form.luogo_inizio} onChange={e => setForm({ ...form, luogo_inizio: e.target.value })} />
+                  <Label>Città <span className="text-destructive">*</span></Label>
+                  <Select value={form.citta} onValueChange={v => setForm({ ...form, citta: v })}>
+                    <SelectTrigger><SelectValue placeholder="Seleziona città" /></SelectTrigger>
+                    <SelectContent>
+                      {CITTA_OPZIONI.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label>Luogo Fine</Label>
-                  <Input value={form.luogo_fine} onChange={e => setForm({ ...form, luogo_fine: e.target.value })} />
+                  <Label>Tipologia <span className="text-destructive">*</span></Label>
+                  <Select value={form.tipologia_servizio} onValueChange={v => setForm({ ...form, tipologia_servizio: v, tour_tipo: v === "tour" ? form.tour_tipo : "" })}>
+                    <SelectTrigger><SelectValue placeholder="Seleziona tipologia" /></SelectTrigger>
+                    <SelectContent>
+                      {TIPOLOGIA_OPZIONI.map(t => (
+                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {form.tipologia_servizio === "tour" && (
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label>Tipo Tour</Label>
+                    <Select value={form.tour_tipo} onValueChange={v => setForm({ ...form, tour_tipo: v })}>
+                      <SelectTrigger><SelectValue placeholder="Seleziona tour" /></SelectTrigger>
+                      <SelectContent>
+                        {TOUR_OPZIONI.map(t => (
+                          <SelectItem key={t} value={t}>{t}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className="sm:col-span-2">
+                  <LuogoField
+                    label="Luogo Inizio"
+                    value={form.luogo_inizio}
+                    onChange={(v) => setForm({ ...form, luogo_inizio: v })}
+                    dettaglio={form.luogo_inizio_dettaglio}
+                    onDettaglioChange={(v) => setForm({ ...form, luogo_inizio_dettaglio: v })}
+                    speciale={luogoInizioSpeciale}
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <LuogoField
+                    label="Luogo Fine"
+                    value={form.luogo_fine}
+                    onChange={(v) => setForm({ ...form, luogo_fine: v })}
+                    dettaglio={form.luogo_fine_dettaglio}
+                    onDettaglioChange={(v) => setForm({ ...form, luogo_fine_dettaglio: v })}
+                    speciale={luogoFineSpeciale}
+                  />
                 </div>
                 <div className="space-y-1 sm:col-span-2">
                   <Label>Itinerario</Label>
-                  <Input value={form.itinerario} onChange={e => setForm({ ...form, itinerario: e.target.value })} />
+                  <Textarea value={form.itinerario} onChange={e => setForm({ ...form, itinerario: e.target.value })} className="min-h-[60px]" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Veicolo (tipo)</Label>
+                  <Select value={form.veicolo_tipo} onValueChange={v => setForm({ ...form, veicolo_tipo: v })}>
+                    <SelectTrigger><SelectValue placeholder="Seleziona veicolo" /></SelectTrigger>
+                    <SelectContent>
+                      {VEICOLI_DISPONIBILI.map(v => (
+                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Tipo Pagamento</Label>
+                  <Select value={form.tipo_pagamento} onValueChange={v => setForm({ ...form, tipo_pagamento: v })}>
+                    <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
+                    <SelectContent>
+                      {PAGAMENTO_OPZIONI.map(p => (
+                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Prezzo €</Label>
+                  <Input type="number" step="0.01" value={form.prezzo} onChange={e => setForm({ ...form, prezzo: e.target.value })} />
                 </div>
                 <div className="space-y-1">
                   <Label>Stato</Label>
@@ -436,16 +555,9 @@ export default function Servizi() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label>Tipologia</Label>
-                  <Select value={form.tipologia} onValueChange={v => setForm({ ...form, tipologia: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(tipologiaLabels).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-1 sm:col-span-2">
+                  <Separator className="my-2" />
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Passeggero</p>
                 </div>
                 <div className="space-y-1">
                   <Label>Società Cliente</Label>
@@ -467,6 +579,26 @@ export default function Servizi() {
                   <Input value={form.telefono_contatto} onChange={e => setForm({ ...form, telefono_contatto: e.target.value })} />
                 </div>
                 <div className="space-y-1">
+                  <Label>Email Contatto</Label>
+                  <Input type="email" value={form.email_contatto} onChange={e => setForm({ ...form, email_contatto: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label>N. Passeggeri</Label>
+                  <Input type="number" value={form.n_passeggeri} onChange={e => setForm({ ...form, n_passeggeri: +e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label>N. Bagagli</Label>
+                  <Input type="number" value={form.n_bagagli} onChange={e => setForm({ ...form, n_bagagli: +e.target.value })} />
+                </div>
+                <div className="space-y-1 sm:col-span-2">
+                  <Label>Accessori</Label>
+                  <Input value={form.accessori} onChange={e => setForm({ ...form, accessori: e.target.value })} />
+                </div>
+                <div className="space-y-1 sm:col-span-2">
+                  <Separator className="my-2" />
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Assegnazione e gestione interna</p>
+                </div>
+                <div className="space-y-1">
                   <Label>Autista</Label>
                   <Select value={form.autista_id} onValueChange={v => setForm({ ...form, autista_id: v })}>
                     <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
@@ -478,7 +610,7 @@ export default function Servizi() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label>Veicolo</Label>
+                  <Label>Veicolo (mezzo)</Label>
                   <Select value={form.veicolo_id} onValueChange={v => setForm({ ...form, veicolo_id: v })}>
                     <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
                     <SelectContent>
@@ -499,21 +631,9 @@ export default function Servizi() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label>N. Passeggeri</Label>
-                  <Input type="number" value={form.n_passeggeri} onChange={e => setForm({ ...form, n_passeggeri: +e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>N. Bagagli</Label>
-                  <Input type="number" value={form.n_bagagli} onChange={e => setForm({ ...form, n_bagagli: +e.target.value })} />
-                </div>
-                <div className="space-y-1 sm:col-span-2">
-                  <Label>Accessori</Label>
-                  <Input value={form.accessori} onChange={e => setForm({ ...form, accessori: e.target.value })} />
-                </div>
                 <div className="space-y-1 sm:col-span-2">
                   <Label>Info Autista</Label>
-                  <Input value={form.info_autista} onChange={e => setForm({ ...form, info_autista: e.target.value })} />
+                  <Textarea value={form.info_autista} onChange={e => setForm({ ...form, info_autista: e.target.value })} className="min-h-[60px]" />
                 </div>
                 <div className="space-y-1">
                   <Label>Codice</Label>
