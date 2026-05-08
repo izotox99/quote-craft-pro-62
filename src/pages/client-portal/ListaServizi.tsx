@@ -17,40 +17,20 @@ import { Search, Download, CalendarDays, Pencil, XCircle, Info, ChevronRight, Ma
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
-const VEICOLI_DISPONIBILI = [
-  "Autovettura 3 posti",
-  "Luxury Car Serie S",
-  "Minivan 7/8 posti",
-  "Minivan 7 posti classe V",
-  "Minibus 8 posti",
-  "Minibus 16 Posti",
-  "Bus 52 posti",
-  "Veicolo disabili",
-  "Servizio guida",
-];
-
-const TRANSFER_OPZIONI = [
-  "Da / Per altro Luogo", "Da Aeroporto", "Da Civitavecchia", "Da Stazione",
-  "Interno Città", "Per Aeroporto", "Per Civitavecchia", "Per Stazione",
-];
-
-const DISPOSIZIONE_OPZIONI = [
-  "3 Ore", "4 Ore", "5 Ore", "6 Ore", "7 Ore", "8 Ore",
-  "9 Ore", "10 Ore", "11 Ore", "12 Ore", "Mezza giornata", "Giornata intera",
-];
-
-const TOUR_OPZIONI = [
-  "Da Civitavecchia Full Day", "Full Day Fuori Roma", "Full Day Roma",
-  "Half Day Fuori Roma", "Half Day Roma",
-];
-
-const PAGAMENTO_OPZIONI = [
-  { value: "fattura", label: "Fattura" },
-  { value: "contante", label: "Contante" },
-  { value: "carta_credito", label: "C. Credito" },
-];
-
-const TIPOLOGIA_OPZIONI = ["transfer", "disposizione", "tour"];
+import {
+  VEICOLI_DISPONIBILI,
+  TIPOLOGIA_OPZIONI,
+  TOUR_OPZIONI,
+  PAGAMENTO_OPZIONI,
+  CITTA_OPZIONI,
+  detectLuogoSpeciale,
+  LuogoField,
+  splitLuogo,
+  joinLuogo,
+  tipologiaFromDB,
+  tipologiaToDB,
+  transferTipoForDB,
+} from "@/lib/booking-shared";
 
 type Servizio = {
   id: string;
