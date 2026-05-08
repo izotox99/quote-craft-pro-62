@@ -143,15 +143,23 @@ export default function Servizi() {
   // New service form
   const [form, setForm] = useState({
     data_servizio: format(new Date(), "yyyy-MM-dd"),
+    ora_inizio: "",
     citta: "",
     luogo_inizio: "",
+    luogo_inizio_dettaglio: "",
     luogo_fine: "",
+    luogo_fine_dettaglio: "",
     itinerario: "",
     stato: "nuovo" as string,
-    tipologia: "transfer" as string,
+    tipologia_servizio: "" as string, // transfer_interno | transfer_regionale | tour
+    tour_tipo: "",
+    veicolo_tipo: "", // tipo veicolo (catalogo booking)
+    tipo_pagamento: "",
+    prezzo: "",
     client_id: "",
     contatto: "",
     telefono_contatto: "",
+    email_contatto: "",
     autista_id: "",
     veicolo_id: "",
     fornitore_cs_id: "",
@@ -167,6 +175,15 @@ export default function Servizi() {
     costo_commissione: 0,
     note: "",
   });
+
+  const luogoInizioSpeciale = useMemo(
+    () => detectLuogoSpeciale(form.luogo_inizio, form.citta, form.luogo_inizio_dettaglio),
+    [form.luogo_inizio, form.citta, form.luogo_inizio_dettaglio]
+  );
+  const luogoFineSpeciale = useMemo(
+    () => detectLuogoSpeciale(form.luogo_fine, form.citta, form.luogo_fine_dettaglio),
+    [form.luogo_fine, form.citta, form.luogo_fine_dettaglio]
+  );
 
   const loadLookups = async () => {
     const [c, a, v, f] = await Promise.all([
