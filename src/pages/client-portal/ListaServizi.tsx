@@ -17,40 +17,20 @@ import { Search, Download, CalendarDays, Pencil, XCircle, Info, ChevronRight, Ma
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
-const VEICOLI_DISPONIBILI = [
-  "Autovettura 3 posti",
-  "Luxury Car Serie S",
-  "Minivan 7/8 posti",
-  "Minivan 7 posti classe V",
-  "Minibus 8 posti",
-  "Minibus 16 Posti",
-  "Bus 52 posti",
-  "Veicolo disabili",
-  "Servizio guida",
-];
-
-const TRANSFER_OPZIONI = [
-  "Da / Per altro Luogo", "Da Aeroporto", "Da Civitavecchia", "Da Stazione",
-  "Interno Città", "Per Aeroporto", "Per Civitavecchia", "Per Stazione",
-];
-
-const DISPOSIZIONE_OPZIONI = [
-  "3 Ore", "4 Ore", "5 Ore", "6 Ore", "7 Ore", "8 Ore",
-  "9 Ore", "10 Ore", "11 Ore", "12 Ore", "Mezza giornata", "Giornata intera",
-];
-
-const TOUR_OPZIONI = [
-  "Da Civitavecchia Full Day", "Full Day Fuori Roma", "Full Day Roma",
-  "Half Day Fuori Roma", "Half Day Roma",
-];
-
-const PAGAMENTO_OPZIONI = [
-  { value: "fattura", label: "Fattura" },
-  { value: "contante", label: "Contante" },
-  { value: "carta_credito", label: "C. Credito" },
-];
-
-const TIPOLOGIA_OPZIONI = ["transfer", "disposizione", "tour"];
+import {
+  VEICOLI_DISPONIBILI,
+  TIPOLOGIA_OPZIONI,
+  TOUR_OPZIONI,
+  PAGAMENTO_OPZIONI,
+  CITTA_OPZIONI,
+  detectLuogoSpeciale,
+  LuogoField,
+  splitLuogo,
+  joinLuogo,
+  tipologiaFromDB,
+  tipologiaToDB,
+  transferTipoForDB,
+} from "@/lib/booking-shared";
 
 type Servizio = {
   id: string;
@@ -180,13 +160,13 @@ export default function ListaServizi() {
     citta: "",
     n_passeggeri: "1",
     n_bagagli: "0",
-    tipologia: "" as string,
-    transfer_tipo: "",
-    disposizione_oraria: "",
+    tipologia: "" as string, // booking-style: transfer_interno|transfer_regionale|tour
     tour_tipo: "",
     veicolo_tipo: "",
     luogo_inizio: "",
+    luogo_inizio_dettaglio: "",
     luogo_fine: "",
+    luogo_fine_dettaglio: "",
     itinerario: "",
     info_autista: "",
     tipo_pagamento: "",
@@ -285,19 +265,21 @@ export default function ListaServizi() {
 
   const openEdit = (s: Servizio) => {
     setSelected(s);
+    const inizio = splitLuogo(s.luogo_inizio);
+    const fine = splitLuogo(s.luogo_fine);
     setEditForm({
       data_servizio: s.data_servizio ?? "",
       ora_inizio: s.ora_inizio ?? "",
       citta: s.citta ?? "",
       n_passeggeri: String(s.n_passeggeri ?? 1),
       n_bagagli: String(s.n_bagagli ?? 0),
-      tipologia: s.tipologia ?? "",
-      transfer_tipo: s.transfer_tipo ?? "",
-      disposizione_oraria: s.disposizione_oraria ?? "",
+      tipologia: tipologiaFromDB(s.tipologia, s.transfer_tipo),
       tour_tipo: s.tour_tipo ?? "",
       veicolo_tipo: s.veicolo_tipo ?? "",
-      luogo_inizio: s.luogo_inizio ?? "",
-      luogo_fine: s.luogo_fine ?? "",
+      luogo_inizio: inizio.base,
+      luogo_inizio_dettaglio: inizio.dettaglio,
+      luogo_fine: fine.base,
+      luogo_fine_dettaglio: fine.dettaglio,
       itinerario: s.itinerario ?? "",
       info_autista: s.info_autista ?? "",
       tipo_pagamento: s.tipo_pagamento ?? "",
@@ -312,6 +294,9 @@ export default function ListaServizi() {
   const handleSaveEdit = async () => {
     if (!selected) return;
 
+    const luogoInizioFinale = joinLuogo(editForm.luogo_inizio, editForm.luogo_inizio_dettaglio);
+    const luogoFineFinale = joinLuogo(editForm.luogo_fine, editForm.luogo_fine_dettaglio);
+
     const { error } = await supabase.rpc("client_portal_update_servizio", {
       _servizio_id: selected.id,
       _data_servizio: editForm.data_servizio || null,
@@ -319,13 +304,13 @@ export default function ListaServizi() {
       _citta: editForm.citta || null,
       _n_passeggeri: editForm.n_passeggeri ? parseInt(editForm.n_passeggeri) : null,
       _n_bagagli: editForm.n_bagagli ? parseInt(editForm.n_bagagli) : null,
-      _tipologia: (editForm.tipologia || null) as any,
-      _transfer_tipo: editForm.tipologia === "transfer" ? (editForm.transfer_tipo || null) : null,
-      _disposizione_oraria: editForm.tipologia === "disposizione" ? (editForm.disposizione_oraria || null) : null,
+      _tipologia: (tipologiaToDB(editForm.tipologia) || null) as any,
+      _transfer_tipo: transferTipoForDB(editForm.tipologia),
+      _disposizione_oraria: null,
       _tour_tipo: editForm.tipologia === "tour" ? (editForm.tour_tipo || null) : null,
       _veicolo_tipo: editForm.veicolo_tipo || null,
-      _luogo_inizio: editForm.luogo_inizio || null,
-      _luogo_fine: editForm.luogo_fine || null,
+      _luogo_inizio: luogoInizioFinale || null,
+      _luogo_fine: luogoFineFinale || null,
       _itinerario: editForm.itinerario || null,
       _info_autista: editForm.info_autista || null,
       _tipo_pagamento: editForm.tipo_pagamento || null,
@@ -864,7 +849,12 @@ export default function ListaServizi() {
                   </div>
                   <div className="space-y-1.5 col-span-2">
                     <Label className="text-xs text-muted-foreground">Città</Label>
-                    <Input value={editForm.citta} onChange={(e) => setEditForm(p => ({ ...p, citta: e.target.value }))} className="rounded-lg h-10" />
+                    <Select value={editForm.citta} onValueChange={(v) => setEditForm(p => ({ ...p, citta: v }))}>
+                      <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona città" /></SelectTrigger>
+                      <SelectContent>
+                        {CITTA_OPZIONI.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -876,10 +866,10 @@ export default function ListaServizi() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Tipologia</Label>
-                    <Select value={editForm.tipologia} onValueChange={(v) => setEditForm(p => ({ ...p, tipologia: v, transfer_tipo: "", disposizione_oraria: "", tour_tipo: "" }))}>
+                    <Select value={editForm.tipologia} onValueChange={(v) => setEditForm(p => ({ ...p, tipologia: v, tour_tipo: v === "tour" ? p.tour_tipo : "" }))}>
                       <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
                       <SelectContent>
-                        {TIPOLOGIA_OPZIONI.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
+                        {TIPOLOGIA_OPZIONI.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -893,28 +883,6 @@ export default function ListaServizi() {
                     </Select>
                   </div>
 
-                  {editForm.tipologia === "transfer" && (
-                    <div className="space-y-1.5 col-span-2">
-                      <Label className="text-xs text-muted-foreground">Tipo transfer</Label>
-                      <Select value={editForm.transfer_tipo} onValueChange={(v) => setEditForm(p => ({ ...p, transfer_tipo: v }))}>
-                        <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
-                        <SelectContent>
-                          {TRANSFER_OPZIONI.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  {editForm.tipologia === "disposizione" && (
-                    <div className="space-y-1.5 col-span-2">
-                      <Label className="text-xs text-muted-foreground">Durata disposizione</Label>
-                      <Select value={editForm.disposizione_oraria} onValueChange={(v) => setEditForm(p => ({ ...p, disposizione_oraria: v }))}>
-                        <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
-                        <SelectContent>
-                          {DISPOSIZIONE_OPZIONI.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
                   {editForm.tipologia === "tour" && (
                     <div className="space-y-1.5 col-span-2">
                       <Label className="text-xs text-muted-foreground">Tipo tour</Label>
@@ -942,23 +910,31 @@ export default function ListaServizi() {
 
               <div className="space-y-3">
                 <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Itinerario</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Luogo inizio</Label>
-                    <Input value={editForm.luogo_inizio} onChange={(e) => setEditForm(p => ({ ...p, luogo_inizio: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Luogo fine</Label>
-                    <Input value={editForm.luogo_fine} onChange={(e) => setEditForm(p => ({ ...p, luogo_fine: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
-                  <div className="space-y-1.5 col-span-2">
-                    <Label className="text-xs text-muted-foreground">Itinerario / tappe</Label>
-                    <Input value={editForm.itinerario} onChange={(e) => setEditForm(p => ({ ...p, itinerario: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
-                  <div className="space-y-1.5 col-span-2">
-                    <Label className="text-xs text-muted-foreground">Info autista</Label>
-                    <Input value={editForm.info_autista} onChange={(e) => setEditForm(p => ({ ...p, info_autista: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
+                <LuogoField
+                  label="Luogo inizio"
+                  value={editForm.luogo_inizio}
+                  onChange={(v) => setEditForm(p => ({ ...p, luogo_inizio: v }))}
+                  dettaglio={editForm.luogo_inizio_dettaglio}
+                  onDettaglioChange={(v) => setEditForm(p => ({ ...p, luogo_inizio_dettaglio: v }))}
+                  speciale={detectLuogoSpeciale(editForm.luogo_inizio, editForm.citta, editForm.luogo_inizio_dettaglio)}
+                  required={false}
+                />
+                <LuogoField
+                  label="Luogo fine"
+                  value={editForm.luogo_fine}
+                  onChange={(v) => setEditForm(p => ({ ...p, luogo_fine: v }))}
+                  dettaglio={editForm.luogo_fine_dettaglio}
+                  onDettaglioChange={(v) => setEditForm(p => ({ ...p, luogo_fine_dettaglio: v }))}
+                  speciale={detectLuogoSpeciale(editForm.luogo_fine, editForm.citta, editForm.luogo_fine_dettaglio)}
+                  required={false}
+                />
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Itinerario / tappe</Label>
+                  <Textarea value={editForm.itinerario} onChange={(e) => setEditForm(p => ({ ...p, itinerario: e.target.value }))} className="rounded-lg min-h-[60px]" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Info autista</Label>
+                  <Input value={editForm.info_autista} onChange={(e) => setEditForm(p => ({ ...p, info_autista: e.target.value }))} className="rounded-lg h-10" />
                 </div>
               </div>
 
