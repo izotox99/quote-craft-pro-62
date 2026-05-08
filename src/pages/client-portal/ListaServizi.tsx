@@ -849,7 +849,12 @@ export default function ListaServizi() {
                   </div>
                   <div className="space-y-1.5 col-span-2">
                     <Label className="text-xs text-muted-foreground">Città</Label>
-                    <Input value={editForm.citta} onChange={(e) => setEditForm(p => ({ ...p, citta: e.target.value }))} className="rounded-lg h-10" />
+                    <Select value={editForm.citta} onValueChange={(v) => setEditForm(p => ({ ...p, citta: v }))}>
+                      <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona città" /></SelectTrigger>
+                      <SelectContent>
+                        {CITTA_OPZIONI.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
               </div>
@@ -861,10 +866,10 @@ export default function ListaServizi() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Tipologia</Label>
-                    <Select value={editForm.tipologia} onValueChange={(v) => setEditForm(p => ({ ...p, tipologia: v, transfer_tipo: "", disposizione_oraria: "", tour_tipo: "" }))}>
+                    <Select value={editForm.tipologia} onValueChange={(v) => setEditForm(p => ({ ...p, tipologia: v, tour_tipo: v === "tour" ? p.tour_tipo : "" }))}>
                       <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
                       <SelectContent>
-                        {TIPOLOGIA_OPZIONI.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
+                        {TIPOLOGIA_OPZIONI.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -878,28 +883,6 @@ export default function ListaServizi() {
                     </Select>
                   </div>
 
-                  {editForm.tipologia === "transfer" && (
-                    <div className="space-y-1.5 col-span-2">
-                      <Label className="text-xs text-muted-foreground">Tipo transfer</Label>
-                      <Select value={editForm.transfer_tipo} onValueChange={(v) => setEditForm(p => ({ ...p, transfer_tipo: v }))}>
-                        <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
-                        <SelectContent>
-                          {TRANSFER_OPZIONI.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                  {editForm.tipologia === "disposizione" && (
-                    <div className="space-y-1.5 col-span-2">
-                      <Label className="text-xs text-muted-foreground">Durata disposizione</Label>
-                      <Select value={editForm.disposizione_oraria} onValueChange={(v) => setEditForm(p => ({ ...p, disposizione_oraria: v }))}>
-                        <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
-                        <SelectContent>
-                          {DISPOSIZIONE_OPZIONI.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
                   {editForm.tipologia === "tour" && (
                     <div className="space-y-1.5 col-span-2">
                       <Label className="text-xs text-muted-foreground">Tipo tour</Label>
@@ -927,23 +910,31 @@ export default function ListaServizi() {
 
               <div className="space-y-3">
                 <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Itinerario</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Luogo inizio</Label>
-                    <Input value={editForm.luogo_inizio} onChange={(e) => setEditForm(p => ({ ...p, luogo_inizio: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Luogo fine</Label>
-                    <Input value={editForm.luogo_fine} onChange={(e) => setEditForm(p => ({ ...p, luogo_fine: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
-                  <div className="space-y-1.5 col-span-2">
-                    <Label className="text-xs text-muted-foreground">Itinerario / tappe</Label>
-                    <Input value={editForm.itinerario} onChange={(e) => setEditForm(p => ({ ...p, itinerario: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
-                  <div className="space-y-1.5 col-span-2">
-                    <Label className="text-xs text-muted-foreground">Info autista</Label>
-                    <Input value={editForm.info_autista} onChange={(e) => setEditForm(p => ({ ...p, info_autista: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
+                <LuogoField
+                  label="Luogo inizio"
+                  value={editForm.luogo_inizio}
+                  onChange={(v) => setEditForm(p => ({ ...p, luogo_inizio: v }))}
+                  dettaglio={editForm.luogo_inizio_dettaglio}
+                  onDettaglioChange={(v) => setEditForm(p => ({ ...p, luogo_inizio_dettaglio: v }))}
+                  speciale={detectLuogoSpeciale(editForm.luogo_inizio, editForm.citta, editForm.luogo_inizio_dettaglio)}
+                  required={false}
+                />
+                <LuogoField
+                  label="Luogo fine"
+                  value={editForm.luogo_fine}
+                  onChange={(v) => setEditForm(p => ({ ...p, luogo_fine: v }))}
+                  dettaglio={editForm.luogo_fine_dettaglio}
+                  onDettaglioChange={(v) => setEditForm(p => ({ ...p, luogo_fine_dettaglio: v }))}
+                  speciale={detectLuogoSpeciale(editForm.luogo_fine, editForm.citta, editForm.luogo_fine_dettaglio)}
+                  required={false}
+                />
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Itinerario / tappe</Label>
+                  <Textarea value={editForm.itinerario} onChange={(e) => setEditForm(p => ({ ...p, itinerario: e.target.value }))} className="rounded-lg min-h-[60px]" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Info autista</Label>
+                  <Input value={editForm.info_autista} onChange={(e) => setEditForm(p => ({ ...p, info_autista: e.target.value }))} className="rounded-lg h-10" />
                 </div>
               </div>
 
