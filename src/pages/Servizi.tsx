@@ -248,16 +248,33 @@ export default function Servizi() {
   const handleSearch = () => loadServizi();
 
   const handleCreate = async () => {
+    if (!form.citta) { toast.error("Seleziona la città"); return; }
+    if (!form.tipologia_servizio) { toast.error("Seleziona la tipologia di servizio"); return; }
+
+    const luogoInizioFinale = form.luogo_inizio_dettaglio
+      ? `${form.luogo_inizio} - ${form.luogo_inizio_dettaglio}`
+      : form.luogo_inizio;
+    const luogoFineFinale = form.luogo_fine_dettaglio
+      ? `${form.luogo_fine} - ${form.luogo_fine_dettaglio}`
+      : form.luogo_fine;
+
     const insertData: Record<string, unknown> = {
       data_servizio: form.data_servizio,
+      ora_inizio: form.ora_inizio || null,
       citta: form.citta || null,
-      luogo_inizio: form.luogo_inizio || null,
-      luogo_fine: form.luogo_fine || null,
+      luogo_inizio: luogoInizioFinale || null,
+      luogo_fine: luogoFineFinale || null,
       itinerario: form.itinerario || null,
       stato: form.stato,
-      tipologia: form.tipologia,
+      tipologia: tipologiaToDB(form.tipologia_servizio),
+      transfer_tipo: transferTipoForDB(form.tipologia_servizio),
+      tour_tipo: form.tipologia_servizio === "tour" ? (form.tour_tipo || null) : null,
+      veicolo_tipo: form.veicolo_tipo || null,
+      tipo_pagamento: form.tipo_pagamento || null,
+      prezzo: form.prezzo ? parseFloat(form.prezzo) : null,
       contatto: form.contatto || null,
       telefono_contatto: form.telefono_contatto || null,
+      email_contatto: form.email_contatto || null,
       n_passeggeri: form.n_passeggeri,
       n_bagagli: form.n_bagagli,
       accessori: form.accessori || null,
