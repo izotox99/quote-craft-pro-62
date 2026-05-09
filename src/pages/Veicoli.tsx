@@ -369,30 +369,112 @@ export default function Veicoli() {
 
       {/* Add / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editing ? "Modifica mezzo" : "Aggiungi mezzo"}</DialogTitle>
+            <DialogTitle className="text-center text-2xl font-display">
+              {editing ? "Modifica Macchina" : "Nuova Macchina"}
+            </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label>Targa *</Label>
-              <Input value={form.targa} onChange={(e) => setForm({ ...form, targa: e.target.value })} placeholder="AB123CD" />
-            </div>
-            <div className="space-y-1.5"><Label>Marca</Label><Input value={form.marca} onChange={(e) => setForm({ ...form, marca: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Modello</Label><Input value={form.modello} onChange={(e) => setForm({ ...form, modello: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Tipo</Label><Input value={form.tipo_macchina} onChange={(e) => setForm({ ...form, tipo_macchina: e.target.value })} placeholder="Berlina, Van..." /></div>
-            <div className="space-y-1.5"><Label>Colore</Label><Input value={form.colore} onChange={(e) => setForm({ ...form, colore: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Posti</Label><Input type="number" value={form.posti} onChange={(e) => setForm({ ...form, posti: +e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Data immatricolazione</Label><Input type="date" value={form.data_immatricolazione} onChange={(e) => setForm({ ...form, data_immatricolazione: e.target.value })} /></div>
-            <div className="space-y-1.5 sm:col-span-2"><Label>Telaio</Label><Input value={form.telaio} onChange={(e) => setForm({ ...form, telaio: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Km attuale</Label><Input type="number" value={form.km_attuale} onChange={(e) => setForm({ ...form, km_attuale: e.target.value })} /></div>
-            <div className="space-y-1.5"><Label>Km prima scadenza</Label><Input type="number" value={form.km_prima_scadenza} onChange={(e) => setForm({ ...form, km_prima_scadenza: e.target.value })} /></div>
-            <div className="space-y-1.5 sm:col-span-2"><Label>Dati tecnici</Label><Input value={form.dati_tecnici} onChange={(e) => setForm({ ...form, dati_tecnici: e.target.value })} /></div>
-            <div className="space-y-1.5 sm:col-span-2"><Label>Note</Label><Textarea rows={2} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} /></div>
+
+          <div className="space-y-3">
+            <VField label="Tipo">
+              <Select
+                value={form.tipo_macchina || undefined}
+                onValueChange={(v) => setForm({ ...form, tipo_macchina: v })}
+              >
+                <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
+                <SelectContent>
+                  {TIPI_MEZZO.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </VField>
+
+            <VField label="Targa">
+              <Input value={form.targa} onChange={(e) => setForm({ ...form, targa: e.target.value.toUpperCase() })} />
+            </VField>
+
+            <VField label="Modello">
+              <Input value={form.modello} onChange={(e) => setForm({ ...form, modello: e.target.value })} />
+            </VField>
+
+            <VField label="Dati tecnici">
+              <Input value={form.dati_tecnici} onChange={(e) => setForm({ ...form, dati_tecnici: e.target.value })} />
+            </VField>
+
+            <VField label="Km iniziale">
+              <Input inputMode="decimal" value={form.km_iniziale} onChange={(e) => setForm({ ...form, km_iniziale: e.target.value })} />
+            </VField>
+
+            <VField label="Consumo km / 1L">
+              <Input inputMode="decimal" value={form.consumo_km_litro} onChange={(e) => setForm({ ...form, consumo_km_litro: e.target.value })} />
+            </VField>
+
+            <VField label="Manutenzione ordinaria">
+              <Input value={form.manutenzione_ordinaria} onChange={(e) => setForm({ ...form, manutenzione_ordinaria: e.target.value })} />
+            </VField>
+
+            <VField label="Visibile in servizi">
+              <div className="flex items-center h-10">
+                <Checkbox
+                  checked={form.visibile_servizi}
+                  onCheckedChange={(c) => setForm({ ...form, visibile_servizi: !!c })}
+                />
+              </div>
+            </VField>
+
+            <VField label="Visibile in magazzino">
+              <div className="flex items-center h-10">
+                <Checkbox
+                  checked={form.visibile_magazzino}
+                  onCheckedChange={(c) => setForm({ ...form, visibile_magazzino: !!c })}
+                />
+              </div>
+            </VField>
+
+            <VField label="Km - Voucher">
+              <Input inputMode="decimal" value={form.km_voucher} onChange={(e) => setForm({ ...form, km_voucher: e.target.value })} />
+            </VField>
+
+            <Separator className="my-4" />
+            <h3 className="text-lg font-display italic font-semibold">Info</h3>
+
+            <VField label="Prezzo acquisto">
+              <Input inputMode="decimal" value={form.prezzo_acquisto} onChange={(e) => setForm({ ...form, prezzo_acquisto: e.target.value })} />
+            </VField>
+
+            <VField label="Quota mensile credito">
+              <Input inputMode="decimal" value={form.quota_mensile_credito} onChange={(e) => setForm({ ...form, quota_mensile_credito: e.target.value })} />
+            </VField>
+
+            <VField label="Data Inizio Credito">
+              <Input type="date" value={form.data_inizio_credito} onChange={(e) => setForm({ ...form, data_inizio_credito: e.target.value })} />
+            </VField>
+
+            <VField label="Data Ultima quota Credito">
+              <Input type="date" value={form.data_ultima_quota_credito} onChange={(e) => setForm({ ...form, data_ultima_quota_credito: e.target.value })} />
+            </VField>
+
+            <VField label="Photo">
+              <div className="space-y-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)}
+                />
+                {editing?.photo_url && !photoFile && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <ImageIcon className="h-3 w-3" /> Foto attuale presente
+                  </div>
+                )}
+              </div>
+            </VField>
           </div>
-          <DialogFooter>
+
+          <DialogFooter className="pt-4">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
-            <Button onClick={handleSave}>{editing ? "Salva modifiche" : "Aggiungi"}</Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {editing ? "Salva modifiche" : "Inserire !"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
