@@ -121,19 +121,30 @@ export default function Veicoli() {
   const openEdit = (v: Veicolo) => {
     setEditing(v);
     setForm({
-      targa: v.targa ?? "",
-      marca: v.marca ?? "",
-      modello: v.modello ?? "",
       tipo_macchina: v.tipo_macchina ?? "",
+      targa: v.targa ?? "",
+      modello: v.modello ?? "",
+      dati_tecnici: v.dati_tecnici ?? "",
+      km_iniziale: v.km_iniziale ?? "",
+      consumo_km_litro: v.consumo_km_litro ?? "",
+      manutenzione_ordinaria: v.manutenzione_ordinaria ?? "",
+      visibile_servizi: v.visibile_servizi ?? true,
+      visibile_magazzino: v.visibile_magazzino ?? true,
+      km_voucher: v.km_voucher ?? "",
+      prezzo_acquisto: v.prezzo_acquisto ?? "",
+      quota_mensile_credito: v.quota_mensile_credito ?? "",
+      data_inizio_credito: v.data_inizio_credito ?? "",
+      data_ultima_quota_credito: v.data_ultima_quota_credito ?? "",
+      marca: v.marca ?? "",
       colore: v.colore ?? "",
       posti: v.posti ?? 4,
       telaio: v.telaio ?? "",
       data_immatricolazione: v.data_immatricolazione ?? "",
       km_attuale: v.km_attuale ?? "",
       km_prima_scadenza: v.km_prima_scadenza ?? "",
-      dati_tecnici: v.dati_tecnici ?? "",
       note: v.note ?? "",
     });
+    setPhotoFile(null);
     setDialogOpen(true);
   };
 
@@ -142,33 +153,66 @@ export default function Veicoli() {
       toast.error("La targa è obbligatoria");
       return;
     }
-    const payload = {
-      targa: form.targa.trim().toUpperCase(),
-      marca: form.marca || null,
-      modello: form.modello || null,
-      tipo_macchina: form.tipo_macchina || null,
-      colore: form.colore || null,
-      posti: Number(form.posti) || null,
-      telaio: form.telaio || null,
-      data_immatricolazione: form.data_immatricolazione || null,
-      km_attuale: form.km_attuale === "" ? null : Number(form.km_attuale),
-      km_prima_scadenza: form.km_prima_scadenza === "" ? null : Number(form.km_prima_scadenza),
-      dati_tecnici: form.dati_tecnici || null,
-      note: form.note || null,
-    };
-    if (editing) {
-      const { error } = await supabase.from("veicoli").update(payload).eq("id", editing.id);
-      if (error) return toast.error(error.message);
-      toast.success("Mezzo aggiornato");
-    } else {
-      const { error } = await supabase.from("veicoli").insert(payload);
-      if (error) return toast.error(error.message);
-      toast.success("Mezzo aggiunto");
+    setSaving(true);
+    try {
+      const num = (v: string | number) => v === "" ? null : Number(v);
+      const payload: any = {
+        targa: form.targa.trim().toUpperCase(),
+        tipo_macchina: form.tipo_macchina || null,
+        modello: form.modello || null,
+        dati_tecnici: form.dati_tecnici || null,
+        km_iniziale: num(form.km_iniziale),
+        consumo_km_litro: num(form.consumo_km_litro),
+        manutenzione_ordinaria: form.manutenzione_ordinaria || null,
+        visibile_servizi: form.visibile_servizi,
+        visibile_magazzino: form.visibile_magazzino,
+        km_voucher: num(form.km_voucher),
+        prezzo_acquisto: num(form.prezzo_acquisto),
+        quota_mensile_credito: num(form.quota_mensile_credito),
+        data_inizio_credito: form.data_inizio_credito || null,
+        data_ultima_quota_credito: form.data_ultima_quota_credito || null,
+        marca: form.marca || null,
+        colore: form.colore || null,
+        posti: Number(form.posti) || null,
+        telaio: form.telaio || null,
+        data_immatricolazione: form.data_immatricolazione || null,
+        km_attuale: num(form.km_attuale),
+        km_prima_scadenza: num(form.km_prima_scadenza),
+        note: form.note || null,
+      };
+
+      let id = editing?.id;
+      if (editing) {
+        const { error } = await supabase.from("veicoli").update(payload).eq("id", editing.id);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from("veicoli").insert(payload).select("id").single();
+        if (error) throw error;
+        id = data.id;
+      }
+
+      if (photoFile && id) {
+        const ext = photoFile.name.split(".").pop() ?? "jpg";
+        const path = `${id}/photo-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("veicoli-foto")
+          .upload(path, photoFile, { upsert: true });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from("veicoli-foto").getPublicUrl(path);
+        await supabase.from("veicoli").update({ photo_url: pub.publicUrl }).eq("id", id);
+      }
+
+      toast.success(editing ? "Mezzo aggiornato" : "Mezzo aggiunto");
+      setDialogOpen(false);
+      setEditing(null);
+      setForm(emptyForm);
+      setPhotoFile(null);
+      load();
+    } catch (e: any) {
+      toast.error(e.message ?? "Errore salvataggio");
+    } finally {
+      setSaving(false);
     }
-    setDialogOpen(false);
-    setEditing(null);
-    setForm(emptyForm);
-    load();
   };
 
   const toggleAttivo = async (v: Veicolo) => {
