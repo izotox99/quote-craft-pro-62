@@ -498,3 +498,12 @@ export default function Veicoli() {
     </DashboardLayout>
   );
 }
+
+function VField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="grid grid-cols-[200px_1fr] items-center gap-3">
+      <Label className="text-sm italic font-semibold text-right">{label}:</Label>
+      <div>{children}</div>
+    </div>
+  );
+}
