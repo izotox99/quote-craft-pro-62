@@ -116,6 +116,7 @@ export default function Veicoli() {
   const openCreate = () => {
     setEditing(null);
     setForm(emptyForm);
+    setPhotoFile(null);
     setDialogOpen(true);
   };
 
