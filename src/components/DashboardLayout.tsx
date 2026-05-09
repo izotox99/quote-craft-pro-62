@@ -13,6 +13,7 @@ import {
   FileText, LayoutDashboard, Users, Car, UserCheck, Truck, Settings, LogOut, User, Menu,
   ChevronDown, List, Receipt, Star, Package, UserPlus, StickyNote, Clock, FileSpreadsheet,
   Users2, Fuel, ClipboardCheck, ClipboardList, TrendingUp, FilePlus, FileText as FileTextIcon, CalendarDays,
+  AlertTriangle, Wrench, Droplet, PlusCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificheBell } from "@/components/NotificheBell";
@@ -40,9 +41,18 @@ const autistiSubItems = [
   { to: "/autisti/mensile", icon: CalendarDays, label: "Mensile autisti interni" },
 ];
 
+const mezziSubItems = [
+  { to: "/veicoli", icon: List, label: "Lista mezzi" },
+  { to: "/veicoli/allert", icon: AlertTriangle, label: "Allert Mezzi" },
+  { to: "/veicoli/bilancio", icon: TrendingUp, label: "Bilancio vettura" },
+  { to: "/veicoli/manutenzione-straordinaria", icon: Wrench, label: "Manutenzione stra." },
+  { to: "/veicoli/carburante", icon: Fuel, label: "Dettagli Carburante" },
+  { to: "/veicoli/adblue", icon: Droplet, label: "Dettagli AdBlue" },
+  { to: "/veicoli/adblue/nuovo", icon: PlusCircle, label: "Aggiungi AdBlue" },
+];
+
 const mainNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
-  { to: "/veicoli", icon: Car, label: "Mezzi" },
   { to: "/fornitori", icon: Truck, label: "Fornitori CS" },
 ];
 
@@ -61,6 +71,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
   const isClientActive = pathname.startsWith("/clients");
   const isAutistiActive = pathname.startsWith("/autisti");
+  const isMezziActive = pathname.startsWith("/veicoli");
+  const [mezziExpanded, setMezziExpanded] = useState(false);
 
   return (
     <div className="min-h-screen bg-background">
@@ -100,7 +112,36 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               );
             })}
 
-            {/* Clienti dropdown */}
+            {/* Mezzi dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "gap-2 rounded-lg font-medium transition-all",
+                    isMezziActive && "bg-primary/10 text-primary hover:bg-primary/15"
+                  )}
+                >
+                  <Car className="h-4 w-4" />
+                  <span>Mezzi</span>
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-60">
+                {mezziSubItems.map((sub) => (
+                  <DropdownMenuItem
+                    key={sub.to}
+                    onClick={() => navigate(sub.to)}
+                    className={cn("gap-3 cursor-pointer", pathname === sub.to && "bg-accent")}
+                  >
+                    <sub.icon className="h-4 w-4 text-muted-foreground" />
+                    {sub.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -221,7 +262,42 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               );
             })}
 
-            {/* Clienti collapsible on mobile */}
+            {/* Mezzi collapsible on mobile */}
+            <Collapsible open={mezziExpanded || isMezziActive} onOpenChange={setMezziExpanded}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between gap-3 h-11 rounded-lg font-medium",
+                    isMezziActive && "bg-primary/10 text-primary"
+                  )}
+                >
+                  <span className="flex items-center gap-3">
+                    <Car className="h-5 w-5" />
+                    Mezzi
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", (mezziExpanded || isMezziActive) && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-border/30 pl-4">
+                {mezziSubItems.map((sub) => (
+                  <Link key={sub.to} to={sub.to} onClick={() => setMobileOpen(false)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "w-full justify-start gap-3 h-9 rounded-lg text-sm font-normal",
+                        pathname === sub.to && "bg-accent text-accent-foreground font-medium"
+                      )}
+                    >
+                      <sub.icon className="h-4 w-4" />
+                      {sub.label}
+                    </Button>
+                  </Link>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+
             <Collapsible open={clientsExpanded || isClientActive} onOpenChange={setClientsExpanded}>
               <CollapsibleTrigger asChild>
                 <Button
