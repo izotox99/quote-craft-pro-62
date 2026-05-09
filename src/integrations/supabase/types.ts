@@ -1216,41 +1216,59 @@ export type Database = {
       }
       veicoli: {
         Row: {
+          attivo: boolean
           colore: string | null
           created_at: string
+          data_immatricolazione: string | null
+          dati_tecnici: string | null
           id: string
+          km_attuale: number | null
+          km_prima_scadenza: number | null
           marca: string | null
           modello: string | null
           note: string | null
           org_id: string
           posti: number | null
           targa: string
+          telaio: string | null
           tipo_macchina: string | null
           updated_at: string
         }
         Insert: {
+          attivo?: boolean
           colore?: string | null
           created_at?: string
+          data_immatricolazione?: string | null
+          dati_tecnici?: string | null
           id?: string
+          km_attuale?: number | null
+          km_prima_scadenza?: number | null
           marca?: string | null
           modello?: string | null
           note?: string | null
           org_id?: string
           posti?: number | null
           targa: string
+          telaio?: string | null
           tipo_macchina?: string | null
           updated_at?: string
         }
         Update: {
+          attivo?: boolean
           colore?: string | null
           created_at?: string
+          data_immatricolazione?: string | null
+          dati_tecnici?: string | null
           id?: string
+          km_attuale?: number | null
+          km_prima_scadenza?: number | null
           marca?: string | null
           modello?: string | null
           note?: string | null
           org_id?: string
           posti?: number | null
           targa?: string
+          telaio?: string | null
           tipo_macchina?: string | null
           updated_at?: string
         }
