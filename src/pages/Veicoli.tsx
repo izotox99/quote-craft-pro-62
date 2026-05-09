@@ -87,7 +87,8 @@ export default function Veicoli() {
   const [editing, setEditing] = useState<Veicolo | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Veicolo | null>(null);
   const [form, setForm] = useState(emptyForm);
-
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
   const load = async () => {
     setLoading(true);
     const { data } = await supabase.from("veicoli").select("*").order("targa");
