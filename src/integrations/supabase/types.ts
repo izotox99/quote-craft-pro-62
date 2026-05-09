@@ -1218,59 +1218,92 @@ export type Database = {
         Row: {
           attivo: boolean
           colore: string | null
+          consumo_km_litro: number | null
           created_at: string
           data_immatricolazione: string | null
+          data_inizio_credito: string | null
+          data_ultima_quota_credito: string | null
           dati_tecnici: string | null
           id: string
           km_attuale: number | null
+          km_iniziale: number | null
           km_prima_scadenza: number | null
+          km_voucher: number | null
+          manutenzione_ordinaria: string | null
           marca: string | null
           modello: string | null
           note: string | null
           org_id: string
+          photo_url: string | null
           posti: number | null
+          prezzo_acquisto: number | null
+          quota_mensile_credito: number | null
           targa: string
           telaio: string | null
           tipo_macchina: string | null
           updated_at: string
+          visibile_magazzino: boolean
+          visibile_servizi: boolean
         }
         Insert: {
           attivo?: boolean
           colore?: string | null
+          consumo_km_litro?: number | null
           created_at?: string
           data_immatricolazione?: string | null
+          data_inizio_credito?: string | null
+          data_ultima_quota_credito?: string | null
           dati_tecnici?: string | null
           id?: string
           km_attuale?: number | null
+          km_iniziale?: number | null
           km_prima_scadenza?: number | null
+          km_voucher?: number | null
+          manutenzione_ordinaria?: string | null
           marca?: string | null
           modello?: string | null
           note?: string | null
           org_id?: string
+          photo_url?: string | null
           posti?: number | null
+          prezzo_acquisto?: number | null
+          quota_mensile_credito?: number | null
           targa: string
           telaio?: string | null
           tipo_macchina?: string | null
           updated_at?: string
+          visibile_magazzino?: boolean
+          visibile_servizi?: boolean
         }
         Update: {
           attivo?: boolean
           colore?: string | null
+          consumo_km_litro?: number | null
           created_at?: string
           data_immatricolazione?: string | null
+          data_inizio_credito?: string | null
+          data_ultima_quota_credito?: string | null
           dati_tecnici?: string | null
           id?: string
           km_attuale?: number | null
+          km_iniziale?: number | null
           km_prima_scadenza?: number | null
+          km_voucher?: number | null
+          manutenzione_ordinaria?: string | null
           marca?: string | null
           modello?: string | null
           note?: string | null
           org_id?: string
+          photo_url?: string | null
           posti?: number | null
+          prezzo_acquisto?: number | null
+          quota_mensile_credito?: number | null
           targa?: string
           telaio?: string | null
           tipo_macchina?: string | null
           updated_at?: string
+          visibile_magazzino?: boolean
+          visibile_servizi?: boolean
         }
         Relationships: []
       }
