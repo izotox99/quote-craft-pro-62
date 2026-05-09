@@ -41,9 +41,18 @@ const autistiSubItems = [
   { to: "/autisti/mensile", icon: CalendarDays, label: "Mensile autisti interni" },
 ];
 
+const mezziSubItems = [
+  { to: "/veicoli", icon: List, label: "Lista mezzi" },
+  { to: "/veicoli/allert", icon: AlertTriangle, label: "Allert Mezzi" },
+  { to: "/veicoli/bilancio", icon: TrendingUp, label: "Bilancio vettura" },
+  { to: "/veicoli/manutenzione-straordinaria", icon: Wrench, label: "Manutenzione stra." },
+  { to: "/veicoli/carburante", icon: Fuel, label: "Dettagli Carburante" },
+  { to: "/veicoli/adblue", icon: Droplet, label: "Dettagli AdBlue" },
+  { to: "/veicoli/adblue/nuovo", icon: PlusCircle, label: "Aggiungi AdBlue" },
+];
+
 const mainNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
-  { to: "/veicoli", icon: Car, label: "Mezzi" },
   { to: "/fornitori", icon: Truck, label: "Fornitori CS" },
 ];
 
