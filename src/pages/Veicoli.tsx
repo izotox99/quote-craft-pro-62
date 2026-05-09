@@ -13,10 +13,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Pencil, Power, PowerOff, Search, Car as CarIcon, Trash2 } from "lucide-react";
+import { PlusCircle, Pencil, Power, PowerOff, Search, Car as CarIcon, Trash2, Image as ImageIcon } from "lucide-react";
+
+const TIPI_MEZZO = ["Berlina", "Van", "Minibus", "SUV", "Limousine", "Bus", "Altro"];
 
 type Veicolo = {
   id: string;
@@ -33,13 +38,43 @@ type Veicolo = {
   km_prima_scadenza: number | null;
   data_immatricolazione: string | null;
   telaio: string | null;
+  consumo_km_litro: number | null;
+  manutenzione_ordinaria: string | null;
+  visibile_servizi: boolean;
+  visibile_magazzino: boolean;
+  km_voucher: number | null;
+  km_iniziale: number | null;
+  prezzo_acquisto: number | null;
+  quota_mensile_credito: number | null;
+  data_inizio_credito: string | null;
+  data_ultima_quota_credito: string | null;
+  photo_url: string | null;
 };
 
 const emptyForm = {
-  targa: "", marca: "", modello: "", tipo_macchina: "", colore: "",
-  posti: 4, telaio: "", data_immatricolazione: "",
-  km_attuale: "" as string | number, km_prima_scadenza: "" as string | number,
-  dati_tecnici: "", note: "",
+  tipo_macchina: "",
+  targa: "",
+  modello: "",
+  dati_tecnici: "",
+  km_iniziale: "" as string | number,
+  consumo_km_litro: "" as string | number,
+  manutenzione_ordinaria: "",
+  visibile_servizi: true,
+  visibile_magazzino: true,
+  km_voucher: "" as string | number,
+  prezzo_acquisto: "" as string | number,
+  quota_mensile_credito: "" as string | number,
+  data_inizio_credito: "",
+  data_ultima_quota_credito: "",
+  // mantenuti per la tabella
+  marca: "",
+  colore: "",
+  posti: 4,
+  telaio: "",
+  data_immatricolazione: "",
+  km_attuale: "" as string | number,
+  km_prima_scadenza: "" as string | number,
+  note: "",
 };
 
 export default function Veicoli() {
