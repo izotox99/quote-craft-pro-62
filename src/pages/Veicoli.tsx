@@ -464,7 +464,7 @@ export default function Veicoli() {
               <Input type="date" value={form.data_ultima_quota_credito} onChange={(e) => setForm({ ...form, data_ultima_quota_credito: e.target.value })} />
             </VField>
 
-            <VField label="Photo">
+            <VField label="Foto">
               <div className="space-y-2">
                 <Input
                   type="file"
