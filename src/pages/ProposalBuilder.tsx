@@ -192,7 +192,6 @@ export default function ProposalBuilder() {
       const { data, error } = await supabase.from("proposals").insert({
         ...proposalData,
         user_id: user.id,
-        org_id: "00000000-0000-0000-0000-000000000001",
         status: "draft",
       } as any).select("id").single();
       if (error) { toast.error(error.message); setSaving(false); return; }

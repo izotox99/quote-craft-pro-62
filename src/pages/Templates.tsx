@@ -115,7 +115,6 @@ export default function Templates() {
     } else {
       const { error } = await supabase.from("templates").insert({
         ...payload,
-        org_id: "00000000-0000-0000-0000-000000000001",
         user_id: user?.id,
         is_default: false,
       } as any);
