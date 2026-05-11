@@ -89,7 +89,7 @@ export type Database = {
           nome: string
           note?: string | null
           numero_ore_ord?: number | null
-          org_id?: string
+          org_id: string
           password?: string | null
           patente?: string | null
           percentuale_notturno?: number | null
@@ -174,7 +174,7 @@ export type Database = {
           nome: string
           note?: string | null
           numero_compto?: string | null
-          org_id?: string
+          org_id: string
           password?: string | null
           patente?: string | null
           percentuale_last_minute?: number | null
@@ -237,7 +237,7 @@ export type Database = {
           id?: string
           importo_spese?: number | null
           note?: string | null
-          org_id?: string
+          org_id: string
           tipo: string
           totale_fattura?: number | null
           updated_at?: string
@@ -480,7 +480,7 @@ export type Database = {
           id?: string
           nome: string
           note?: string | null
-          org_id?: string
+          org_id: string
           telefono?: string | null
           updated_at?: string
         }
@@ -1001,7 +1001,7 @@ export type Database = {
           n_passeggeri?: number | null
           note?: string | null
           ora_inizio?: string | null
-          org_id?: string
+          org_id: string
           prezzo?: number | null
           stato?: Database["public"]["Enums"]["servizio_stato"]
           telefono_contatto?: string | null
@@ -1263,7 +1263,7 @@ export type Database = {
           marca?: string | null
           modello?: string | null
           note?: string | null
-          org_id?: string
+          org_id: string
           photo_url?: string | null
           posti?: number | null
           prezzo_acquisto?: number | null

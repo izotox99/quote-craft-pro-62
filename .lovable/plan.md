@@ -1,98 +1,42 @@
+Obiettivo: ogni NCC deve vedere solo i propri dati: clienti, utenze clienti, servizi, mezzi, autisti, fornitori, preventivi/template e allegati devono appartenere a un’unica organizzazione/account. I nuovi account non devono più ereditare o vedere dati già presenti.
 
-# Piano: Semplificare la prenotazione con wizard a step
+## Piano di correzione
 
-## Obiettivo
-Trasformare il form attuale (single-page, ~10 campi visibili insieme) in un **wizard a 5 step guidati** mantenendo **gli stessi identici dati richiesti** dal database. Aggiungere due scorciatoie per ridurre il lavoro ripetitivo: **"Duplica ultima prenotazione"** e **autocomplete passeggero** dalla rubrica.
+1. **Separare davvero gli account NCC alla registrazione**
+   - Alla creazione di un nuovo account NCC verrà creata automaticamente una nuova organizzazione dedicata.
+   - Il nuovo utente diventerà admin solo della propria organizzazione.
+   - Non verrà più usata l’organizzazione predefinita condivisa per i nuovi account.
 
-Nessuna modifica al database — solo riorganizzazione UI/UX della pagina `src/pages/client-portal/Prenota.tsx`.
+2. **Bloccare il default condiviso che causa il mix di dati**
+   - Rimuovere i valori predefiniti fissi tipo `00000000-0000-0000-0000-000000000001` dai dati operativi.
+   - Aggiungere protezioni lato database: quando un NCC crea un record, il record viene collegato solo alla sua organizzazione.
+   - Se un record tenta di essere salvato con un’organizzazione diversa da quella dell’utente, viene rifiutato.
 
----
+3. **Correggere la creazione di clienti e utenze clienti**
+   - Gli account cliente/utenza non dovranno essere trattati come account NCC.
+   - La funzione che crea l’accesso cliente verrà aggiornata per marcare l’utente come “cliente”, evitando la creazione automatica di profilo NCC/ruolo interno.
+   - Le utenze dei clienti resteranno sempre collegate al cliente padre e quindi all’NCC proprietario.
 
-## 1. Struttura del wizard (5 step)
+4. **Aggiornare le schermate che salvano dati**
+   - Clienti, servizi, mezzi, autisti, collaboratori, fornitori, template e preventivi useranno l’organizzazione dell’utente loggato invece del valore fisso condiviso.
+   - Anche upload come foto mezzi e tariffari autisti verranno salvati con percorso separato per organizzazione.
 
-In cima alla pagina: barra di progresso minimale stile Notion (`Step 2 di 5 · Tragitto`) + bottoni `Indietro` / `Continua` in basso. Ogni step mostra solo i campi di quella sezione, validati prima di procedere.
+5. **Sistemare i dati già esistenti**
+   - I dati creati da un utente specifico verranno ricollegati alla sua organizzazione dedicata quando il proprietario è riconoscibile.
+   - I dati storici senza proprietario chiaro resteranno assegnati solo all’account originale/admin, così i nuovi account non li vedranno più.
+   - Gli account cliente già creati che hanno ricevuto per errore un ruolo/profilo interno verranno ripuliti, così restano clienti e non membri NCC.
 
-| # | Titolo step | Campi inclusi |
-|---|---|---|
-| 1 | **Quando** | `data_servizio`, `ora_inizio` |
-| 2 | **Dove** | `citta`, `luogo_inizio` (con detection aeroporti/stazioni esistente), `luogo_fine`, `itinerario` |
-| 3 | **Servizio** | `tipologia` (Transfer interno / regionale / Tour), `tour_tipo` (se Tour), `veicolo_tipo`, `n_passeggeri`, `n_bagagli`, `accessori` |
-| 4 | **Passeggero** | `contatto` (nome), `telefono_contatto`, `email_contatto` — con **autocomplete dalla rubrica `passeggeri_rubrica`** |
-| 5 | **Riepilogo & extra** | `tipo_pagamento`, `info_autista`, `note`, allegato → riepilogo completo + pulsante **"Conferma prenotazione"** |
+6. **Verifica finale**
+   - Controllare che un account NCC nuovo veda dashboard/liste vuote.
+   - Controllare che ogni tabella operativa filtri per organizzazione.
+   - Controllare che clienti e utenze cliente vedano solo i servizi del proprio NCC.
+   - Eseguire un controllo sicurezza sulle regole di accesso del database.
 
-**Validazione per step**: blocca `Continua` se mancano i campi obbligatori (es. step 1: data + ora; step 2: città + luogo inizio; step 4: nome contatto).
+## Dettagli tecnici
 
----
-
-## 2. Pulsante "Duplica ultima prenotazione"
-
-In cima alla pagina (sopra lo step 1), card compatta:
-
-```
-┌─────────────────────────────────────────────────┐
-│ 🔄  Ripeti l'ultima prenotazione                │
-│     Transfer interno · Roma · 18 apr 2026       │
-│     [ Duplica e modifica ]                      │
-└─────────────────────────────────────────────────┘
-```
-
-**Logica**:
-- Al mount, query `servizi` filtrata per `client_id` o `utenza_id` corrente, `order by created_at desc limit 1`.
-- Se esiste, mostra la card con un riassunto (tipologia + città + data).
-- Click su "Duplica e modifica" → precompila **tutti** i campi del wizard tranne `data_servizio` (default = oggi) e `ora_inizio` (svuotato), poi salta direttamente allo **step 5 (riepilogo)** così l'utente verifica e conferma. Può tornare indietro con `Indietro` se vuole cambiare qualcosa.
-- L'allegato NON viene duplicato (file diverso ogni volta).
-
----
-
-## 3. Autocomplete passeggero (step 4)
-
-Nel campo `contatto` dello step 4: mentre l'utente digita, mostra suggerimenti dalla rubrica `passeggeri_rubrica` (già esistente, con RLS per parent client e utenze).
-
-- Input con dropdown sotto (stessa estetica del `LuogoField` esistente).
-- Al click su un passeggero: precompila automaticamente nome, telefono, email.
-- Sotto l'input: link `+ Salva nuovo passeggero in rubrica` se il nome digitato non esiste già — al submit del wizard, viene anche inserito in `passeggeri_rubrica` (oltre che salvato nel servizio).
-
----
-
-## 4. UI/UX dettagli
-
-- **Header wizard**: titolo grande step corrente + sottotitolo grigio (es. *"Quando vuoi il servizio?"*) + barra di progresso a 5 segmenti (Plus Jakarta Sans, in linea con il design system Notion-like del progetto).
-- **Footer fisso**: `[← Indietro]` a sinistra, `[Continua →]` a destra. All'ultimo step diventa `[Conferma prenotazione]` con icona `Send`.
-- **Animazione step**: fade + slide-in da destra (`animate-in fade-in-0 slide-in-from-right-2`) quando si avanza, viceversa quando si torna indietro.
-- **Mobile**: stesso layout (già single-column), footer sticky in basso.
-- **Riepilogo step 5**: mostra tutti i dati raccolti in una card a 2 colonne con etichette grigie + valori in grassetto, e link "Modifica" accanto a ciascuna sezione che riporta allo step relativo.
-
----
-
-## 5. Implementazione tecnica
-
-**File modificato**: `src/pages/client-portal/Prenota.tsx` (riscrittura della struttura, mantenendo tutta la logica esistente di submit, detection luoghi, allegato, passeggeri rubrica).
-
-**State aggiuntivo**:
-```ts
-const [step, setStep] = useState(1);
-const [ultimoServizio, setUltimoServizio] = useState<Servizio | null>(null);
-const [passeggeriSuggeriti, setPasseggeriSuggeriti] = useState<Passeggero[]>([]);
-```
-
-**Funzioni nuove**:
-- `caricaUltimoServizio()` — query Supabase al mount.
-- `duplicaUltimo()` — copia campi nello state e va a `setStep(5)`.
-- `validateStep(n)` — ritorna `boolean` + toast errore se mancano campi.
-- `handleNext()` / `handleBack()` — con validazione.
-
-**Nessuna modifica a**:
-- Database / RLS / migrazioni.
-- Edge functions.
-- Logica di submit (`handleSubmit` rimane identica, viene solo richiamata al click finale).
-- Componenti `LuogoField`, detection aeroporti, dropzone allegato — restano come sono.
-
----
-
-## Cosa NON cambia
-- I dati salvati su `servizi` sono **esattamente gli stessi** di adesso.
-- Le RLS, i permessi utenze (singolo/gruppo), il limite 12h, lo stato `nuovo` → tutto invariato.
-- La rubrica `passeggeri_rubrica` esiste già, viene solo letta + opzionalmente arricchita.
-
-## Risultato
-L'utente vede 2-4 campi per volta invece di 15+, può ripetere l'ultima prenotazione in 2 click, e il sistema impara i passeggeri ricorrenti. Stesso database, esperienza molto più snella.
+- Modifica della funzione database `handle_new_user` per creare una nuova riga in `organizations` per ogni signup NCC.
+- Uso di metadata di signup per distinguere `ncc` da `client`.
+- Trigger/funzioni di guardia su tabelle con `org_id`: `clients`, `servizi`, `veicoli`, `autisti`, `autisti_esterni`, `fornitori_cs`, `templates`, `proposals`, `passeggeri_rubrica`, dove necessario.
+- Aggiornamento delle insert lato app in `Clients`, `Servizi`, `Veicoli`, `NuovoAutistaDialog`, `FornitoriCS`, `Templates`, `ProposalBuilder`.
+- Aggiornamento della funzione `create-client-account` per creare utenti cliente senza ruolo NCC.
+- Migrazione dati controllata per separare gli account esistenti senza cancellare dati.
