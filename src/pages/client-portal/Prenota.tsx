@@ -403,11 +403,8 @@ export default function Prenota() {
 
     setForm(empty);
     setAllegato(null);
-    setStep(1);
     setLoading(false);
   };
-
-  const StepIcon = STEPS[step - 1].icon;
 
   // Riepilogo helper
   const Riga = ({ label, value, onEdit }: { label: string; value: React.ReactNode; onEdit?: () => void }) => (
