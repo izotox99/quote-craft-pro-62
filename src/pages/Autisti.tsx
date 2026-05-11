@@ -139,8 +139,8 @@ export default function Autisti() {
       totale_fattura: spesaForm.totale_fattura ? Number(spesaForm.totale_fattura) : 0,
     };
     const { error } = editingSpesaId
-      ? await supabase.from("autisti_spese").update(payload).eq("id", editingSpesaId)
-      : await supabase.from("autisti_spese").insert(payload);
+      ? await supabase.from("autisti_spese").update(payload as any).eq("id", editingSpesaId)
+      : await supabase.from("autisti_spese").insert(payload as any);
     if (error) return toast.error(error.message);
     toast.success(editingSpesaId ? "Spesa aggiornata" : "Spesa aggiunta");
     setSpesaForm(emptySpesa);
