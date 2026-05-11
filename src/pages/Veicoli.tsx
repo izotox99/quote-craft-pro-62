@@ -483,7 +483,7 @@ export default function Veicoli() {
           <DialogFooter className="pt-4">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Annulla</Button>
             <Button onClick={handleSave} disabled={saving}>
-              {editing ? "Salva modifiche" : "Inserire !"}
+              {editing ? "Salva modifiche" : "Inserisci"}
             </Button>
           </DialogFooter>
         </DialogContent>
