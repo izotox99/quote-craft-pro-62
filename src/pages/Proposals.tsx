@@ -136,7 +136,6 @@ export default function Proposals() {
       total: p.total,
       notes: p.notes,
       user_id: user.id,
-      org_id: p.org_id || "00000000-0000-0000-0000-000000000001",
     } as any).select("id").single();
 
     if (error || !newProposal) {
