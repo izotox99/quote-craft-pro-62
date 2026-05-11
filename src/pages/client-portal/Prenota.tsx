@@ -435,7 +435,7 @@ export default function Prenota() {
         </div>
 
         {/* Card Riprendi nominativi ultima prenotazione */}
-        {ultimoServizio && ultimoServizio.contatto && step === 1 && (
+        {ultimoServizio && ultimoServizio.contatto && (
           <Card className="rounded-xl border-primary/30 bg-gradient-to-br from-primary/5 to-accent/30 shadow-sm">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary shrink-0">
@@ -456,424 +456,342 @@ export default function Prenota() {
           </Card>
         )}
 
-        {/* Info box solo step 1 */}
-        {step === 1 && (
-          <Card className="rounded-xl border-primary/20 bg-primary/5 shadow-none">
-            <CardContent className="p-4 text-sm text-muted-foreground">
-              <div className="flex items-start gap-2">
-                <Info className="h-4 w-4 mt-0.5 text-primary shrink-0" />
-                <div className="space-y-1">
-                  <p>Compila i 5 brevi step. Dalla pagina <strong>Lista Servizi</strong> potrai modificare la prenotazione.</p>
-                  <p className="text-xs text-destructive font-medium">Modifica e annulla: fino a 12 ore prima del servizio.</p>
+        {/* Info box */}
+        <Card className="rounded-xl border-primary/20 bg-primary/5 shadow-none">
+          <CardContent className="p-4 text-sm text-muted-foreground">
+            <div className="flex items-start gap-2">
+              <Info className="h-4 w-4 mt-0.5 text-primary shrink-0" />
+              <div className="space-y-1">
+                <p>Compila tutte le sezioni. Dalla pagina <strong>Lista Servizi</strong> potrai modificare la prenotazione.</p>
+                <p className="text-xs text-destructive font-medium">Modifica e annulla: fino a 12 ore prima del servizio.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          {/* SEZIONE 1: Quando */}
+          <Card className="rounded-xl border-border/50 shadow-sm">
+            <CardContent className="p-5 space-y-4">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <CalendarIcon className="h-4 w-4 text-primary" /> Quando vuoi il servizio?
+              </h2>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Data del servizio <span className="text-destructive">*</span></Label>
+                <DatePicker value={form.data_servizio} onChange={(v) => set("data_servizio", v)} placeholder="Seleziona data" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Ora di inizio <span className="text-destructive">*</span></Label>
+                <TimePicker value={form.ora_inizio} onChange={(v) => set("ora_inizio", v)} placeholder="Seleziona ora" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* SEZIONE 2: Dove */}
+          <Card className="rounded-xl border-border/50 shadow-sm">
+            <CardContent className="p-5 space-y-4">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" /> Da dove a dove?
+              </h2>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Città di servizio <span className="text-destructive">*</span></Label>
+                <Select value={form.citta} onValueChange={(v) => set("citta", v)}>
+                  <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona città" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Roma">Roma</SelectItem>
+                    <SelectItem value="Napoli">Napoli</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <LuogoField
+                label="Luogo inizio"
+                value={form.luogo_inizio}
+                onChange={(v) => set("luogo_inizio", v)}
+                dettaglio={form.luogo_inizio_dettaglio}
+                onDettaglioChange={(v) => set("luogo_inizio_dettaglio", v)}
+                speciale={luogoInizioSpeciale}
+              />
+              <LuogoField
+                label="Luogo fine"
+                value={form.luogo_fine}
+                onChange={(v) => set("luogo_fine", v)}
+                dettaglio={form.luogo_fine_dettaglio}
+                onDettaglioChange={(v) => set("luogo_fine_dettaglio", v)}
+                speciale={luogoFineSpeciale}
+              />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Itinerario (opzionale)</Label>
+                <Textarea
+                  value={form.itinerario}
+                  onChange={(e) => set("itinerario", e.target.value)}
+                  placeholder="Descrivi il percorso, le tappe, gli orari..."
+                  className="rounded-lg min-h-[70px] resize-y"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* SEZIONE 3: Servizio */}
+          <Card className="rounded-xl border-border/50 shadow-sm">
+            <CardContent className="p-5 space-y-4">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <Car className="h-4 w-4 text-primary" /> Tipo di servizio e veicolo
+              </h2>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Tipologia di servizio <span className="text-destructive">*</span></Label>
+                <Select
+                  value={form.tipologia_servizio}
+                  onValueChange={(v) => setForm(p => ({ ...p, tipologia_servizio: v, tour_tipo: v === "tour" ? p.tour_tipo : "" }))}
+                >
+                  <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona tipologia" /></SelectTrigger>
+                  <SelectContent>
+                    {TIPOLOGIA_OPZIONI.map(t => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {form.tipologia_servizio === "tour" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Tipo di tour</Label>
+                  <Select value={form.tour_tipo} onValueChange={(v) => set("tour_tipo", v)}>
+                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona tour" /></SelectTrigger>
+                    <SelectContent>
+                      {TOUR_OPZIONI.map(t => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Veicolo <span className="text-destructive">*</span></Label>
+                <Select value={form.veicolo_tipo} onValueChange={(v) => set("veicolo_tipo", v)}>
+                  <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona veicolo" /></SelectTrigger>
+                  <SelectContent>
+                    {VEICOLI_DISPONIBILI.map(v => (
+                      <SelectItem key={v} value={v}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">N. persone</Label>
+                  <Input type="number" min="1" value={form.n_passeggeri} onChange={(e) => set("n_passeggeri", e.target.value)} className="rounded-lg h-10" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">N. bagagli</Label>
+                  <Input type="number" min="0" value={form.n_bagagli} onChange={(e) => set("n_bagagli", e.target.value)} className="rounded-lg h-10" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Accessori (opzionale)</Label>
+                <Input value={form.accessori} onChange={(e) => set("accessori", e.target.value)} placeholder="es. seggiolino, WiFi..." className="rounded-lg h-10" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* SEZIONE 4: Passeggero */}
+          <Card className="rounded-xl border-border/50 shadow-sm">
+            <CardContent className="p-5 space-y-5">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <User className="h-4 w-4 text-primary" /> Chi viaggia?
+              </h2>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Nome passeggero <span className="text-destructive">*</span>
+                </Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={form.contatto}
+                    onChange={(e) => set("contatto", e.target.value)}
+                    placeholder="Cerca o digita un nuovo nome…"
+                    className="rounded-lg h-11 pl-9 pr-9"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-form-type="other"
+                  />
+                  {form.contatto && (
+                    <button
+                      type="button"
+                      onClick={() => { set("contatto", ""); set("telefono_contatto", ""); set("email_contatto", ""); }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition"
+                      aria-label="Cancella"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {passeggeri.length > 0 && (
+                  <div className="rounded-xl border border-border bg-card overflow-hidden">
+                    <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40 border-b border-border flex items-center justify-between">
+                      <span>Dalla rubrica</span>
+                      <span className="text-[10px] font-normal normal-case">
+                        {passeggeriFiltrati.length} {passeggeriFiltrati.length === 1 ? "risultato" : "risultati"}
+                      </span>
+                    </div>
+                    {passeggeriFiltrati.length > 0 ? (
+                      <ul className="max-h-64 overflow-y-auto divide-y divide-border/60">
+                        {passeggeriFiltrati.map(p => {
+                          const fullName = `${p.nome}${p.cognome ? " " + p.cognome : ""}`;
+                          const isSelected =
+                            form.contatto.trim().toLowerCase() === fullName.toLowerCase().trim();
+                          return (
+                            <li key={p.id}>
+                              <button
+                                type="button"
+                                onClick={() => selezionaPasseggero(p)}
+                                className={`w-full text-left px-3 py-2.5 text-sm transition-colors flex items-center gap-3 ${
+                                  isSelected ? "bg-primary/10" : "hover:bg-accent"
+                                }`}
+                              >
+                                <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
+                                  {p.nome.charAt(0).toUpperCase()}
+                                  {p.cognome ? p.cognome.charAt(0).toUpperCase() : ""}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-medium truncate flex items-center gap-2">
+                                    {fullName}
+                                    {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />}
+                                  </div>
+                                  {(p.telefono || p.email) && (
+                                    <div className="text-xs text-muted-foreground truncate">
+                                      {[p.telefono, p.email].filter(Boolean).join(" · ")}
+                                    </div>
+                                  )}
+                                </div>
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                        Nessun passeggero trovato in rubrica
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {form.contatto.trim() && !passeggeroEsiste && (
+                  <div className="flex items-start gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs text-foreground">
+                    <UserPlus className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                    <span>
+                      <strong className="font-semibold">{form.contatto}</strong> non è in rubrica — lo salveremo automaticamente al termine così la prossima volta lo trovi subito.
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <Phone className="h-3 w-3" /> Telefono
+                  </Label>
+                  <Input value={form.telefono_contatto} onChange={(e) => set("telefono_contatto", e.target.value)} placeholder="+39…" className="rounded-lg h-10" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <Mail className="h-3 w-3" /> Email
+                  </Label>
+                  <Input type="email" value={form.email_contatto} onChange={(e) => set("email_contatto", e.target.value)} placeholder="email@esempio.com" className="rounded-lg h-10" />
                 </div>
               </div>
             </CardContent>
           </Card>
-        )}
 
-        {/* Header step + barra progresso */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <StepIcon className="h-4 w-4" />
-              </div>
-              <div>
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
-                  Step {step} di 5
-                </div>
-                <div className="text-base font-semibold text-foreground leading-tight">
-                  {STEPS[step - 1].sottotitolo}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-5 gap-1.5">
-            {STEPS.map(s => (
-              <div
-                key={s.num}
-                className={`h-1.5 rounded-full transition-colors ${
-                  s.num <= step ? "bg-primary" : "bg-muted"
-                }`}
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* CONTENUTO STEP */}
-        <div key={step} className="animate-in fade-in-0 slide-in-from-right-2 duration-200">
-          {/* STEP 1: Quando */}
-          {step === 1 && (
-            <Card className="rounded-xl border-border/50 shadow-sm">
-              <CardContent className="p-5 space-y-4">
+          {/* SEZIONE 5: Pagamento + extra */}
+          <Card className="rounded-xl border-border/50 shadow-sm">
+            <CardContent className="p-5 space-y-4">
+              <h2 className="text-sm font-semibold flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-primary" /> Pagamento e dettagli
+              </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Data del servizio <span className="text-destructive">*</span></Label>
-                  <DatePicker value={form.data_servizio} onChange={(v) => set("data_servizio", v)} placeholder="Seleziona data" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Ora di inizio <span className="text-destructive">*</span></Label>
-                  <TimePicker value={form.ora_inizio} onChange={(v) => set("ora_inizio", v)} placeholder="Seleziona ora" />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* STEP 2: Dove */}
-          {step === 2 && (
-            <Card className="rounded-xl border-border/50 shadow-sm">
-              <CardContent className="p-5 space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Città di servizio <span className="text-destructive">*</span></Label>
-                  <Select value={form.citta} onValueChange={(v) => set("citta", v)}>
-                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona città" /></SelectTrigger>
+                  <Label className="text-xs font-medium text-muted-foreground">Tipo pagamento <span className="text-destructive">*</span></Label>
+                  <Select value={form.tipo_pagamento} onValueChange={(v) => set("tipo_pagamento", v)}>
+                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Roma">Roma</SelectItem>
-                      <SelectItem value="Napoli">Napoli</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <LuogoField
-                  label="Luogo inizio"
-                  value={form.luogo_inizio}
-                  onChange={(v) => set("luogo_inizio", v)}
-                  dettaglio={form.luogo_inizio_dettaglio}
-                  onDettaglioChange={(v) => set("luogo_inizio_dettaglio", v)}
-                  speciale={luogoInizioSpeciale}
-                />
-                <LuogoField
-                  label="Luogo fine"
-                  value={form.luogo_fine}
-                  onChange={(v) => set("luogo_fine", v)}
-                  dettaglio={form.luogo_fine_dettaglio}
-                  onDettaglioChange={(v) => set("luogo_fine_dettaglio", v)}
-                  speciale={luogoFineSpeciale}
-                />
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Itinerario (opzionale)</Label>
-                  <Textarea
-                    value={form.itinerario}
-                    onChange={(e) => set("itinerario", e.target.value)}
-                    placeholder="Descrivi il percorso, le tappe, gli orari..."
-                    className="rounded-lg min-h-[70px] resize-y"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* STEP 3: Servizio */}
-          {step === 3 && (
-            <Card className="rounded-xl border-border/50 shadow-sm">
-              <CardContent className="p-5 space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Tipologia di servizio <span className="text-destructive">*</span></Label>
-                  <Select
-                    value={form.tipologia_servizio}
-                    onValueChange={(v) => setForm(p => ({ ...p, tipologia_servizio: v, tour_tipo: v === "tour" ? p.tour_tipo : "" }))}
-                  >
-                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona tipologia" /></SelectTrigger>
-                    <SelectContent>
-                      {TIPOLOGIA_OPZIONI.map(t => (
-                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      {PAGAMENTO_OPZIONI.map(p => (
+                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                {form.tipologia_servizio === "tour" && (
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Tipo di tour</Label>
-                    <Select value={form.tour_tipo} onValueChange={(v) => set("tour_tipo", v)}>
-                      <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona tour" /></SelectTrigger>
-                      <SelectContent>
-                        {TOUR_OPZIONI.map(t => (
-                          <SelectItem key={t} value={t}>{t}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Veicolo <span className="text-destructive">*</span></Label>
-                  <Select value={form.veicolo_tipo} onValueChange={(v) => set("veicolo_tipo", v)}>
-                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona veicolo" /></SelectTrigger>
-                    <SelectContent>
-                      {VEICOLI_DISPONIBILI.map(v => (
-                        <SelectItem key={v} value={v}>{v}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-xs font-medium text-muted-foreground">Prezzo (opzionale)</Label>
+                  <Input type="number" step="0.01" value={form.prezzo} onChange={(e) => set("prezzo", e.target.value)} placeholder="0.00" className="rounded-lg h-10" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">N. persone</Label>
-                    <Input type="number" min="1" value={form.n_passeggeri} onChange={(e) => set("n_passeggeri", e.target.value)} className="rounded-lg h-10" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">N. bagagli</Label>
-                    <Input type="number" min="0" value={form.n_bagagli} onChange={(e) => set("n_bagagli", e.target.value)} className="rounded-lg h-10" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Accessori (opzionale)</Label>
-                  <Input value={form.accessori} onChange={(e) => set("accessori", e.target.value)} placeholder="es. seggiolino, WiFi..." className="rounded-lg h-10" />
-                </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Info per l'autista (opzionale)</Label>
+                <Textarea value={form.info_autista} onChange={(e) => set("info_autista", e.target.value)} placeholder="Informazioni utili per l'autista" className="rounded-lg min-h-[60px] resize-y" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-medium text-muted-foreground">Note (opzionale)</Label>
+                <Textarea value={form.note} onChange={(e) => set("note", e.target.value)} placeholder="Note aggiuntive..." className="rounded-lg min-h-[60px] resize-y" />
+              </div>
 
-          {/* STEP 4: Passeggero con autocomplete */}
-          {step === 4 && (
-            <Card className="rounded-xl border-border/50 shadow-sm">
-              <CardContent className="p-5 space-y-5">
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-muted-foreground">
-                    Nome passeggero <span className="text-destructive">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <Input
-                      value={form.contatto}
-                      onChange={(e) => set("contatto", e.target.value)}
-                      placeholder="Cerca o digita un nuovo nome…"
-                      className="rounded-lg h-11 pl-9 pr-9"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      spellCheck={false}
-                      data-lpignore="true"
-                      data-form-type="other"
+              {/* Allegato */}
+              <div className="space-y-2 pt-2 border-t border-border/40">
+                <Label className="text-sm font-semibold flex items-center gap-2">
+                  <Paperclip className="h-4 w-4 text-primary" />
+                  Allegato per l'autista (opzionale)
+                </Label>
+                {allegato ? (
+                  <div className="flex items-center justify-between gap-2 p-3 rounded-lg border border-border/60 bg-muted/30">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="text-sm truncate">{allegato.name}</span>
+                    </div>
+                    <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setAllegato(null)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <label htmlFor="allegato-input" className="flex items-center gap-3 p-3 rounded-lg border-2 border-dashed border-border hover:border-primary/50 hover:bg-accent/30 transition-colors cursor-pointer">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                      <Plus className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">Scegli un file</p>
+                      <p className="text-xs text-muted-foreground">PDF, Word, Excel o immagini · max {ALLEGATO_MAX_MB}MB</p>
+                    </div>
+                    <input
+                      id="allegato-input"
+                      type="file"
+                      accept={ALLEGATO_ACCEPT}
+                      className="sr-only"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (!f) return;
+                        if (f.size > ALLEGATO_MAX_MB * 1024 * 1024) {
+                          toast.error(`File troppo grande. Massimo ${ALLEGATO_MAX_MB}MB.`);
+                          e.target.value = "";
+                          return;
+                        }
+                        setAllegato(f);
+                      }}
                     />
-                    {form.contatto && (
-                      <button
-                        type="button"
-                        onClick={() => { set("contatto", ""); set("telefono_contatto", ""); set("email_contatto", ""); }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition"
-                        aria-label="Cancella"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Lista rubrica — sempre visibile sotto il campo */}
-                  {passeggeri.length > 0 && (
-                    <div className="rounded-xl border border-border bg-card overflow-hidden">
-                      <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground bg-muted/40 border-b border-border flex items-center justify-between">
-                        <span>Dalla rubrica</span>
-                        <span className="text-[10px] font-normal normal-case">
-                          {passeggeriFiltrati.length} {passeggeriFiltrati.length === 1 ? "risultato" : "risultati"}
-                        </span>
-                      </div>
-                      {passeggeriFiltrati.length > 0 ? (
-                        <ul className="max-h-64 overflow-y-auto divide-y divide-border/60">
-                          {passeggeriFiltrati.map(p => {
-                            const fullName = `${p.nome}${p.cognome ? " " + p.cognome : ""}`;
-                            const isSelected =
-                              form.contatto.trim().toLowerCase() === fullName.toLowerCase().trim();
-                            return (
-                              <li key={p.id}>
-                                <button
-                                  type="button"
-                                  onClick={() => selezionaPasseggero(p)}
-                                  className={`w-full text-left px-3 py-2.5 text-sm transition-colors flex items-center gap-3 ${
-                                    isSelected ? "bg-primary/10" : "hover:bg-accent"
-                                  }`}
-                                >
-                                  <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
-                                    {p.nome.charAt(0).toUpperCase()}
-                                    {p.cognome ? p.cognome.charAt(0).toUpperCase() : ""}
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="font-medium truncate flex items-center gap-2">
-                                      {fullName}
-                                      {isSelected && <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" />}
-                                    </div>
-                                    {(p.telefono || p.email) && (
-                                      <div className="text-xs text-muted-foreground truncate">
-                                        {[p.telefono, p.email].filter(Boolean).join(" · ")}
-                                      </div>
-                                    )}
-                                  </div>
-                                </button>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      ) : (
-                        <div className="px-3 py-4 text-center text-xs text-muted-foreground">
-                          Nessun passeggero trovato in rubrica
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {form.contatto.trim() && !passeggeroEsiste && (
-                    <div className="flex items-start gap-2 rounded-lg border border-dashed border-primary/40 bg-primary/5 px-3 py-2 text-xs text-foreground">
-                      <UserPlus className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <span>
-                        <strong className="font-semibold">{form.contatto}</strong> non è in rubrica — lo salveremo automaticamente al termine così la prossima volta lo trovi subito.
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                      <Phone className="h-3 w-3" /> Telefono
-                    </Label>
-                    <Input value={form.telefono_contatto} onChange={(e) => set("telefono_contatto", e.target.value)} placeholder="+39…" className="rounded-lg h-10" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                      <Mail className="h-3 w-3" /> Email
-                    </Label>
-                    <Input type="email" value={form.email_contatto} onChange={(e) => set("email_contatto", e.target.value)} placeholder="email@esempio.com" className="rounded-lg h-10" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* STEP 5: Riepilogo + extra */}
-          {step === 5 && (
-            <div className="space-y-4">
-              <Card className="rounded-xl border-border/50 shadow-sm">
-                <CardContent className="p-5 space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-medium text-muted-foreground">Tipo pagamento <span className="text-destructive">*</span></Label>
-                      <Select value={form.tipo_pagamento} onValueChange={(v) => set("tipo_pagamento", v)}>
-                        <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona" /></SelectTrigger>
-                        <SelectContent>
-                          {PAGAMENTO_OPZIONI.map(p => (
-                            <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-medium text-muted-foreground">Prezzo (opzionale)</Label>
-                      <Input type="number" step="0.01" value={form.prezzo} onChange={(e) => set("prezzo", e.target.value)} placeholder="0.00" className="rounded-lg h-10" />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Info per l'autista (opzionale)</Label>
-                    <Textarea value={form.info_autista} onChange={(e) => set("info_autista", e.target.value)} placeholder="Informazioni utili per l'autista" className="rounded-lg min-h-[60px] resize-y" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground">Note (opzionale)</Label>
-                    <Textarea value={form.note} onChange={(e) => set("note", e.target.value)} placeholder="Note aggiuntive..." className="rounded-lg min-h-[60px] resize-y" />
-                  </div>
-
-                  {/* Allegato */}
-                  <div className="space-y-2 pt-2 border-t border-border/40">
-                    <Label className="text-sm font-semibold flex items-center gap-2">
-                      <Paperclip className="h-4 w-4 text-primary" />
-                      Allegato per l'autista (opzionale)
-                    </Label>
-                    {allegato ? (
-                      <div className="flex items-center justify-between gap-2 p-3 rounded-lg border border-border/60 bg-muted/30">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
-                          <span className="text-sm truncate">{allegato.name}</span>
-                        </div>
-                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => setAllegato(null)}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <label htmlFor="allegato-input" className="flex items-center gap-3 p-3 rounded-lg border-2 border-dashed border-border hover:border-primary/50 hover:bg-accent/30 transition-colors cursor-pointer">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                          <Plus className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">Scegli un file</p>
-                          <p className="text-xs text-muted-foreground">PDF, Word, Excel o immagini · max {ALLEGATO_MAX_MB}MB</p>
-                        </div>
-                        <input
-                          id="allegato-input"
-                          type="file"
-                          accept={ALLEGATO_ACCEPT}
-                          className="sr-only"
-                          onChange={(e) => {
-                            const f = e.target.files?.[0];
-                            if (!f) return;
-                            if (f.size > ALLEGATO_MAX_MB * 1024 * 1024) {
-                              toast.error(`File troppo grande. Massimo ${ALLEGATO_MAX_MB}MB.`);
-                              e.target.value = "";
-                              return;
-                            }
-                            setAllegato(f);
-                          }}
-                        />
-                      </label>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Riepilogo */}
-              <Card className="rounded-xl border-border/50 shadow-sm">
-                <CardContent className="p-5 space-y-1">
-                  <h3 className="text-sm font-semibold text-foreground mb-2">Riepilogo prenotazione</h3>
-                  <Riga
-                    label="Quando"
-                    value={`${form.data_servizio ? format(parse(form.data_servizio, "yyyy-MM-dd", new Date()), "d MMM yyyy", { locale: it }) : "—"}${form.ora_inizio ? " · " + form.ora_inizio : ""}`}
-                    onEdit={() => setStep(1)}
-                  />
-                  <Riga
-                    label="Tragitto"
-                    value={
-                      <>
-                        {form.citta && <span className="text-muted-foreground">{form.citta} · </span>}
-                        {form.luogo_inizio_dettaglio ? `${form.luogo_inizio} - ${form.luogo_inizio_dettaglio}` : form.luogo_inizio}
-                        {" → "}
-                        {form.luogo_fine_dettaglio ? `${form.luogo_fine} - ${form.luogo_fine_dettaglio}` : form.luogo_fine}
-                      </>
-                    }
-                    onEdit={() => setStep(2)}
-                  />
-                  <Riga
-                    label="Servizio"
-                    value={`${tipologiaLabel(form.tipologia_servizio)}${form.tour_tipo ? " · " + form.tour_tipo : ""} · ${form.veicolo_tipo} · ${form.n_passeggeri} pax · ${form.n_bagagli} bagagli`}
-                    onEdit={() => setStep(3)}
-                  />
-                  <Riga
-                    label="Passeggero"
-                    value={`${form.contatto}${form.telefono_contatto ? " · " + form.telefono_contatto : ""}${form.email_contatto ? " · " + form.email_contatto : ""}`}
-                    onEdit={() => setStep(4)}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          )}
+                  </label>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Footer navigazione sticky */}
+        {/* Footer submit sticky */}
         <div className="sticky bottom-4 z-20 mt-6">
           <div className="flex items-center gap-3 p-2 rounded-xl border border-border bg-background/95 backdrop-blur shadow-lg">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleBack}
-              disabled={step === 1 || loading}
-              className="rounded-lg gap-1.5"
-            >
-              <ChevronLeft className="h-4 w-4" /> Indietro
+            <Button type="button" onClick={handleSubmit} disabled={loading} className="rounded-lg gap-1.5 w-full">
+              <Send className="h-4 w-4" />
+              {loading ? "Invio..." : "Conferma prenotazione"}
             </Button>
-            <div className="flex-1 text-center text-xs text-muted-foreground hidden sm:block">
-              {step < 5 ? `Prossimo: ${STEPS[step].titolo}` : "Pronto per inviare"}
-            </div>
-            {step < 5 ? (
-              <Button type="button" onClick={handleNext} className="rounded-lg gap-1.5 ml-auto sm:ml-0">
-                Continua <ChevronRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button type="button" onClick={handleSubmit} disabled={loading} className="rounded-lg gap-1.5 ml-auto sm:ml-0">
-                <Send className="h-4 w-4" />
-                {loading ? "Invio..." : "Conferma prenotazione"}
-              </Button>
-            )}
           </div>
         </div>
       </div>
