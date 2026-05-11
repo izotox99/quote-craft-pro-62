@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
         email: syntheticEmail,
         password: authPassword,
         email_confirm: true,
-        user_metadata: { utenza_id: utenza.id, real_email: utenza.email },
+        user_metadata: { utenza_id: utenza.id, real_email: utenza.email, account_type: "client" },
       });
 
       if (createErr || !created.user) {
