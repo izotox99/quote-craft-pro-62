@@ -328,7 +328,7 @@ export default function Prenota() {
   const handleSubmit = async () => {
     // Validazione finale completa
     for (let i = 1; i <= 4; i++) {
-      if (!validateStep(i)) { setStep(i); return; }
+      if (!validateStep(i)) return;
     }
     if (!form.tipo_pagamento) { toast.error("Seleziona il tipo di pagamento"); return; }
     if (!clientId || !orgId) return;
