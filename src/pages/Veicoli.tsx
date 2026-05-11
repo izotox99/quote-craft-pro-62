@@ -21,7 +21,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PlusCircle, Pencil, Power, PowerOff, Search, Car as CarIcon, Trash2, Image as ImageIcon } from "lucide-react";
 
-const TIPI_MEZZO = ["Berlina", "Van", "Minibus", "SUV", "Limousine", "Bus", "Altro"];
+const TIPI_MEZZO = [
+  "Autovettura 3 posti",
+  "Bus 52 posti",
+  "Luxury Car Serie S",
+  "Minibus 16 Posti",
+  "Minibus 8 posti",
+  "Minivan 7 posti classe V",
+  "Minivan 7/8 posti",
+  "Servizio guida",
+  "Veicolo disabili",
+];
 
 type Veicolo = {
   id: string;
