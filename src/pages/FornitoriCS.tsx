@@ -33,7 +33,7 @@ export default function FornitoriCS() {
     const { error } = await supabase.from("fornitori_cs").insert({
       nome: form.nome, telefono: form.telefono || null,
       email: form.email || null, note: form.note || null,
-    });
+    } as any);
     if (error) toast.error(error.message);
     else { toast.success("Fornitore aggiunto!"); setDialogOpen(false); load(); setForm({ nome: "", telefono: "", email: "", note: "" }); }
   };

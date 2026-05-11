@@ -117,7 +117,6 @@ export default function Clients() {
       }
       const { data: inserted, error } = await supabase.from("clients").insert({
         ...payload,
-        org_id: "00000000-0000-0000-0000-000000000001",
         created_by: user?.id ?? null,
       } as any).select("id").single();
       if (error) {

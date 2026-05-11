@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
         email,
         password,
         email_confirm: true,
+        user_metadata: { account_type: "client" },
       });
 
       if (createError) {
