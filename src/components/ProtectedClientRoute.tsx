@@ -4,14 +4,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export function ProtectedClientRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, loading, role, organization } = useAuth();
   const [checking, setChecking] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [gdprAccepted, setGdprAccepted] = useState(false);
 
   useEffect(() => {
     const check = async () => {
-      if (!user) { setChecking(false); return; }
+      if (!user || (role && organization)) { setChecking(false); return; }
       const { data: client } = await supabase
         .from("clients")
         .select("id, gdpr_accepted_at")
@@ -36,7 +36,7 @@ export function ProtectedClientRoute({ children }: { children: React.ReactNode }
       setChecking(false);
     };
     if (!loading) check();
-  }, [user, loading]);
+  }, [user, loading, role, organization]);
 
   if (loading || checking) {
     return (
@@ -47,6 +47,7 @@ export function ProtectedClientRoute({ children }: { children: React.ReactNode }
   }
 
   if (!user) return <Navigate to="/client-login" replace />;
+  if (role && organization) return <Navigate to="/dashboard" replace />;
   if (!isClient) return <Navigate to="/client-login" replace />;
   if (!gdprAccepted) return <Navigate to="/client-portal/gdpr" replace />;
 
