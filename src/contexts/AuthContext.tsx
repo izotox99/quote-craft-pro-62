@@ -43,9 +43,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [organization, setOrganization] = useState<Organization | null>(null);
 
   const loadUserMeta = async (uid: string) => {
-    setRole(null);
-    setOrganization(null);
-
     // Load role
     const { data: roles } = await supabase
       .from("user_roles")
