@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, role, organization, signOut } = useAuth();
+  const { user, loading, role, organization } = useAuth();
   const [checkingClient, setCheckingClient] = useState(true);
   const [isClientAccount, setIsClientAccount] = useState(false);
 
@@ -44,10 +44,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!user) return <Navigate to="/login" replace />;
   if (role && organization) return <>{children}</>;
 
-  if (isClientAccount) {
-    signOut();
-    return <Navigate to="/login" replace />;
-  }
+  if (isClientAccount) return <Navigate to="/login" replace />;
 
   return <Navigate to="/login" replace />;
 }
