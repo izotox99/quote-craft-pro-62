@@ -25,19 +25,31 @@ export default function ClientLogin() {
       // 1) Try parent-client login (direct auth)
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (!error) {
+        const uid = (await supabase.auth.getUser()).data.user?.id;
         const { data: client } = await supabase
           .from("clients")
           .select("id, gdpr_accepted_at")
-          .eq("auth_user_id", (await supabase.auth.getUser()).data.user?.id)
-          .single();
+          .eq("auth_user_id", uid)
+          .maybeSingle();
 
         if (client) {
           if (!client.gdpr_accepted_at) navigate("/client-portal/gdpr");
           else navigate("/client-portal");
           return;
         }
-        // Logged in but not a client → sign out and try utenza fallback
+        // Logged in but not a client → check utenza link before falling back
+        const { data: utenzaLink } = await supabase
+          .from("client_utenze")
+          .select("id, attivo")
+          .eq("auth_user_id", uid)
+          .maybeSingle();
+        if (utenzaLink?.attivo) {
+          navigate("/client-portal");
+          return;
+        }
         await supabase.auth.signOut();
+        toast.error("Account non collegato a un profilo cliente. Contatta l'amministratore.");
+        return;
       }
 
       // 2) Fallback: try utenza login via edge function
