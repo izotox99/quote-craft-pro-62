@@ -101,7 +101,23 @@ export default function Clients() {
     if (editing) {
       const { error } = await supabase.from("clients").update(payload as any).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
-      toast.success("Cliente aggiornato");
+
+      // Sync auth account if email + password are present (handles email/password changes
+      // and also creates the account if it was missing).
+      const emailChanged = (editing.email ?? "") !== form.email.trim();
+      const passwordChanged = (editing.password_cliente ?? "") !== form.password_cliente.trim();
+      if (form.email.trim() && form.password_cliente.trim() && (emailChanged || passwordChanged)) {
+        const { data: fnData, error: fnError } = await supabase.functions.invoke("create-client-account", {
+          body: { email: form.email.trim(), password: form.password_cliente.trim(), client_id: editing.id },
+        });
+        if (fnError || fnData?.error) {
+          toast.warning("Cliente aggiornato, ma errore nell'account: " + (fnData?.error || fnError?.message));
+        } else {
+          toast.success("Cliente e account aggiornati");
+        }
+      } else {
+        toast.success("Cliente aggiornato");
+      }
     } else {
       // Pre-check duplicate email within org (case-insensitive)
       if (form.email.trim()) {
