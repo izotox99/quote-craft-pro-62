@@ -139,6 +139,20 @@ export default function ClientLogin() {
               <LogIn className="h-4 w-4" />
               {loading ? "Accesso in corso..." : "Accedi"}
             </Button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!email.trim()) { toast.error("Inserisci la tua email"); return; }
+                const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+                  redirectTo: `${window.location.origin}/reset-password`,
+                });
+                if (error) toast.error("Impossibile inviare la richiesta. Riprova.");
+                else toast.success("Se l'email è registrata riceverai le istruzioni per reimpostare la password.");
+              }}
+              className="block w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Password dimenticata?
+            </button>
           </form>
           <div className="mt-6 pt-4 border-t border-border/50 text-center space-y-2">
             <p className="text-xs text-muted-foreground">Sei una società di NCC?</p>
