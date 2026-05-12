@@ -63,8 +63,8 @@ export function SectionGasolio({ veicoloId }: { veicoloId: string }) {
       luogo: form.luogo || null,
     };
     const { error } = editing
-      ? await supabase.from("veicoli_gasolio").update(payload).eq("id", editing.id)
-      : await supabase.from("veicoli_gasolio").insert(payload);
+      ? await supabase.from("veicoli_gasolio").update(payload as any).eq("id", editing.id)
+      : await supabase.from("veicoli_gasolio").insert([payload] as any);
     if (error) return toast.error(error.message);
     toast.success(editing ? "Aggiornato" : "Aggiunto");
     setOpen(false); load();

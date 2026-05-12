@@ -46,13 +46,13 @@ export function SectionDocumenti({ veicoloId }: { veicoloId: string }) {
         .from("veicoli-documenti")
         .upload(path, file, { upsert: false });
       if (upErr) throw upErr;
-      const { error } = await supabase.from("veicoli_documenti").insert({
+      const { error } = await supabase.from("veicoli_documenti").insert([{
         veicolo_id: veicoloId,
         titolo: titolo.trim(),
         file_path: path,
         file_name: file.name,
         mime_type: file.type,
-      });
+      }] as any);
       if (error) throw error;
       toast.success("Documento aggiunto");
       setTitolo(""); setFile(null);

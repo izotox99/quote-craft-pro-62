@@ -66,8 +66,8 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
       payload.ordine = form.ordine || null;
     }
     const { error } = editing
-      ? await supabase.from(table).update(payload).eq("id", editing.id)
-      : await supabase.from(table).insert(payload);
+      ? await supabase.from(table as any).update(payload as any).eq("id", editing.id)
+      : await supabase.from(table as any).insert([payload] as any);
     if (error) return toast.error(error.message);
     toast.success(editing ? "Aggiornato" : "Aggiunto");
     setOpen(false); load();

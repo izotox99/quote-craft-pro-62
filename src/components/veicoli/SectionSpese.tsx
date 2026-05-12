@@ -49,8 +49,8 @@ export function SectionSpese({ veicoloId }: { veicoloId: string }) {
       note: form.note || null,
     };
     const { error } = editing
-      ? await supabase.from("veicoli_spese").update(payload).eq("id", editing.id)
-      : await supabase.from("veicoli_spese").insert(payload);
+      ? await supabase.from("veicoli_spese").update(payload as any).eq("id", editing.id)
+      : await supabase.from("veicoli_spese").insert([payload] as any);
     if (error) return toast.error(error.message);
     toast.success(editing ? "Aggiornato" : "Aggiunto");
     setOpen(false); load();
