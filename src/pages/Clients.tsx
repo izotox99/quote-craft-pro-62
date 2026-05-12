@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { PlusCircle, Search, Users, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,7 +38,6 @@ const emptyForm = {
 
 export default function Clients() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -92,7 +90,7 @@ export default function Clients() {
       toast.error("La password deve avere almeno 6 caratteri");
       return;
     }
-    // We never store the cleartext password in the DB anymore — auth.users is the source of truth.
+
     const payload = {
       name: form.company.trim(),
       email: toNull(form.email), company: toNull(form.company), phone: toNull(form.phone), notes: toNull(form.notes),
@@ -103,72 +101,24 @@ export default function Clients() {
       telefono_urg1: toNull(form.telefono_urg1), telefono_urg1_nota: toNull(form.telefono_urg1_nota),
       telefono_urg2: toNull(form.telefono_urg2), telefono_urg2_nota: toNull(form.telefono_urg2_nota),
       telefono_urg3: toNull(form.telefono_urg3), telefono_urg3_nota: toNull(form.telefono_urg3_nota),
-      fax: toNull(form.fax), password_cliente: null,
+      fax: toNull(form.fax),
     };
-    if (editing) {
-      const { error } = await supabase.from("clients").update(payload as any).eq("id", editing.id);
-      if (error) { toast.error(error.message); return; }
 
-      // Sync auth account whenever email is present and either email changed or a new password was typed.
-      const emailChanged = (editing.email ?? "") !== form.email.trim();
-      const newPassword = form.password_cliente.trim();
-      const shouldSync = !!form.email.trim() && (emailChanged || !!newPassword);
-      if (shouldSync) {
-        if (!newPassword) {
-          toast.warning("Per cambiare l'email serve anche reimpostare la password.");
-        } else {
-          const { data: fnData, error: fnError } = await supabase.functions.invoke("create-client-account", {
-            body: { email: form.email.trim(), password: newPassword, client_id: editing.id },
-          });
-          if (fnError || fnData?.error) {
-            toast.warning("Cliente aggiornato, ma errore nell'account: " + (fnData?.error || fnError?.message));
-          } else {
-            toast.success("Cliente e account aggiornati");
-          }
-        }
-      } else {
-        toast.success("Cliente aggiornato");
-      }
-    } else {
-      // Pre-check duplicate email within org (case-insensitive)
-      if (form.email.trim()) {
-        const { data: existing } = await supabase
-          .from("clients")
-          .select("id")
-          .ilike("email", form.email.trim())
-          .maybeSingle();
-        if (existing) {
-          toast.error("Esiste già un cliente con questa email");
-          return;
-        }
-      }
-      const { data: inserted, error } = await supabase.from("clients").insert({
-        ...payload,
-        created_by: user?.id ?? null,
-      } as any).select("id").single();
-      if (error) {
-        if (error.code === "23505" || error.message.includes("clients_org_email_unique")) {
-          toast.error("Esiste già un cliente con questa email");
-        } else {
-          toast.error(error.message);
-        }
-        return;
-      }
+    const { data: fnData, error: fnError } = await supabase.functions.invoke("create-client-account", {
+      body: {
+        client_id: editing?.id,
+        client: payload,
+        password: form.password_cliente.trim() || undefined,
+      },
+    });
 
-      // Create auth account if email and password provided
-      if (form.email.trim() && form.password_cliente.trim() && inserted) {
-        const { data: fnData, error: fnError } = await supabase.functions.invoke("create-client-account", {
-          body: { email: form.email.trim(), password: form.password_cliente.trim(), client_id: inserted.id },
-        });
-        if (fnError || fnData?.error) {
-          toast.warning("Cliente creato, ma errore nella creazione account: " + (fnData?.error || fnError?.message));
-        } else {
-          toast.success("Cliente e account creati con successo!");
-        }
-      } else {
-        toast.success("Cliente creato");
-      }
+    if (fnError || fnData?.error) {
+      const message = fnData?.error || fnError?.message || "Errore durante il salvataggio";
+      toast.error(message);
+      return;
     }
+
+    toast.success(editing ? "Cliente aggiornato" : "Cliente e account creati con successo!");
     setDialogOpen(false);
     load();
   };
