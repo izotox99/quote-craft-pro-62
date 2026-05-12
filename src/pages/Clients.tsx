@@ -73,7 +73,9 @@ export default function Clients() {
       telefono_urg1: c.telefono_urg1 ?? "", telefono_urg1_nota: c.telefono_urg1_nota ?? "",
       telefono_urg2: c.telefono_urg2 ?? "", telefono_urg2_nota: c.telefono_urg2_nota ?? "",
       telefono_urg3: c.telefono_urg3 ?? "", telefono_urg3_nota: c.telefono_urg3_nota ?? "",
-      fax: c.fax ?? "", password_cliente: c.password_cliente ?? "",
+      // Password is intentionally never prefilled — users type a NEW password to change it,
+      // or leave empty to keep the existing one.
+      fax: c.fax ?? "", password_cliente: "",
     });
     setDialogOpen(true);
   };
@@ -86,6 +88,11 @@ export default function Clients() {
       toast.error("Inserisci una password per creare l'account cliente");
       return;
     }
+    if (form.password_cliente.trim() && form.password_cliente.trim().length < 6) {
+      toast.error("La password deve avere almeno 6 caratteri");
+      return;
+    }
+    // We never store the cleartext password in the DB anymore — auth.users is the source of truth.
     const payload = {
       name: form.company.trim(),
       email: toNull(form.email), company: toNull(form.company), phone: toNull(form.phone), notes: toNull(form.notes),
@@ -96,24 +103,28 @@ export default function Clients() {
       telefono_urg1: toNull(form.telefono_urg1), telefono_urg1_nota: toNull(form.telefono_urg1_nota),
       telefono_urg2: toNull(form.telefono_urg2), telefono_urg2_nota: toNull(form.telefono_urg2_nota),
       telefono_urg3: toNull(form.telefono_urg3), telefono_urg3_nota: toNull(form.telefono_urg3_nota),
-      fax: toNull(form.fax), password_cliente: toNull(form.password_cliente),
+      fax: toNull(form.fax), password_cliente: null,
     };
     if (editing) {
       const { error } = await supabase.from("clients").update(payload as any).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
 
-      // Sync auth account if email + password are present (handles email/password changes
-      // and also creates the account if it was missing).
+      // Sync auth account whenever email is present and either email changed or a new password was typed.
       const emailChanged = (editing.email ?? "") !== form.email.trim();
-      const passwordChanged = (editing.password_cliente ?? "") !== form.password_cliente.trim();
-      if (form.email.trim() && form.password_cliente.trim() && (emailChanged || passwordChanged)) {
-        const { data: fnData, error: fnError } = await supabase.functions.invoke("create-client-account", {
-          body: { email: form.email.trim(), password: form.password_cliente.trim(), client_id: editing.id },
-        });
-        if (fnError || fnData?.error) {
-          toast.warning("Cliente aggiornato, ma errore nell'account: " + (fnData?.error || fnError?.message));
+      const newPassword = form.password_cliente.trim();
+      const shouldSync = !!form.email.trim() && (emailChanged || !!newPassword);
+      if (shouldSync) {
+        if (!newPassword) {
+          toast.warning("Per cambiare l'email serve anche reimpostare la password.");
         } else {
-          toast.success("Cliente e account aggiornati");
+          const { data: fnData, error: fnError } = await supabase.functions.invoke("create-client-account", {
+            body: { email: form.email.trim(), password: newPassword, client_id: editing.id },
+          });
+          if (fnError || fnData?.error) {
+            toast.warning("Cliente aggiornato, ma errore nell'account: " + (fnData?.error || fnError?.message));
+          } else {
+            toast.success("Cliente e account aggiornati");
+          }
         }
       } else {
         toast.success("Cliente aggiornato");
@@ -163,8 +174,13 @@ export default function Clients() {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("clients").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
+    const { data: fnData, error: fnError } = await supabase.functions.invoke("delete-client-account", {
+      body: { client_id: id },
+    });
+    if (fnError || fnData?.error) {
+      toast.error(fnData?.error || fnError?.message || "Errore durante l'eliminazione");
+      return;
+    }
     toast.success("Cliente eliminato");
     load();
   };
@@ -307,7 +323,13 @@ export default function Clients() {
                 {/* Accesso */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Accesso</h3>
-                  <Field label="Password" value={form.password_cliente} onChange={v => set("password_cliente", v)} placeholder="Password cliente" />
+                  <Field
+                    label={editing ? "Cambia password (lascia vuoto per non modificarla)" : "Password"}
+                    value={form.password_cliente}
+                    onChange={v => set("password_cliente", v)}
+                    placeholder={editing ? "••••••••" : "Almeno 6 caratteri"}
+                    type="password"
+                  />
                 </div>
 
                 {/* Note */}
