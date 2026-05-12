@@ -612,7 +612,9 @@ export type Database = {
           industry: string | null
           logo_url: string | null
           name: string
+          p_iva: string | null
           phone: string | null
+          sede_legale: string | null
           updated_at: string
           website: string | null
         }
@@ -626,7 +628,9 @@ export type Database = {
           industry?: string | null
           logo_url?: string | null
           name?: string
+          p_iva?: string | null
           phone?: string | null
+          sede_legale?: string | null
           updated_at?: string
           website?: string | null
         }
@@ -640,7 +644,9 @@ export type Database = {
           industry?: string | null
           logo_url?: string | null
           name?: string
+          p_iva?: string | null
           phone?: string | null
+          sede_legale?: string | null
           updated_at?: string
           website?: string | null
         }
