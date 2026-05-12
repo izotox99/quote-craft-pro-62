@@ -128,10 +128,11 @@ export default function ClientLogin() {
               {loading ? "Accesso in corso..." : "Accedi"}
             </Button>
           </form>
-          <div className="mt-6 text-center">
-            <a href="/login" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              Sei una società di NCC? Accedi qui
-            </a>
+          <div className="mt-6 pt-4 border-t border-border/50 text-center space-y-2">
+            <p className="text-xs text-muted-foreground">Sei una società di NCC?</p>
+            <Button asChild variant="outline" className="w-full h-10 rounded-lg">
+              <a href="/login">Accedi come NCC</a>
+            </Button>
           </div>
         </CardContent>
       </Card>
