@@ -23,7 +23,19 @@ export default function Login() {
       return;
     }
 
-    signOut();
+    let active = true;
+    const validateExistingSession = async () => {
+      const [{ data: profile }, { data: roles }] = await Promise.all([
+        supabase.from("profiles").select("org_id").eq("user_id", user.id).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", user.id).limit(1),
+      ]);
+      if (!active) return;
+      if (profile?.org_id && Array.isArray(roles) && roles.length > 0) navigate("/dashboard", { replace: true });
+      else signOut();
+    };
+
+    validateExistingSession();
+    return () => { active = false; };
   }, [authLoading, user, role, organization, navigate, signOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
