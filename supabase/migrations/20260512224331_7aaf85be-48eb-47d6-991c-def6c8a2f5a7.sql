@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS enforce_user_org_id_trg ON public.clients;
