@@ -12,12 +12,13 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { user, signUp, signInWithGoogle } = useAuth();
+  const { user, loading: authLoading, role, organization, signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) navigate("/dashboard", { replace: true });
-  }, [user, navigate]);
+    if (authLoading || !user) return;
+    if (role && organization) navigate("/dashboard", { replace: true });
+  }, [authLoading, user, role, organization, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
