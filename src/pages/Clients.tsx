@@ -73,7 +73,9 @@ export default function Clients() {
       telefono_urg1: c.telefono_urg1 ?? "", telefono_urg1_nota: c.telefono_urg1_nota ?? "",
       telefono_urg2: c.telefono_urg2 ?? "", telefono_urg2_nota: c.telefono_urg2_nota ?? "",
       telefono_urg3: c.telefono_urg3 ?? "", telefono_urg3_nota: c.telefono_urg3_nota ?? "",
-      fax: c.fax ?? "", password_cliente: c.password_cliente ?? "",
+      // Password is intentionally never prefilled — users type a NEW password to change it,
+      // or leave empty to keep the existing one.
+      fax: c.fax ?? "", password_cliente: "",
     });
     setDialogOpen(true);
   };
