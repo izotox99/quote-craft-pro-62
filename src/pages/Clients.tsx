@@ -323,7 +323,13 @@ export default function Clients() {
                 {/* Accesso */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Accesso</h3>
-                  <Field label="Password" value={form.password_cliente} onChange={v => set("password_cliente", v)} placeholder="Password cliente" />
+                  <Field
+                    label={editing ? "Cambia password (lascia vuoto per non modificarla)" : "Password"}
+                    value={form.password_cliente}
+                    onChange={v => set("password_cliente", v)}
+                    placeholder={editing ? "••••••••" : "Almeno 6 caratteri"}
+                    type="password"
+                  />
                 </div>
 
                 {/* Note */}
