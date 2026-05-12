@@ -66,13 +66,13 @@ const App = () => (
             <Route path="/clients/in-attesa" element={<ProtectedRoute><ClientiInAttesa /></ProtectedRoute>} />
             <Route path="/clients/preventivi" element={<ProtectedRoute><Preventivi /></ProtectedRoute>} />
             <Route path="/veicoli" element={<ProtectedRoute><Veicoli /></ProtectedRoute>} />
-            <Route path="/veicoli/:id" element={<ProtectedRoute><VeicoloDettaglio /></ProtectedRoute>} />
             <Route path="/veicoli/allert" element={<ProtectedRoute><AllertMezzi /></ProtectedRoute>} />
             <Route path="/veicoli/bilancio" element={<ProtectedRoute><BilancioVettura /></ProtectedRoute>} />
             <Route path="/veicoli/manutenzione-straordinaria" element={<ProtectedRoute><ManutenzioneStraordinaria /></ProtectedRoute>} />
             <Route path="/veicoli/carburante" element={<ProtectedRoute><DettagliCarburante /></ProtectedRoute>} />
             <Route path="/veicoli/adblue" element={<ProtectedRoute><DettagliAdBlue /></ProtectedRoute>} />
             <Route path="/veicoli/adblue/nuovo" element={<ProtectedRoute><AggiungiAdBlue /></ProtectedRoute>} />
+            <Route path="/veicoli/:id" element={<ProtectedRoute><VeicoloDettaglio /></ProtectedRoute>} />
             <Route path="/autisti" element={<ProtectedRoute><Autisti /></ProtectedRoute>} />
             <Route path="/autisti/collaboratori" element={<ProtectedRoute><AutistiCollaboratori /></ProtectedRoute>} />
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
