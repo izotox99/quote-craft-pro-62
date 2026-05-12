@@ -23,6 +23,7 @@ import ClientiNote from "./pages/ClientiNote";
 import ClientiInAttesa from "./pages/ClientiInAttesa";
 import Preventivi from "./pages/Preventivi";
 import Veicoli from "./pages/Veicoli";
+import VeicoloDettaglio from "./pages/VeicoloDettaglio";
 import { AllertMezzi, BilancioVettura, ManutenzioneStraordinaria, DettagliCarburante, DettagliAdBlue, AggiungiAdBlue } from "./pages/mezzi/Stub";
 import Autisti from "./pages/Autisti";
 import AutistiCollaboratori from "./pages/AutistiCollaboratori";
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/veicoli/carburante" element={<ProtectedRoute><DettagliCarburante /></ProtectedRoute>} />
             <Route path="/veicoli/adblue" element={<ProtectedRoute><DettagliAdBlue /></ProtectedRoute>} />
             <Route path="/veicoli/adblue/nuovo" element={<ProtectedRoute><AggiungiAdBlue /></ProtectedRoute>} />
+            <Route path="/veicoli/:id" element={<ProtectedRoute><VeicoloDettaglio /></ProtectedRoute>} />
             <Route path="/autisti" element={<ProtectedRoute><Autisti /></ProtectedRoute>} />
             <Route path="/autisti/collaboratori" element={<ProtectedRoute><AutistiCollaboratori /></ProtectedRoute>} />
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
