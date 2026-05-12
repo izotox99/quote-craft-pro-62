@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { Car } from "lucide-react";
 import { toast } from "sonner";
 
@@ -12,20 +13,50 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { user, signIn, signInWithGoogle } = useAuth();
+  const { user, loading: authLoading, role, organization, signIn, signInWithGoogle, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user) navigate("/dashboard", { replace: true });
-  }, [user, navigate]);
+    if (authLoading || !user) return;
+    if (role && organization) {
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+
+    signOut();
+  }, [authLoading, user, role, organization, navigate, signOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     const { error } = await signIn(email, password);
+    if (error) {
+      setLoading(false);
+      toast.error(error.message);
+      return;
+    }
+
+    const { data: authData } = await supabase.auth.getUser();
+    const uid = authData.user?.id;
+    const [{ data: profile }, { data: roles }] = await Promise.all([
+      uid
+        ? supabase.from("profiles").select("org_id").eq("user_id", uid).maybeSingle()
+        : Promise.resolve({ data: null }),
+      uid
+        ? supabase.from("user_roles").select("role").eq("user_id", uid).limit(1)
+        : Promise.resolve({ data: null }),
+    ]);
+
+    const hasNccAccess = !!profile?.org_id && Array.isArray(roles) && roles.length > 0;
+    if (!hasNccAccess) {
+      await signOut();
+      setLoading(false);
+      toast.error("Questo account è cliente: usa l'Area Clienti oppure accedi con un account NCC.");
+      return;
+    }
+
     setLoading(false);
-    if (error) toast.error(error.message);
-    else navigate("/dashboard");
+    navigate("/dashboard", { replace: true });
   };
 
   const handleGoogle = async () => {
