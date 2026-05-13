@@ -594,6 +594,32 @@ export default function Prenota() {
             </CardContent>
           </Card>
 
+          {/* SEZIONE 3b: Disposizione oraria (solo se tipologia=disposizione) */}
+          {form.tipologia_servizio === "disposizione" && (
+            <Card className="rounded-xl border-border/50 shadow-sm">
+              <CardContent className="p-5 space-y-4">
+                <h2 className="text-sm font-semibold flex items-center gap-2">
+                  <CalendarIcon className="h-4 w-4 text-primary" /> Disposizione oraria
+                </h2>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    Durata <span className="text-destructive">*</span>
+                  </Label>
+                  <Select value={form.disposizione_oraria} onValueChange={(v) => set("disposizione_oraria", v)}>
+                    <SelectTrigger className="rounded-lg h-10">
+                      <SelectValue placeholder="Seleziona durata" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DISPOSIZIONE_OPZIONI.map(d => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* SEZIONE 4: Passeggero */}
           <Card className="rounded-xl border-border/50 shadow-sm">
             <CardContent className="p-5 space-y-5">
