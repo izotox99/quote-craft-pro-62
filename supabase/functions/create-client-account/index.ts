@@ -134,14 +134,15 @@ Deno.serve(async (req) => {
     }
 
     if (email) {
-      const otherClientQuery = admin
+      let otherClientQuery = admin
         .from("clients")
-        .select("id")
-        .ilike("email", email);
-      if (clientId) otherClientQuery.neq("id", clientId);
+        .select("id, auth_user_id, org_id")
+        .ilike("email", email)
+        .eq("org_id", callerProfile.org_id);
+      if (clientId) otherClientQuery = otherClientQuery.neq("id", clientId);
       const { data: otherClient } = await otherClientQuery.maybeSingle();
       if (otherClient) {
-        return jsonResponse({ error: "Email già usata da un altro cliente", code: "email_taken_client" }, 409);
+        return jsonResponse({ error: "Email già usata da un altro cliente della tua organizzazione", code: "email_taken_client" }, 409);
       }
     }
 
