@@ -594,7 +594,7 @@ export default function Prenota() {
           </Card>
 
           {/* SEZIONE 3b: Disposizione oraria (solo se tipologia=disposizione) */}
-          {form.tipologia_servizio === "disposizione" && (
+          {form.tipologia_servizio === "transfer_interno" || form.tipologia_servizio === "transfer_regionale" ? (
             <Card className="rounded-xl border-border/50 shadow-sm">
               <CardContent className="p-5 space-y-4">
                 <h2 className="text-sm font-semibold flex items-center gap-2">
