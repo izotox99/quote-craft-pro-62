@@ -313,7 +313,7 @@ export default function Prenota() {
     }
     if (n === 3) {
       if (!form.tipologia_servizio) { toast.error("Seleziona la tipologia di servizio"); return false; }
-      if (form.tipologia_servizio === "disposizione" && !form.disposizione_oraria) { toast.error("Seleziona la disposizione oraria"); return false; }
+      if (!form.veicolo_tipo) { toast.error("Seleziona il veicolo"); return false; }
       if (!form.veicolo_tipo) { toast.error("Seleziona il veicolo"); return false; }
     }
     if (n === 4) {
@@ -361,7 +361,7 @@ export default function Prenota() {
       veicolo_tipo: form.veicolo_tipo || null,
       transfer_tipo: transferTipoDB,
       tour_tipo: form.tour_tipo || null,
-      disposizione_oraria: form.tipologia_servizio === "disposizione" ? (form.disposizione_oraria || null) : null,
+      disposizione_oraria: form.disposizione_oraria || null,
       luogo_inizio: luogoInizioFinale || null,
       luogo_fine: luogoFineFinale || null,
       itinerario: form.itinerario || null,
@@ -594,7 +594,7 @@ export default function Prenota() {
           </Card>
 
           {/* SEZIONE 3b: Disposizione oraria (solo se tipologia=disposizione) */}
-          {form.tipologia_servizio === "transfer_interno" || form.tipologia_servizio === "transfer_regionale" ? (
+          {(form.tipologia_servizio === "transfer_interno" || form.tipologia_servizio === "transfer_regionale") && (
             <Card className="rounded-xl border-border/50 shadow-sm">
               <CardContent className="p-5 space-y-4">
                 <h2 className="text-sm font-semibold flex items-center gap-2">
