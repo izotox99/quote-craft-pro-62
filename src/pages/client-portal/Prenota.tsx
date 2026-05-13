@@ -542,7 +542,7 @@ export default function Prenota() {
                 <Label className="text-xs font-medium text-muted-foreground">Tipologia di servizio <span className="text-destructive">*</span></Label>
                 <Select
                   value={form.tipologia_servizio}
-                  onValueChange={(v) => setForm(p => ({ ...p, tipologia_servizio: v, tour_tipo: v === "tour" ? p.tour_tipo : "", disposizione_oraria: v === "disposizione" ? p.disposizione_oraria : "" }))}
+                  onValueChange={(v) => setForm(p => ({ ...p, tipologia_servizio: v, tour_tipo: v === "tour" ? p.tour_tipo : "", disposizione_oraria: "" }))}
                 >
                   <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona tipologia" /></SelectTrigger>
                   <SelectContent>
