@@ -314,6 +314,7 @@ export default function Prenota() {
     }
     if (n === 3) {
       if (!form.tipologia_servizio) { toast.error("Seleziona la tipologia di servizio"); return false; }
+      if (form.tipologia_servizio === "disposizione" && !form.disposizione_oraria) { toast.error("Seleziona la disposizione oraria"); return false; }
       if (!form.veicolo_tipo) { toast.error("Seleziona il veicolo"); return false; }
     }
     if (n === 4) {
