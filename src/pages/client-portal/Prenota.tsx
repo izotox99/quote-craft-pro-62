@@ -566,19 +566,6 @@ export default function Prenota() {
                   </Select>
                 </div>
               )}
-              {form.tipologia_servizio === "disposizione" && (
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Disposizione oraria <span className="text-destructive">*</span></Label>
-                  <Select value={form.disposizione_oraria} onValueChange={(v) => set("disposizione_oraria", v)}>
-                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona durata" /></SelectTrigger>
-                    <SelectContent>
-                      {DISPOSIZIONE_OPZIONI.map(d => (
-                        <SelectItem key={d} value={d}>{d}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Veicolo <span className="text-destructive">*</span></Label>
                 <Select value={form.veicolo_tipo} onValueChange={(v) => set("veicolo_tipo", v)}>
