@@ -361,6 +361,7 @@ export default function Prenota() {
       veicolo_tipo: form.veicolo_tipo || null,
       transfer_tipo: transferTipoDB,
       tour_tipo: form.tour_tipo || null,
+      disposizione_oraria: form.tipologia_servizio === "disposizione" ? (form.disposizione_oraria || null) : null,
       luogo_inizio: luogoInizioFinale || null,
       luogo_fine: luogoFineFinale || null,
       itinerario: form.itinerario || null,
