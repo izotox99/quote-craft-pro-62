@@ -85,6 +85,7 @@ export default function Prenota() {
     veicolo_tipo: "",
     tipologia_servizio: "",
     tour_tipo: "",
+    disposizione_oraria: "",
     luogo_inizio: "",
     luogo_inizio_dettaglio: "",
     luogo_fine: "",
