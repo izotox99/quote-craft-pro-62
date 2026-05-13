@@ -177,7 +177,6 @@ export default function Prenota() {
   const getTipologiaDB = (): string => {
     if (form.tipologia_servizio === "tour") return "tour";
     if (form.tipologia_servizio === "transfer_interno" || form.tipologia_servizio === "transfer_regionale") return "transfer";
-    if (form.tipologia_servizio === "disposizione") return "disposizione";
     return "altro";
   };
 
