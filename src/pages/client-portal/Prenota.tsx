@@ -542,7 +542,7 @@ export default function Prenota() {
                 <Label className="text-xs font-medium text-muted-foreground">Tipologia di servizio <span className="text-destructive">*</span></Label>
                 <Select
                   value={form.tipologia_servizio}
-                  onValueChange={(v) => setForm(p => ({ ...p, tipologia_servizio: v, tour_tipo: v === "tour" ? p.tour_tipo : "" }))}
+                  onValueChange={(v) => setForm(p => ({ ...p, tipologia_servizio: v, tour_tipo: v === "tour" ? p.tour_tipo : "", disposizione_oraria: v === "disposizione" ? p.disposizione_oraria : "" }))}
                 >
                   <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona tipologia" /></SelectTrigger>
                   <SelectContent>
@@ -560,6 +560,19 @@ export default function Prenota() {
                     <SelectContent>
                       {TOUR_OPZIONI.map(t => (
                         <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {form.tipologia_servizio === "disposizione" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Disposizione oraria <span className="text-destructive">*</span></Label>
+                  <Select value={form.disposizione_oraria} onValueChange={(v) => set("disposizione_oraria", v)}>
+                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona durata" /></SelectTrigger>
+                    <SelectContent>
+                      {DISPOSIZIONE_OPZIONI.map(d => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
