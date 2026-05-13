@@ -16,7 +16,6 @@ export const VEICOLI_DISPONIBILI = [
 export const TIPOLOGIA_OPZIONI = [
   { value: "transfer_interno", label: "Transfer interno città" },
   { value: "transfer_regionale", label: "Transfer regionale" },
-  { value: "disposizione", label: "Disposizione oraria" },
   { value: "tour", label: "Tour" },
 ];
 
