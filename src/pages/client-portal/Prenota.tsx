@@ -42,6 +42,7 @@ import {
   VEICOLI_DISPONIBILI,
   TIPOLOGIA_OPZIONI,
   TOUR_OPZIONI,
+  DISPOSIZIONE_OPZIONI,
   PAGAMENTO_OPZIONI,
   TERMINAL_FIUMICINO,
   TERMINAL_CIAMPINO,
@@ -84,6 +85,7 @@ export default function Prenota() {
     veicolo_tipo: "",
     tipologia_servizio: "",
     tour_tipo: "",
+    disposizione_oraria: "",
     luogo_inizio: "",
     luogo_inizio_dettaglio: "",
     luogo_fine: "",
@@ -175,6 +177,7 @@ export default function Prenota() {
   const getTipologiaDB = (): string => {
     if (form.tipologia_servizio === "tour") return "tour";
     if (form.tipologia_servizio === "transfer_interno" || form.tipologia_servizio === "transfer_regionale") return "transfer";
+    if (form.tipologia_servizio === "disposizione") return "disposizione";
     return "altro";
   };
 
@@ -311,6 +314,7 @@ export default function Prenota() {
     }
     if (n === 3) {
       if (!form.tipologia_servizio) { toast.error("Seleziona la tipologia di servizio"); return false; }
+      if (form.tipologia_servizio === "disposizione" && !form.disposizione_oraria) { toast.error("Seleziona la disposizione oraria"); return false; }
       if (!form.veicolo_tipo) { toast.error("Seleziona il veicolo"); return false; }
     }
     if (n === 4) {
@@ -358,6 +362,7 @@ export default function Prenota() {
       veicolo_tipo: form.veicolo_tipo || null,
       transfer_tipo: transferTipoDB,
       tour_tipo: form.tour_tipo || null,
+      disposizione_oraria: form.tipologia_servizio === "disposizione" ? (form.disposizione_oraria || null) : null,
       luogo_inizio: luogoInizioFinale || null,
       luogo_fine: luogoFineFinale || null,
       itinerario: form.itinerario || null,
@@ -538,7 +543,7 @@ export default function Prenota() {
                 <Label className="text-xs font-medium text-muted-foreground">Tipologia di servizio <span className="text-destructive">*</span></Label>
                 <Select
                   value={form.tipologia_servizio}
-                  onValueChange={(v) => setForm(p => ({ ...p, tipologia_servizio: v, tour_tipo: v === "tour" ? p.tour_tipo : "" }))}
+                  onValueChange={(v) => setForm(p => ({ ...p, tipologia_servizio: v, tour_tipo: v === "tour" ? p.tour_tipo : "", disposizione_oraria: v === "disposizione" ? p.disposizione_oraria : "" }))}
                 >
                   <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona tipologia" /></SelectTrigger>
                   <SelectContent>
@@ -556,6 +561,19 @@ export default function Prenota() {
                     <SelectContent>
                       {TOUR_OPZIONI.map(t => (
                         <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {form.tipologia_servizio === "disposizione" && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-muted-foreground">Disposizione oraria <span className="text-destructive">*</span></Label>
+                  <Select value={form.disposizione_oraria} onValueChange={(v) => set("disposizione_oraria", v)}>
+                    <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="Seleziona durata" /></SelectTrigger>
+                    <SelectContent>
+                      {DISPOSIZIONE_OPZIONI.map(d => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
