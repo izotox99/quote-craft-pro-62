@@ -31,7 +31,14 @@ import {
   tipologiaToDB,
   transferTipoForDB,
 } from "@/lib/booking-shared";
-import { AccessoriEditor, type AccessorioRow, loadServizioAccessori } from "@/components/servizi/AccessoriEditor";
+import { AccessoriEditor, type AccessorioRow, loadServizioAccessori, saveServizioAccessori } from "@/components/servizi/AccessoriEditor";
+import {
+  BookingFormFields,
+  emptyBookingForm,
+  deriveTipologia,
+  servizioToBookingForm,
+  type BookingFormState,
+} from "@/components/booking/BookingFormFields";
 
 type Servizio = {
   id: string;
@@ -156,27 +163,12 @@ export default function ListaServizi() {
 
   // Edit
   const [editOpen, setEditOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    data_servizio: "",
-    ora_inizio: "",
-    citta: "",
-    n_passeggeri: "1",
-    n_bagagli: "0",
-    tipologia: "" as string, // booking-style: transfer_interno|transfer_regionale|tour
-    tour_tipo: "",
-    veicolo_tipo: "",
-    luogo_inizio: "",
-    luogo_inizio_dettaglio: "",
-    luogo_fine: "",
-    luogo_fine_dettaglio: "",
-    itinerario: "",
-    info_autista: "",
-    tipo_pagamento: "",
-    centro_costo: "",
-    accessori: "",
-    note: "",
-  });
+  const [editForm, setEditForm] = useState<BookingFormState>(emptyBookingForm);
   const [editAccessori, setEditAccessori] = useState<AccessorioRow[]>([]);
+  const [editOrgId, setEditOrgId] = useState<string | null>(null);
+  const [editClientId, setEditClientId] = useState<string | null>(null);
+  const [editPasseggeri, setEditPasseggeri] = useState<{ id: string; nome: string; cognome: string | null; telefono: string | null; email: string | null }[]>([]);
+  const [autoreName, setAutoreName] = useState<string>("");
 
   const loadServizi = async () => {
     if (!user) return;
@@ -267,31 +259,50 @@ export default function ListaServizi() {
     setDetailOpen(true);
   };
 
-  const openEdit = (s: Servizio) => {
+  const openEdit = async (s: Servizio) => {
     setSelected(s);
-    const inizio = splitLuogo(s.luogo_inizio);
-    const fine = splitLuogo(s.luogo_fine);
-    setEditForm({
-      data_servizio: s.data_servizio ?? "",
-      ora_inizio: s.ora_inizio ?? "",
-      citta: s.citta ?? "",
-      n_passeggeri: String(s.n_passeggeri ?? 1),
-      n_bagagli: String(s.n_bagagli ?? 0),
-      tipologia: tipologiaFromDB(s.tipologia, s.transfer_tipo),
-      tour_tipo: s.tour_tipo ?? "",
-      veicolo_tipo: s.veicolo_tipo ?? "",
-      luogo_inizio: inizio.base,
-      luogo_inizio_dettaglio: inizio.dettaglio,
-      luogo_fine: fine.base,
-      luogo_fine_dettaglio: fine.dettaglio,
-      itinerario: s.itinerario ?? "",
-      info_autista: s.info_autista ?? "",
-      tipo_pagamento: s.tipo_pagamento ?? "",
-      centro_costo: s.centro_costo ?? "",
-      accessori: s.accessori ?? "",
-      note: s.note ?? "",
-    });
+    setEditForm(servizioToBookingForm(s));
     loadServizioAccessori(s.id).then(setEditAccessori);
+    setEditClientId(null);
+    setEditOrgId(s.org_id ?? null);
+    setEditPasseggeri([]);
+    // Resolve client_id, passeggeri and autore for the shared form
+    if (user) {
+      const { data: parent } = await supabase
+        .from("clients")
+        .select("id, org_id, name")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      let cid: string | null = null;
+      let oid: string | null = null;
+      let autore = "";
+      if (parent) {
+        cid = parent.id; oid = parent.org_id; autore = parent.name ?? user.email ?? "";
+      } else {
+        const { data: utenza } = await supabase
+          .from("client_utenze")
+          .select("nome, cognome, parent_client_id, clients:parent_client_id(id, org_id)")
+          .eq("auth_user_id", user.id)
+          .eq("attivo", true)
+          .maybeSingle();
+        if (utenza) {
+          cid = (utenza as any).parent_client_id;
+          oid = (utenza as any).clients?.org_id ?? null;
+          autore = `${utenza.nome ?? ""} ${utenza.cognome ?? ""}`.trim() || (user.email ?? "");
+        }
+      }
+      setEditClientId(cid);
+      setEditOrgId(oid ?? s.org_id ?? null);
+      setAutoreName(autore);
+      if (cid) {
+        const { data: pass } = await supabase
+          .from("passeggeri_rubrica")
+          .select("id, nome, cognome, telefono, email")
+          .eq("client_id", cid)
+          .order("nome");
+        setEditPasseggeri(pass ?? []);
+      }
+    }
     setDetailOpen(false);
     setEditOpen(true);
   };
@@ -301,6 +312,7 @@ export default function ListaServizi() {
 
     const luogoInizioFinale = joinLuogo(editForm.luogo_inizio, editForm.luogo_inizio_dettaglio);
     const luogoFineFinale = joinLuogo(editForm.luogo_fine, editForm.luogo_fine_dettaglio);
+    const t = deriveTipologia(editForm);
 
     const { error } = await supabase.rpc("client_portal_update_servizio", {
       _servizio_id: selected.id,
@@ -309,10 +321,10 @@ export default function ListaServizi() {
       _citta: editForm.citta || null,
       _n_passeggeri: editForm.n_passeggeri ? parseInt(editForm.n_passeggeri) : null,
       _n_bagagli: editForm.n_bagagli ? parseInt(editForm.n_bagagli) : null,
-      _tipologia: (tipologiaToDB(editForm.tipologia) || null) as any,
-      _transfer_tipo: transferTipoForDB(editForm.tipologia),
-      _disposizione_oraria: null,
-      _tour_tipo: editForm.tipologia === "tour" ? (editForm.tour_tipo || null) : null,
+      _tipologia: t.tipologia as any,
+      _transfer_tipo: t.transfer_tipo,
+      _disposizione_oraria: t.disposizione_oraria,
+      _tour_tipo: t.tour_tipo,
       _veicolo_tipo: editForm.veicolo_tipo || null,
       _luogo_inizio: luogoInizioFinale || null,
       _luogo_fine: luogoFineFinale || null,
@@ -320,7 +332,7 @@ export default function ListaServizi() {
       _info_autista: editForm.info_autista || null,
       _tipo_pagamento: editForm.tipo_pagamento || null,
       _centro_costo: editForm.centro_costo || null,
-      _accessori: editForm.accessori || null,
+      _accessori: null,
       _note: editForm.note || null,
       _allegato_nome: selected.allegato_nome ?? null,
     });
@@ -330,15 +342,14 @@ export default function ListaServizi() {
       toast.error(`Errore: ${error.message}`);
       return;
     }
-    // Persisti accessori (righe strutturate)
     try {
-      const { saveServizioAccessori } = await import("@/components/servizi/AccessoriEditor");
       await saveServizioAccessori(selected.id, editAccessori);
     } catch (e) { console.error(e); }
     toast.success("Servizio aggiornato");
     setEditOpen(false);
     loadServizi();
   };
+
 
   const handleCancel = async (s: Servizio) => {
     if (!canModify(s)) {
@@ -845,151 +856,20 @@ export default function ListaServizi() {
               )}
             </DialogHeader>
             <Separator />
-            <div className="p-5 space-y-5 max-h-[65vh] overflow-y-auto">
-              <div className="space-y-3">
-                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Quando</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Data</Label>
-                    <DatePicker value={editForm.data_servizio} onChange={(v) => setEditForm(p => ({ ...p, data_servizio: v }))} className="h-10" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Ora</Label>
-                    <TimePicker value={editForm.ora_inizio} onChange={(v) => setEditForm(p => ({ ...p, ora_inizio: v }))} className="h-10" />
-                  </div>
-                  <div className="space-y-1.5 col-span-2">
-                    <Label className="text-xs text-muted-foreground">Città</Label>
-                    <Select value={editForm.citta} onValueChange={(v) => setEditForm(p => ({ ...p, citta: v }))}>
-                      <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona città" /></SelectTrigger>
-                      <SelectContent>
-                        {CITTA_OPZIONI.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Servizio</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Tipologia</Label>
-                    <Select value={editForm.tipologia} onValueChange={(v) => setEditForm(p => ({ ...p, tipologia: v, tour_tipo: v === "tour" ? p.tour_tipo : "" }))}>
-                      <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
-                      <SelectContent>
-                        {TIPOLOGIA_OPZIONI.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Veicolo</Label>
-                    <Select value={editForm.veicolo_tipo} onValueChange={(v) => setEditForm(p => ({ ...p, veicolo_tipo: v }))}>
-                      <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
-                      <SelectContent>
-                        {VEICOLI_DISPONIBILI.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {editForm.tipologia === "tour" && (
-                    <div className="space-y-1.5 col-span-2">
-                      <Label className="text-xs text-muted-foreground">Tipo tour</Label>
-                      <Select value={editForm.tour_tipo} onValueChange={(v) => setEditForm(p => ({ ...p, tour_tipo: v }))}>
-                        <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
-                        <SelectContent>
-                          {TOUR_OPZIONI.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">N. passeggeri</Label>
-                    <Input type="number" min="1" value={editForm.n_passeggeri} onChange={(e) => setEditForm(p => ({ ...p, n_passeggeri: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">N. bagagli</Label>
-                    <Input type="number" min="0" value={editForm.n_bagagli} onChange={(e) => setEditForm(p => ({ ...p, n_bagagli: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Itinerario</h4>
-                <LuogoField
-                  label="Luogo inizio"
-                  value={editForm.luogo_inizio}
-                  onChange={(v) => setEditForm(p => ({ ...p, luogo_inizio: v }))}
-                  dettaglio={editForm.luogo_inizio_dettaglio}
-                  onDettaglioChange={(v) => setEditForm(p => ({ ...p, luogo_inizio_dettaglio: v }))}
-                  speciale={detectLuogoSpeciale(editForm.luogo_inizio, editForm.citta, editForm.luogo_inizio_dettaglio)}
-                  required={false}
-                />
-                <LuogoField
-                  label="Luogo fine"
-                  value={editForm.luogo_fine}
-                  onChange={(v) => setEditForm(p => ({ ...p, luogo_fine: v }))}
-                  dettaglio={editForm.luogo_fine_dettaglio}
-                  onDettaglioChange={(v) => setEditForm(p => ({ ...p, luogo_fine_dettaglio: v }))}
-                  speciale={detectLuogoSpeciale(editForm.luogo_fine, editForm.citta, editForm.luogo_fine_dettaglio)}
-                  required={false}
-                />
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Itinerario / tappe</Label>
-                  <Textarea value={editForm.itinerario} onChange={(e) => setEditForm(p => ({ ...p, itinerario: e.target.value }))} className="rounded-lg min-h-[60px]" />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Info autista</Label>
-                  <Input value={editForm.info_autista} onChange={(e) => setEditForm(p => ({ ...p, info_autista: e.target.value }))} className="rounded-lg h-10" />
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <h4 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Pagamento & extra</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Tipo pagamento</Label>
-                    <Select value={editForm.tipo_pagamento} onValueChange={(v) => setEditForm(p => ({ ...p, tipo_pagamento: v }))}>
-                      <SelectTrigger className="h-10 rounded-lg"><SelectValue placeholder="Seleziona" /></SelectTrigger>
-                      <SelectContent>
-                        {PAGAMENTO_OPZIONI.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Centro di costo</Label>
-                    <Input value={editForm.centro_costo} onChange={(e) => setEditForm(p => ({ ...p, centro_costo: e.target.value }))} className="rounded-lg h-10" />
-                  </div>
-                  <div className="space-y-1.5 col-span-2">
-                    <Label className="text-xs text-muted-foreground">Accessori</Label>
-                    <AccessoriEditor value={editAccessori} onChange={setEditAccessori} />
-                  </div>
-                  <div className="space-y-1.5 col-span-2">
-                    <Label className="text-xs text-muted-foreground">Note</Label>
-                    <Textarea value={editForm.note} onChange={(e) => setEditForm(p => ({ ...p, note: e.target.value }))} className="rounded-lg min-h-[70px]" />
-                  </div>
-                </div>
-              </div>
-
-              {selected && (
-                <div className="rounded-lg bg-muted/40 border border-border/50 p-3 space-y-1.5">
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                    <Lock className="h-3 w-3" /> Dati passeggero (non modificabili)
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-                    <div><span className="text-muted-foreground">Nome:</span> <span className="font-medium">{selected.contatto ?? "—"}</span></div>
-                    <div><span className="text-muted-foreground">Tel:</span> <span className="font-medium">{selected.telefono_contatto ?? "—"}</span></div>
-                    <div className="truncate"><span className="text-muted-foreground">Email:</span> <span className="font-medium">{selected.email_contatto ?? "—"}</span></div>
-                  </div>
-                </div>
-              )}
+            <div className="p-5 max-h-[70vh] overflow-y-auto">
+              <BookingFormFields
+                form={editForm}
+                setForm={setEditForm}
+                mode="edit"
+                orgId={editOrgId}
+                clientId={editClientId}
+                passeggeri={editPasseggeri}
+                accessoriRows={editAccessori}
+                setAccessoriRows={setEditAccessori}
+                autoreName={autoreName}
+              />
             </div>
+
             <Separator />
             <div className="p-4 flex gap-2">
               <Button variant="outline" className="flex-1 rounded-lg h-10" onClick={() => setEditOpen(false)}>Annulla</Button>
