@@ -222,6 +222,7 @@ export default function Clients() {
                             </Button>
                           ) : <span className="text-muted-foreground/40">—</span>}
                         </TableCell>
+                        <TableCell>
                           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(c)}>
                               <Pencil className="h-3.5 w-3.5" />
