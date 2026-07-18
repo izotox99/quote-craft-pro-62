@@ -949,6 +949,14 @@ export default function Servizi() {
                       size="sm"
                       variant="outline"
                       className="ml-auto gap-1.5 h-7 text-xs"
+                      onClick={() => setNetworkDialogId(s.id)}
+                    >
+                      <Network className="h-3.5 w-3.5" /> Network
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 h-7 text-xs"
                       onClick={() => openEditServizio(s.id)}
                     >
                       <Pencil className="h-3.5 w-3.5" /> Modifica
