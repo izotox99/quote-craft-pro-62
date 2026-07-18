@@ -930,19 +930,10 @@ export default function Servizi() {
               <TooltipProvider delayDuration={200}>
                 <table className="w-full table-fixed border-collapse text-[8px] font-semibold italic leading-[1.15] text-foreground xl:text-[8.5px]" style={{ borderSpacing: 0 }}>
                       <colgroup>
-                        <col style={{ width: `${CHECKBOX_PCT}%` }} />
                         {visibleCols.map((c) => <col key={c.key} style={{ width: colWidth(c.key) }} />)}
                       </colgroup>
                       <thead className="border-b border-border bg-muted/70">
                         <tr className="text-[7.5px] font-bold not-italic leading-[1.05] text-foreground xl:text-[8px]">
-                          <th className="border-r border-border px-0 py-0.5 overflow-hidden">
-                            <Checkbox
-                              className="h-2 w-2 rounded-[2px]"
-                              checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
-                              onCheckedChange={handleToggleAllVisible}
-                              aria-label="Seleziona tutti i servizi visibili"
-                            />
-                          </th>
                           {visibleCols.map((c, idx) => {
                             const def = COLUMNS_MAP[c.key];
                             const edgePad = idx === 0 ? "pl-[3px] pr-0" : idx === visibleCols.length - 1 ? "pl-0 pr-[3px]" : "px-0";
