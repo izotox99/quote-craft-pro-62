@@ -327,11 +327,16 @@ export default function ListaServizi() {
     if (error) {
       console.error("[handleSaveEdit] RPC error:", error);
       toast.error(`Errore: ${error.message}`);
-    } else {
-      toast.success("Servizio aggiornato");
-      setEditOpen(false);
-      loadServizi();
+      return;
     }
+    // Persisti accessori (righe strutturate)
+    try {
+      const { saveServizioAccessori } = await import("@/components/servizi/AccessoriEditor");
+      await saveServizioAccessori(selected.id, editAccessori);
+    } catch (e) { console.error(e); }
+    toast.success("Servizio aggiornato");
+    setEditOpen(false);
+    loadServizi();
   };
 
   const handleCancel = async (s: Servizio) => {
