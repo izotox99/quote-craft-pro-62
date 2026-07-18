@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   SYSTEM_VIEWS,
   SYSTEM_VIEW_IDS,
   reconcileColumns,
   makeCompletaState,
+  type ColumnKey,
   type ViewColumnState,
   type SystemView,
 } from "@/lib/servizi-columns";
