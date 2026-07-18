@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { Bell, XCircle, Pencil, FilePlus, Check, Inbox } from "lucide-react";
+import { Bell, XCircle, Pencil, FilePlus, Check, Inbox, CalendarClock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
