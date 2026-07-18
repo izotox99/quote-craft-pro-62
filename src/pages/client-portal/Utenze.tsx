@@ -82,76 +82,56 @@ export default function Utenze() {
     }
     setSaving(true);
 
-    if (editingId) {
-      const updateData: any = {
-        nome: form.nome,
-        cognome: form.cognome,
-        cellulare: form.cellulare || null,
-        email: form.email,
-        tipo: form.tipo,
-      };
-      if (form.password) {
-        const { data: hash, error: hashErr } = await supabase.rpc("hash_utenza_password", {
-          _password: form.password,
-        });
-        if (hashErr || !hash) {
-          toast.error("Errore durante la cifratura della password");
-          setSaving(false);
-          return;
-        }
-        updateData.password_hash = hash;
-      }
+    const payload: Record<string, unknown> = {
+      action: editingId ? "update" : "create",
+      utenza_id: editingId,
+      nome: form.nome,
+      cognome: form.cognome,
+      cellulare: form.cellulare || null,
+      email: form.email,
+      tipo: form.tipo,
+    };
+    if (form.password) payload.password = form.password;
 
-      const { error } = await supabase.from("client_utenze").update(updateData).eq("id", editingId);
-      if (error) {
-        toast.error("Errore durante il salvataggio");
-      } else {
-        toast.success("Utenza aggiornata");
-        setDialogOpen(false);
-        await fetchUtenze(clientId);
-      }
-    } else {
-      const { data: hash, error: hashErr } = await supabase.rpc("hash_utenza_password", {
-        _password: form.password,
-      });
-      if (hashErr || !hash) {
-        toast.error("Errore durante la cifratura della password");
-        setSaving(false);
-        return;
-      }
-      const { error } = await supabase.from("client_utenze").insert({
-        parent_client_id: clientId,
-        nome: form.nome,
-        cognome: form.cognome,
-        cellulare: form.cellulare || null,
-        email: form.email,
-        password_hash: hash,
-        tipo: form.tipo,
-      });
-      if (error) {
-        toast.error("Errore durante il salvataggio");
-      } else {
-        toast.success("Utenza aggiunta");
-        setDialogOpen(false);
-        await fetchUtenze(clientId);
-      }
+    const { data, error } = await supabase.functions.invoke("manage-utenza-account", { body: payload });
+    if (error || data?.error) {
+      toast.error(data?.error || error?.message || "Errore durante il salvataggio");
+      setSaving(false);
+      return;
     }
+
+    toast.success(editingId ? "Utenza aggiornata" : "Utenza aggiunta");
+    setDialogOpen(false);
+    await fetchUtenze(clientId);
     setSaving(false);
   };
 
   const handleToggle = async (id: string, attivo: boolean) => {
     if (!clientId) return;
-    await supabase.from("client_utenze").update({ attivo: !attivo }).eq("id", id);
+    const { data, error } = await supabase.functions.invoke("manage-utenza-account", {
+      body: { action: "toggle_attivo", utenza_id: id },
+    });
+    if (error || data?.error) {
+      toast.error(data?.error || error?.message || "Errore");
+      return;
+    }
     await fetchUtenze(clientId);
     toast.success(attivo ? "Utenza disattivata" : "Utenza attivata");
   };
 
   const handleDelete = async (id: string) => {
     if (!clientId) return;
-    await supabase.from("client_utenze").delete().eq("id", id);
+    const { data, error } = await supabase.functions.invoke("manage-utenza-account", {
+      body: { action: "delete", utenza_id: id },
+    });
+    if (error || data?.error) {
+      toast.error(data?.error || error?.message || "Errore");
+      return;
+    }
     await fetchUtenze(clientId);
     toast.success("Utenza eliminata");
   };
+
 
   if (loading) return (
     <ClientPortalLayout>
