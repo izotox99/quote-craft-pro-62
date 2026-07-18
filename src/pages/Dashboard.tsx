@@ -362,6 +362,7 @@ export default function Dashboard() {
                   <SelectItem value="senza_autista">Senza autista</SelectItem>
                   <SelectItem value="modificati">Modificati dal cliente</SelectItem>
                   <SelectItem value="nuovo">Nuovi</SelectItem>
+                  <SelectItem value="da_confermare">Da confermare</SelectItem>
                   <SelectItem value="confermato">Confermati</SelectItem>
                   <SelectItem value="in_corso">In corso</SelectItem>
                   <SelectItem value="completato">Completati</SelectItem>
