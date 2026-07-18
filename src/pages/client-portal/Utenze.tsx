@@ -236,7 +236,7 @@ export default function Utenze() {
                       <TableCell className="font-medium">{u.nome} {u.cognome}</TableCell>
                       <TableCell>{u.cellulare || "—"}</TableCell>
                       <TableCell className="text-xs">{u.email}</TableCell>
-                      <TableCell className="text-xs font-mono">{u.password.substring(0, 12)}…</TableCell>
+                      <TableCell className="text-xs font-mono text-muted-foreground">••••••••</TableCell>
                       <TableCell>
                         <Badge
                           variant={u.attivo ? "default" : "secondary"}
