@@ -526,7 +526,7 @@ export function ServizioFormDialog({
                     type="button"
                     size="sm"
                     className="mt-2 w-full h-8 text-xs bg-orange-600 hover:bg-orange-700 text-white gap-1.5"
-                    onClick={() => set({ stato: "confermato" })}
+                    onClick={() => set({ stato: "confermato", modificato_da_cliente: false, modificato_at: null } as any)}
                   >
                     ✓ Conferma servizio
                   </Button>
