@@ -768,6 +768,33 @@ export type Database = {
           },
         ]
       }
+      password_fingerprints: {
+        Row: {
+          created_at: string
+          fingerprint: string
+          org_id: string
+          owner_id: string
+          owner_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fingerprint: string
+          org_id: string
+          owner_id: string
+          owner_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fingerprint?: string
+          org_id?: string
+          owner_id?: string
+          owner_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -22,6 +22,22 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+async function computePasswordFingerprint(password: string): Promise<string> {
+  const secret = Deno.env.get("PASSWORD_FINGERPRINT_KEY");
+  if (!secret) throw new Error("PASSWORD_FINGERPRINT_KEY non configurato");
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(password));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+
 const writableClientFields = [
   "name",
   "email",
@@ -114,6 +130,24 @@ Deno.serve(async (req) => {
     if (password && password.length < 6) {
       return jsonResponse({ error: "La password deve avere almeno 6 caratteri", code: "weak_password" }, 400);
     }
+
+    // Fingerprint HMAC della password: se fornita, garantisci unicità tra tutti gli account cliente/utenza.
+    let passwordFingerprint: string | null = null;
+    if (password) {
+      passwordFingerprint = await computePasswordFingerprint(password);
+      const { data: existingFp } = await admin
+        .from("password_fingerprints")
+        .select("owner_type, owner_id")
+        .eq("fingerprint", passwordFingerprint)
+        .maybeSingle();
+      if (existingFp && !(existingFp.owner_type === "client" && clientId && existingFp.owner_id === clientId)) {
+        return jsonResponse({
+          error: "Password già in uso da un altro account, scegline una diversa.",
+          code: "password_in_use",
+        }, 409);
+      }
+    }
+
 
     let existingClient: { id: string; org_id: string; auth_user_id: string | null; email: string | null } | null = null;
     if (clientId) {
@@ -237,7 +271,30 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: saveError?.message ?? "Errore salvataggio cliente", code: "client_save_failed" }, 400);
     }
 
+    // Registra il fingerprint della nuova password (rimpiazza quello precedente per lo stesso cliente).
+    if (passwordFingerprint) {
+      await admin
+        .from("password_fingerprints")
+        .delete()
+        .eq("owner_type", "client")
+        .eq("owner_id", savedClient.id);
+      const { error: fpErr } = await admin.from("password_fingerprints").insert({
+        fingerprint: passwordFingerprint,
+        owner_type: "client",
+        owner_id: savedClient.id,
+        org_id: callerProfile.org_id,
+      });
+      if (fpErr) {
+        // Race molto improbabile: un altro account ha appena registrato lo stesso fingerprint.
+        return jsonResponse({
+          error: "Password già in uso da un altro account, scegline una diversa.",
+          code: "password_in_use",
+        }, 409);
+      }
+    }
+
     return jsonResponse({ success: true, client_id: savedClient.id, user_id: authUserId, action: existingClient ? "updated" : "created", auth_action: authAction });
+
   } catch (err) {
     return jsonResponse({ error: (err as Error).message ?? "Errore interno", code: "internal_error" }, 500);
   }
