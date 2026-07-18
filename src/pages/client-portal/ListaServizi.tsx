@@ -83,7 +83,7 @@ function computeClientStato(s: Servizio): { label: string; className: string } {
     return { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" };
   }
   const hasDriver = !!(s.autista_id || s.autista_esterno_id);
-  if (!hasDriver && (s.stato === "nuovo" || s.stato === "confermato")) {
+  if (!hasDriver && (s.stato === "nuovo" || s.stato === "da_confermare" || s.stato === "confermato")) {
     return { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" };
   }
   return statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" };
@@ -122,6 +122,7 @@ const pagamentoLabel: Record<string, string> = {
 
 const statoConfig: Record<string, { label: string; className: string }> = {
   nuovo: { label: "Nuovo", className: "bg-blue-100 text-blue-700 border-blue-200" },
+  da_confermare: { label: "In lavorazione", className: "bg-orange-100 text-orange-700 border-orange-200" },
   confermato: { label: "Confermato", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
   in_corso: { label: "In corso", className: "bg-amber-100 text-amber-700 border-amber-200" },
   completato: { label: "Completato", className: "bg-green-100 text-green-700 border-green-200" },

@@ -172,6 +172,7 @@ export default function Dashboard() {
       senzaAutista: attivi.filter(s => !s.autista_id && !s.autista_esterno_id).length,
       modificati: attivi.filter(s => s.modificato_da_cliente).length,
       nuovi: attivi.filter(s => s.stato === "nuovo").length,
+      daConfermare: attivi.filter(s => s.stato === "da_confermare").length,
       confermati: attivi.filter(s => s.stato === "confermato").length,
       annullati: servizi.filter(s => s.stato === "annullato").length,
     };
@@ -318,6 +319,7 @@ export default function Dashboard() {
             { key: "senza_autista", label: "Senza autista", count: counts.senzaAutista, color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" },
             { key: "modificati", label: "Modificati", count: counts.modificati, color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" },
             { key: "nuovo", label: "Nuovi", count: counts.nuovi, color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
+            { key: "da_confermare", label: "Da confermare", count: counts.daConfermare, color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300" },
             { key: "confermato", label: "Confermati", count: counts.confermati, color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
             { key: "annullato", label: "Annullati", count: counts.annullati, color: "bg-red-200 text-red-900 dark:bg-red-900/40 dark:text-red-200" },
           ].map(c => (
@@ -360,6 +362,7 @@ export default function Dashboard() {
                   <SelectItem value="senza_autista">Senza autista</SelectItem>
                   <SelectItem value="modificati">Modificati dal cliente</SelectItem>
                   <SelectItem value="nuovo">Nuovi</SelectItem>
+                  <SelectItem value="da_confermare">Da confermare</SelectItem>
                   <SelectItem value="confermato">Confermati</SelectItem>
                   <SelectItem value="in_corso">In corso</SelectItem>
                   <SelectItem value="completato">Completati</SelectItem>

@@ -16,7 +16,7 @@ import { ServizioFormDialog, type ServizioFormInitial } from "@/components/servi
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil, Network, Columns3 } from "lucide-react";
+import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil, Network, Columns3, CheckCircle2 } from "lucide-react";
 import { ModificheClientePopover } from "@/components/ModificheClientePopover";
 import { NetworkDispatchDialog } from "@/components/servizi/NetworkDispatchDialog";
 import { ViewSelector } from "@/components/servizi/ViewSelector";
@@ -98,6 +98,7 @@ type Fornitore = { id: string; nome: string };
 
 const statusColors: Record<string, string> = {
   nuovo: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  da_confermare: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200",
   confermato: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   in_corso: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
   completato: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
@@ -106,6 +107,7 @@ const statusColors: Record<string, string> = {
 
 const statusLabels: Record<string, string> = {
   nuovo: "Nuovo",
+  da_confermare: "Da confermare",
   confermato: "Confermato",
   in_corso: "In Corso",
   completato: "Completato",
@@ -558,6 +560,17 @@ export default function Servizi() {
   };
 
   const nuoviCount = servizi.filter(s => s.stato === "nuovo").length;
+  const daConfermareCount = servizi.filter(s => s.stato === "da_confermare").length;
+
+  const handleConfirmServizio = async (servizioId: string) => {
+    const { error } = await supabase
+      .from("servizi")
+      .update({ stato: "confermato" as any })
+      .eq("id", servizioId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Servizio confermato");
+    await loadServizi();
+  };
 
   // Quick day filters for "Nuovi" services
   const [quickDay, setQuickDay] = useState<string | null>(null);
@@ -631,7 +644,7 @@ export default function Servizi() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-baseline gap-2">
             <h1 className="font-display text-base font-semibold text-foreground">Servizi</h1>
-            <p className="text-xs text-muted-foreground">{nuoviCount} nuovi · {servizi.length} totali</p>
+            <p className="text-xs text-muted-foreground">{nuoviCount} nuovi · {daConfermareCount} da confermare · {servizi.length} totali</p>
           </div>
           <div className="flex gap-2 items-center w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
@@ -854,12 +867,15 @@ export default function Servizi() {
             servizi.map((s) => {
               const senzaAutista = !s.autista_id && !s.autista_esterno_id;
               const modificato = s.modificato_da_cliente;
+              const isNuovoRosso = s.stato === "nuovo" && senzaAutista;
+              const isDaConfermare = s.stato === "da_confermare";
               return (
                 <Card
                   key={s.id}
                   className={`cursor-pointer hover:shadow-md transition-all hover:border-primary/30 group ${
-                    senzaAutista ? "bg-red-50/60 dark:bg-red-950/20 border-red-200 dark:border-red-900" : ""
-                  } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
+                    isNuovoRosso ? "bg-red-50/60 dark:bg-red-950/20 border-red-200 dark:border-red-900" :
+                    isDaConfermare ? "bg-orange-50/70 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900" : ""
+                  } ${modificato ? "border-l-4 border-l-orange-700 dark:border-l-orange-500" : ""}`}
                   onClick={() => setDetailServizio(s)}
                 >
                   <CardContent className="p-4 flex items-center gap-4">
@@ -882,8 +898,8 @@ export default function Servizi() {
                       <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
                         <Users className="h-3.5 w-3.5" /> {s.n_passeggeri ?? 0}
                       </div>
-                      <Badge variant="outline" className={senzaAutista ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" : (statusColors[s.stato] || "")}>
-                        {senzaAutista ? "Senza autista" : (statusLabels[s.stato] || s.stato)}
+                      <Badge variant="outline" className={isNuovoRosso ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" : (statusColors[s.stato] || "")}>
+                        {isNuovoRosso ? "Senza autista" : (statusLabels[s.stato] || s.stato)}
                       </Badge>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                     </div>
@@ -998,15 +1014,28 @@ export default function Servizi() {
               case "commissione": return s.costo_commissione ?? 0;
               case "codice": return <span className="block truncate text-center font-mono text-[8px]">{s.codice || "—"}</span>;
               case "foglio": return (
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-4 w-4"
-                  title="Stampa foglio di servizio"
-                  onClick={(e) => { e.stopPropagation(); printFoglioServizio(s, organization); }}
-                >
-                  <Printer className="h-2.5 w-2.5" />
-                </Button>
+                <div className="flex items-center justify-center gap-0.5">
+                  {s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id) && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-4 w-4 text-orange-700 hover:text-orange-900 hover:bg-orange-100 dark:text-orange-300 dark:hover:bg-orange-900/40"
+                      title="Conferma servizio"
+                      onClick={(e) => { e.stopPropagation(); handleConfirmServizio(s.id); }}
+                    >
+                      <CheckCircle2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-4 w-4"
+                    title="Stampa foglio di servizio"
+                    onClick={(e) => { e.stopPropagation(); printFoglioServizio(s, organization); }}
+                  >
+                    <Printer className="h-2.5 w-2.5" />
+                  </Button>
+                </div>
               );
               case "network_stato": {
                 const n = networkMap[s.id];
@@ -1084,6 +1113,8 @@ export default function Servizi() {
                           servizi.map(s => {
                             const senzaAutista = !s.autista_id && !s.autista_esterno_id;
                             const modificato = !!s.modificato_da_cliente;
+                            const isNuovoRosso = s.stato === "nuovo" && senzaAutista;
+                            const isDaConfermare = s.stato === "da_confermare";
                             const isSelected = selectedServiziIds.includes(s.id);
                             const networkInfo = networkMap[s.id];
                             return (
@@ -1093,11 +1124,14 @@ export default function Servizi() {
                                 className={`border-b cursor-pointer transition-colors ${
                                   isSelected
                                     ? "bg-primary/5 hover:bg-primary/10"
-                                    : senzaAutista
+                                    : isNuovoRosso
                                       ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/30"
-                                      : "hover:bg-muted/40"
-                                } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
+                                      : isDaConfermare
+                                        ? "bg-orange-50/70 hover:bg-orange-50 dark:bg-orange-950/20 dark:hover:bg-orange-950/30"
+                                        : "hover:bg-muted/40"
+                                } ${modificato ? "border-l-4 border-l-orange-700 dark:border-l-orange-500" : ""}`}
                               >
+
                                 {visibleCols.map((c, idx) => {
                                   const isInteractive = INTERACTIVE_COLS.includes(c.key);
                                   const isFirst = idx === 0;
@@ -1154,11 +1188,19 @@ export default function Servizi() {
         <div className="hidden md:flex flex-wrap gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <span className="inline-block w-3 h-3 rounded bg-red-100 border border-red-300" />
-            Riga rossa = senza autista (da assegnare per confermare)
+            Rosso = nuovo senza autista (da assegnare)
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="inline-block w-1 h-3 bg-amber-500 rounded" />
-            Bordo giallo = modificato dal cliente
+            <span className="inline-block w-3 h-3 rounded bg-orange-100 border border-orange-300" />
+            Arancione = autista assegnato, da confermare
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded bg-background border border-border" />
+            Bianco = confermato
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-1 h-3 bg-orange-700 rounded" />
+            Bordo arancione scuro = modificato dal cliente
           </div>
         </div>
 
@@ -1190,6 +1232,15 @@ export default function Servizi() {
                   <div className="flex flex-wrap gap-2 mt-1 items-center">
                     <Badge variant="outline" className={statusColors[s.stato] || ""}>{statusLabels[s.stato] || s.stato}</Badge>
                     {s.citta && <Badge variant="outline">{s.citta}</Badge>}
+                    {s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id) && (
+                      <Button
+                        size="sm"
+                        className="gap-1.5 h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white"
+                        onClick={() => handleConfirmServizio(s.id)}
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Conferma
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"

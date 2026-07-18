@@ -2354,6 +2354,7 @@ export type Database = {
       proposal_status: "draft" | "sent" | "viewed" | "accepted" | "rejected"
       servizio_stato:
         | "nuovo"
+        | "da_confermare"
         | "confermato"
         | "in_corso"
         | "completato"
@@ -2509,6 +2510,7 @@ export const Constants = {
       proposal_status: ["draft", "sent", "viewed", "accepted", "rejected"],
       servizio_stato: [
         "nuovo",
+        "da_confermare",
         "confermato",
         "in_corso",
         "completato",

@@ -1,0 +1,1 @@
+ALTER TYPE public.servizio_stato ADD VALUE IF NOT EXISTS 'da_confermare' BEFORE 'confermato';
