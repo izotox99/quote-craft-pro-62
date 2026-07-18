@@ -900,16 +900,13 @@ export default function Servizi() {
           const widthMap = computeEffectiveWidths(visibleCols);
           const colWidth = (key: ColumnKey) => `${widthMap[key] ?? 0}%`;
 
-          const alignClass = (key: ColumnKey) => {
-            const a = COLUMNS_MAP[key]?.align;
-            return a === "right" ? "text-right tabular-nums" : a === "center" ? "text-center" : "text-left";
-          };
+          const alignClass = (_key: ColumnKey) => "text-center";
 
           const renderCell = (key: ColumnKey, s: Servizio): React.ReactNode => {
             switch (key) {
               case "citta": return <span className="font-medium">{s.citta || "—"}</span>;
               case "data": return (
-                <div>
+                <div className="text-center">
                   <div className={(!s.autista_id && !s.autista_esterno_id) ? "text-red-700 dark:text-red-400 font-semibold" : "font-medium"}>
                     {format(new Date(s.data_servizio), "dd/MM/yy")}
                   </div>
@@ -935,7 +932,7 @@ export default function Servizi() {
                 const csNome = s.fornitori_cs?.nome;
                 const csTel = s.fornitori_cs?.telefono;
                 return csNome ? (
-                <div className="flex flex-col leading-[1.05]">
+                <div className="flex flex-col items-center text-center leading-[1.05]">
                     <span className="font-medium">{csNome}</span>
                   {csTel && <span className="text-muted-foreground text-[7.5px]">{csTel}</span>}
                   </div>
@@ -953,7 +950,7 @@ export default function Servizi() {
                   return (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="flex max-w-full flex-col overflow-hidden leading-[1.05] rounded-sm px-0.5 py-0 border border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30 dark:border-indigo-900"
+                      className="flex max-w-full flex-col items-center text-center overflow-hidden leading-[1.05] rounded-sm px-0.5 py-0 border border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30 dark:border-indigo-900"
                       title="Autista assegnato dal partner del network"
                     >
                       <span className="flex max-w-full items-center gap-0.5 overflow-hidden font-medium text-indigo-900 dark:text-indigo-200">
@@ -976,7 +973,7 @@ export default function Servizi() {
                       <button
                         type="button"
                         onClick={(e) => e.stopPropagation()}
-                        className={`inline-flex w-full min-w-0 max-w-full flex-col items-start gap-0 overflow-hidden rounded-sm px-0.5 py-0 text-left transition-colors leading-[1.05] ${
+                        className={`inline-flex w-full min-w-0 max-w-full flex-col items-center text-center gap-0 overflow-hidden rounded-sm px-0.5 py-0 transition-colors leading-[1.05] ${
                           driverLabel ? "hover:bg-accent" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
                         }`}
                       >
@@ -995,11 +992,11 @@ export default function Servizi() {
               case "costo_centro": return (
                 <>
                   {s.costo_centro != null ? s.costo_centro : "—"}
-                  {s.centro_costo && <div className="truncate text-[7px] text-muted-foreground font-normal">{s.centro_costo}</div>}
+                  {s.centro_costo && <div className="truncate text-center text-[7px] text-muted-foreground font-normal">{s.centro_costo}</div>}
                 </>
               );
               case "commissione": return s.costo_commissione ?? 0;
-              case "codice": return <span className="block truncate font-mono text-[8px]">{s.codice || "—"}</span>;
+              case "codice": return <span className="block truncate text-center font-mono text-[8px]">{s.codice || "—"}</span>;
               case "foglio": return (
                 <Button
                   size="icon"
@@ -1015,7 +1012,7 @@ export default function Servizi() {
                 const n = networkMap[s.id];
                 if (!n) return <span className="text-muted-foreground">—</span>;
                 return (
-                  <div className="flex max-w-full flex-col overflow-hidden leading-[1.05]">
+                  <div className="flex max-w-full flex-col items-center text-center overflow-hidden leading-[1.05]">
                     <Badge variant="outline" className={`w-fit max-w-full text-[7px] px-0.5 py-0 ${NETWORK_STATO_COLOR[n.stato] || ""}`}>
                       {NETWORK_STATO_LABEL[n.stato] || n.stato}
                     </Badge>
@@ -1041,11 +1038,11 @@ export default function Servizi() {
                         <tr className="text-[7.5px] font-bold not-italic leading-[1.05] text-foreground xl:text-[8px]">
                           {visibleCols.map((c, idx) => {
                             const def = COLUMNS_MAP[c.key];
-                            const edgePad = idx === 0 ? "pl-[3px] pr-0" : idx === visibleCols.length - 1 ? "pl-0 pr-[3px]" : "px-0";
+                            const edgePad = idx === 0 ? "pl-[7px] pr-0" : idx === visibleCols.length - 1 ? "pl-0 pr-[7px]" : "px-0";
                             const isLast = idx === visibleCols.length - 1;
                             return (
                               <th key={c.key} className={`relative border-r border-border ${edgePad} py-0.5 overflow-hidden ${alignClass(c.key)}`}>
-                                <div className="flex items-center gap-1">
+                                <div className="flex items-center justify-center gap-1">
                                   {idx === 0 && (
                                     <Checkbox
                                       className="h-2 w-2 rounded-[2px] shrink-0"
@@ -1105,7 +1102,7 @@ export default function Servizi() {
                                   const isInteractive = INTERACTIVE_COLS.includes(c.key);
                                   const isFirst = idx === 0;
                                   const isLast = idx === visibleCols.length - 1;
-                                  const edgePad = isFirst ? "pl-[3px] pr-0" : isLast ? "pl-0 pr-[3px]" : "px-0";
+                                  const edgePad = isFirst ? "pl-[7px] pr-0" : isLast ? "pl-0 pr-[7px]" : "px-0";
                                   return (
                                     <td
                                       key={c.key}
@@ -1113,7 +1110,7 @@ export default function Servizi() {
                                       onClick={isInteractive ? (e) => e.stopPropagation() : undefined}
                                     >
                                       {isFirst && (
-                                        <div className="flex items-center gap-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
+                                        <div className="flex items-center justify-center gap-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
                                           <Checkbox
                                             className="h-2.5 w-2.5 rounded-[2px] shrink-0"
                                             checked={isSelected}
