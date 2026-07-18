@@ -16,8 +16,9 @@ import { ServizioFormDialog, type ServizioFormInitial } from "@/components/servi
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil } from "lucide-react";
+import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil, Network } from "lucide-react";
 import { ModificheClientePopover } from "@/components/ModificheClientePopover";
+import { NetworkDispatchDialog } from "@/components/servizi/NetworkDispatchDialog";
 import { format, addDays } from "date-fns";
 import { it as itLocale } from "date-fns/locale";
 
@@ -209,6 +210,7 @@ export default function Servizi() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editServizio, setEditServizio] = useState<ServizioFormInitial | null>(null);
   const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
+  const [networkDialogId, setNetworkDialogId] = useState<string | null>(null);
   const [selectedServiziIds, setSelectedServiziIds] = useState<string[]>([]);
   const [globalSearch, setGlobalSearch] = useState("");
 
@@ -947,6 +949,14 @@ export default function Servizi() {
                       size="sm"
                       variant="outline"
                       className="ml-auto gap-1.5 h-7 text-xs"
+                      onClick={() => setNetworkDialogId(s.id)}
+                    >
+                      <Network className="h-3.5 w-3.5" /> Network
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 h-7 text-xs"
                       onClick={() => openEditServizio(s.id)}
                     >
                       <Pencil className="h-3.5 w-3.5" /> Modifica
@@ -1050,6 +1060,13 @@ export default function Servizi() {
           isAdmin={isAdmin}
           userId={user?.id}
           onSaved={loadServizi}
+        />
+
+        <NetworkDispatchDialog
+          open={!!networkDialogId}
+          onOpenChange={(o) => { if (!o) setNetworkDialogId(null); }}
+          servizioId={networkDialogId}
+          onChanged={loadServizi}
         />
       </div>
     </DashboardLayout>

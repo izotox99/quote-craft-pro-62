@@ -371,6 +371,7 @@ export type Database = {
           id: string
           name: string
           nazione: string | null
+          network_org_id: string | null
           nome_rappresentante: string | null
           nota_tariffario: string | null
           notes: string | null
@@ -408,6 +409,7 @@ export type Database = {
           id?: string
           name: string
           nazione?: string | null
+          network_org_id?: string | null
           nome_rappresentante?: string | null
           nota_tariffario?: string | null
           notes?: string | null
@@ -445,6 +447,7 @@ export type Database = {
           id?: string
           name?: string
           nazione?: string | null
+          network_org_id?: string | null
           nome_rappresentante?: string | null
           nota_tariffario?: string | null
           notes?: string | null
@@ -467,6 +470,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "clients_network_org_id_fkey"
+            columns: ["network_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "clients_org_id_fkey"
             columns: ["org_id"]
@@ -1406,6 +1416,93 @@ export type Database = {
           },
         ]
       }
+      servizi_network: {
+        Row: {
+          created_at: string
+          dispatched_at: string
+          dispatched_by: string | null
+          id: string
+          org_a: string
+          org_b: string
+          partnership_id: string
+          prezzo_concordato: number
+          responded_at: string | null
+          servizio_a_id: string
+          servizio_b_id: string | null
+          snapshot: Json
+          stato: Database["public"]["Enums"]["network_dispatch_stato"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dispatched_at?: string
+          dispatched_by?: string | null
+          id?: string
+          org_a: string
+          org_b: string
+          partnership_id: string
+          prezzo_concordato: number
+          responded_at?: string | null
+          servizio_a_id: string
+          servizio_b_id?: string | null
+          snapshot: Json
+          stato?: Database["public"]["Enums"]["network_dispatch_stato"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dispatched_at?: string
+          dispatched_by?: string | null
+          id?: string
+          org_a?: string
+          org_b?: string
+          partnership_id?: string
+          prezzo_concordato?: number
+          responded_at?: string | null
+          servizio_a_id?: string
+          servizio_b_id?: string | null
+          snapshot?: Json
+          stato?: Database["public"]["Enums"]["network_dispatch_stato"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servizi_network_org_a_fkey"
+            columns: ["org_a"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_network_org_b_fkey"
+            columns: ["org_b"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_network_partnership_id_fkey"
+            columns: ["partnership_id"]
+            isOneToOne: false
+            referencedRelation: "network_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_network_servizio_a_id_fkey"
+            columns: ["servizio_a_id"]
+            isOneToOne: false
+            referencedRelation: "servizi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_network_servizio_b_id_fkey"
+            columns: ["servizio_b_id"]
+            isOneToOne: false
+            referencedRelation: "servizi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       templates: {
         Row: {
           category: Database["public"]["Enums"]["template_category"]
@@ -2047,6 +2144,35 @@ export type Database = {
       hash_share_password: { Args: { _password: string }; Returns: string }
       hash_utenza_password: { Args: { _password: string }; Returns: string }
       is_client_user: { Args: { _user_id: string }; Returns: boolean }
+      network_dispatch_servizio: {
+        Args: {
+          _partner_org_id: string
+          _prezzo_concordato: number
+          _servizio_id: string
+        }
+        Returns: {
+          created_at: string
+          dispatched_at: string
+          dispatched_by: string | null
+          id: string
+          org_a: string
+          org_b: string
+          partnership_id: string
+          prezzo_concordato: number
+          responded_at: string | null
+          servizio_a_id: string
+          servizio_b_id: string | null
+          snapshot: Json
+          stato: Database["public"]["Enums"]["network_dispatch_stato"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "servizi_network"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       network_invite_partner: {
         Args: { _email?: string; _org_b?: string }
         Returns: {
@@ -2127,6 +2253,31 @@ export type Database = {
           name: string
         }[]
       }
+      network_withdraw_servizio: {
+        Args: { _servizio_id: string }
+        Returns: {
+          created_at: string
+          dispatched_at: string
+          dispatched_by: string | null
+          id: string
+          org_a: string
+          org_b: string
+          partnership_id: string
+          prezzo_concordato: number
+          responded_at: string | null
+          servizio_a_id: string
+          servizio_b_id: string | null
+          snapshot: Json
+          stato: Database["public"]["Enums"]["network_dispatch_stato"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "servizi_network"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       verify_share_password: {
         Args: { _password: string; _share_id: string }
         Returns: boolean
@@ -2138,6 +2289,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "manager" | "agent"
+      network_dispatch_stato:
+        | "inviato"
+        | "accettato"
+        | "rifiutato"
+        | "completato"
+        | "ritirato"
       proposal_status: "draft" | "sent" | "viewed" | "accepted" | "rejected"
       servizio_stato:
         | "nuovo"
@@ -2286,6 +2443,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "manager", "agent"],
+      network_dispatch_stato: [
+        "inviato",
+        "accettato",
+        "rifiutato",
+        "completato",
+        "ritirato",
+      ],
       proposal_status: ["draft", "sent", "viewed", "accepted", "rejected"],
       servizio_stato: [
         "nuovo",
