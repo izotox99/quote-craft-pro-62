@@ -29,9 +29,9 @@ const emptyCommon = {
   cellulare: "",
   patente: "",
   email: "",
-  password: "",
   calcola_riposi: "Si",
 };
+
 
 const emptyInterno = {
   mansione: "",
