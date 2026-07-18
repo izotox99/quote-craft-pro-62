@@ -644,7 +644,7 @@ export default function Servizi() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-baseline gap-2">
             <h1 className="font-display text-base font-semibold text-foreground">Servizi</h1>
-            <p className="text-xs text-muted-foreground">{nuoviCount} nuovi · {servizi.length} totali</p>
+            <p className="text-xs text-muted-foreground">{nuoviCount} nuovi · {daConfermareCount} da confermare · {servizi.length} totali</p>
           </div>
           <div className="flex gap-2 items-center w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
