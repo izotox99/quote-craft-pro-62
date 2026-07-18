@@ -1179,6 +1179,17 @@ export default function Servizi() {
           servizioId={networkDialogId}
           onChanged={loadServizi}
         />
+
+        <ColumnCustomizer
+          open={customizerOpen}
+          onOpenChange={setCustomizerOpen}
+          activeView={viste.activeView}
+          onUpdateColumns={(cols) => viste.updateViewColumns(viste.activeView.id, cols)}
+          onSaveAs={(nome, cols) => viste.saveNewView(nome, cols)}
+          onRename={(nome) => viste.renameView(viste.activeView.id, nome)}
+          onDelete={() => viste.deleteView(viste.activeView.id)}
+          onSetDefault={() => viste.setAsDefault(viste.activeView.id)}
+        />
       </div>
     </DashboardLayout>
   );
