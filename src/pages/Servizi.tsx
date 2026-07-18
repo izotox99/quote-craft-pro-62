@@ -81,6 +81,9 @@ type Servizio = {
   fornitore_cs_id: string | null;
   modificato_da_cliente: boolean | null;
   modificato_at: string | null;
+  network_autista_nome: string | null;
+  network_autista_telefono: string | null;
+  network_autista_targa: string | null;
   clients: { name: string; company: string | null } | null;
   autisti: { nome: string; cognome: string; cellulare: string | null } | null;
   autisti_esterni: { nome: string; cellulare: string | null; targa: string | null } | null;
