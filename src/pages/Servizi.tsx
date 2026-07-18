@@ -517,12 +517,12 @@ export default function Servizi() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 overflow-x-clip">
+      <div className="space-y-2 overflow-x-clip">
         {/* Header row */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Servizi</h1>
-            <p className="text-sm text-muted-foreground">{nuoviCount} nuovi · {servizi.length} totali</p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-baseline gap-2">
+            <h1 className="font-display text-base font-semibold text-foreground">Servizi</h1>
+            <p className="text-xs text-muted-foreground">{nuoviCount} nuovi · {servizi.length} totali</p>
           </div>
           <div className="flex gap-2 items-center w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
