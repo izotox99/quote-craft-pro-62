@@ -1027,11 +1027,9 @@ export default function Servizi() {
                             );
                           })
                         )}
-                      </tbody>
-                    </table>
-                  </TooltipProvider>
-                </CardContent>
-              </Card>
+                  </tbody>
+                </table>
+              </TooltipProvider>
             </div>
           );
         })()}
