@@ -711,6 +711,15 @@ export default function Servizi() {
                     <X className="h-3 w-3" /> Reset
                   </Button>
                 )}
+                <Button
+                  variant={filterArchiviati ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 text-xs gap-1.5"
+                  onClick={() => { setFilterArchiviati(v => !v); setTimeout(() => loadServizi(), 0); }}
+                  title="Mostra i servizi archiviati (sola lettura)"
+                >
+                  {filterArchiviati ? "Nascondi archiviati" : "Archiviati"}
+                </Button>
                 <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
                   <CollapsibleTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
