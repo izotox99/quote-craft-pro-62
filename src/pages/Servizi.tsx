@@ -294,9 +294,12 @@ export default function Servizi() {
       codice: form.codice || null,
       foglio: form.foglio || null,
       incasso: form.incasso,
+      non_incassato: form.non_incassato || null,
       costo_cs: form.costo_cs,
       costo_autista: form.costo_autista,
       costo_commissione: form.costo_commissione,
+      costo_centro: form.costo_centro || null,
+      centro_costo: form.centro_costo || null,
       note: form.note || null,
       created_by: user?.id,
     };
