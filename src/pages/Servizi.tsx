@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -10,27 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { TimePicker } from "@/components/ui/time-picker";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
-import {
-  VEICOLI_DISPONIBILI,
-  TIPOLOGIA_OPZIONI,
-  TOUR_OPZIONI,
-  PAGAMENTO_OPZIONI,
-  CITTA_OPZIONI,
-  detectLuogoSpeciale,
-  LuogoField,
-  tipologiaToDB,
-  transferTipoForDB,
-} from "@/lib/booking-shared";
+import { ServizioFormDialog, type ServizioFormInitial } from "@/components/servizi/ServizioFormDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, AlertTriangle, Bell, Printer } from "lucide-react";
+import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil } from "lucide-react";
 import { ModificheClientePopover } from "@/components/ModificheClientePopover";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, addDays } from "date-fns";
 import { it as itLocale } from "date-fns/locale";
 
@@ -80,7 +67,7 @@ type Servizio = {
   fornitori_cs: { nome: string; telefono: string | null } | null;
 };
 
-type Client = { id: string; name: string; company: string | null };
+type Client = { id: string; name: string; company: string | null; phone: string | null };
 type Autista = { id: string; nome: string; cognome: string };
 type Veicolo = { id: string; targa: string; tipo_macchina: string | null };
 type Fornitore = { id: string; nome: string };
@@ -219,8 +206,11 @@ export default function Servizi() {
   const [fornitori, setFornitori] = useState<Fornitore[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editServizio, setEditServizio] = useState<ServizioFormInitial | null>(null);
   const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
   const [selectedServiziIds, setSelectedServiziIds] = useState<string[]>([]);
+  const [globalSearch, setGlobalSearch] = useState("");
+
   
 
   // Filters
@@ -236,57 +226,12 @@ export default function Servizi() {
   const [filterCodice, setFilterCodice] = useState("");
   const [filterArchiviati, setFilterArchiviati] = useState(false);
 
-  // New service form
-  const [form, setForm] = useState({
-    data_servizio: format(new Date(), "yyyy-MM-dd"),
-    ora_inizio: "",
-    citta: "",
-    luogo_inizio: "",
-    luogo_inizio_dettaglio: "",
-    luogo_fine: "",
-    luogo_fine_dettaglio: "",
-    itinerario: "",
-    stato: "nuovo" as string,
-    tipologia_servizio: "" as string, // transfer_interno | transfer_regionale | tour
-    tour_tipo: "",
-    veicolo_tipo: "", // tipo veicolo (catalogo booking)
-    tipo_pagamento: "",
-    prezzo: "",
-    client_id: "",
-    contatto: "",
-    telefono_contatto: "",
-    email_contatto: "",
-    autista_id: "",
-    veicolo_id: "",
-    fornitore_cs_id: "",
-    n_passeggeri: 1,
-    n_bagagli: 0,
-    accessori: "",
-    info_autista: "",
-    codice: "",
-    foglio: "",
-    incasso: 0,
-    costo_cs: 0,
-    costo_autista: 0,
-    costo_commissione: 0,
-    non_incassato: 0,
-    costo_centro: 0,
-    centro_costo: "",
-    note: "",
-  });
+  // Form state is managed inside <ServizioFormDialog />
 
-  const luogoInizioSpeciale = useMemo(
-    () => detectLuogoSpeciale(form.luogo_inizio, form.citta, form.luogo_inizio_dettaglio),
-    [form.luogo_inizio, form.citta, form.luogo_inizio_dettaglio]
-  );
-  const luogoFineSpeciale = useMemo(
-    () => detectLuogoSpeciale(form.luogo_fine, form.citta, form.luogo_fine_dettaglio),
-    [form.luogo_fine, form.citta, form.luogo_fine_dettaglio]
-  );
 
   const loadLookups = async () => {
     const [c, a, v, f] = await Promise.all([
-      supabase.from("clients").select("id, name, company").order("name"),
+      supabase.from("clients").select("id, name, company, phone").order("name"),
       supabase.from("autisti").select("id, nome, cognome").order("cognome"),
       supabase.from("veicoli").select("id, targa, tipo_macchina").order("targa"),
       supabase.from("fornitori_cs").select("id, nome").order("nome"),
@@ -319,6 +264,10 @@ export default function Servizi() {
     if (filterAutista !== "all") query = query.eq("autista_id", filterAutista);
     if (filterFornitore !== "all") query = query.eq("fornitore_cs_id", filterFornitore);
     if (filterCodice) query = query.ilike("codice", `%${filterCodice}%`);
+    if (globalSearch.trim()) {
+      const q = globalSearch.trim().replace(/,/g, " ");
+      query = query.or(`contatto.ilike.%${q}%,codice.ilike.%${q}%,luogo_inizio.ilike.%${q}%,luogo_fine.ilike.%${q}%`);
+    }
 
     const { data } = await query;
     const nextServizi = (data ?? []) as unknown as Servizio[];
@@ -350,64 +299,13 @@ export default function Servizi() {
 
   const handleSearch = () => loadServizi();
 
-  const handleCreate = async () => {
-    if (!form.citta) { toast.error("Seleziona la città"); return; }
-    if (!form.tipologia_servizio) { toast.error("Seleziona la tipologia di servizio"); return; }
-
-    const luogoInizioFinale = form.luogo_inizio_dettaglio
-      ? `${form.luogo_inizio} - ${form.luogo_inizio_dettaglio}`
-      : form.luogo_inizio;
-    const luogoFineFinale = form.luogo_fine_dettaglio
-      ? `${form.luogo_fine} - ${form.luogo_fine_dettaglio}`
-      : form.luogo_fine;
-
-    const insertData: Record<string, unknown> = {
-      data_servizio: form.data_servizio,
-      ora_inizio: form.ora_inizio || null,
-      citta: form.citta || null,
-      luogo_inizio: luogoInizioFinale || null,
-      luogo_fine: luogoFineFinale || null,
-      itinerario: form.itinerario || null,
-      stato: form.stato,
-      tipologia: tipologiaToDB(form.tipologia_servizio),
-      transfer_tipo: transferTipoForDB(form.tipologia_servizio),
-      tour_tipo: form.tipologia_servizio === "tour" ? (form.tour_tipo || null) : null,
-      veicolo_tipo: form.veicolo_tipo || null,
-      tipo_pagamento: form.tipo_pagamento || null,
-      prezzo: form.prezzo ? parseFloat(form.prezzo) : null,
-      contatto: form.contatto || null,
-      telefono_contatto: form.telefono_contatto || null,
-      email_contatto: form.email_contatto || null,
-      n_passeggeri: form.n_passeggeri,
-      n_bagagli: form.n_bagagli,
-      accessori: form.accessori || null,
-      info_autista: form.info_autista || null,
-      codice: form.codice || null,
-      foglio: form.foglio || null,
-      incasso: form.incasso,
-      non_incassato: form.non_incassato || null,
-      costo_cs: form.costo_cs,
-      costo_autista: form.costo_autista,
-      costo_commissione: form.costo_commissione,
-      costo_centro: form.costo_centro || null,
-      centro_costo: form.centro_costo || null,
-      note: form.note || null,
-      created_by: user?.id,
-    };
-    if (form.client_id) insertData.client_id = form.client_id;
-    if (form.autista_id) insertData.autista_id = form.autista_id;
-    if (form.veicolo_id) insertData.veicolo_id = form.veicolo_id;
-    if (form.fornitore_cs_id) insertData.fornitore_cs_id = form.fornitore_cs_id;
-
-    const { error } = await supabase.from("servizi").insert(insertData as any);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Servizio creato!");
-      setDialogOpen(false);
-      loadServizi();
-    }
+  const openEditServizio = async (id: string) => {
+    const { data, error } = await supabase.from("servizi").select("*").eq("id", id).single();
+    if (error) { toast.error(error.message); return; }
+    setEditServizio(data as any);
+    setDetailServizio(null);
   };
+
 
   const handleToggleServizioSelection = (servizioId: string) => {
     setSelectedServiziIds(prev => prev.includes(servizioId)
@@ -546,255 +444,22 @@ export default function Servizi() {
             <h1 className="font-display text-2xl font-bold text-foreground">Servizi</h1>
             <p className="text-sm text-muted-foreground">{nuoviCount} nuovi · {servizi.length} totali</p>
           </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2 w-full sm:w-auto">
-                <PlusCircle className="h-4 w-4" /> Nuovo Servizio
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Nuovo Servizio</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <Label>Data Servizio <span className="text-destructive">*</span></Label>
-                  <DatePicker value={form.data_servizio} onChange={(v) => setForm({ ...form, data_servizio: v })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Ora Inizio</Label>
-                  <TimePicker value={form.ora_inizio} onChange={(v) => setForm({ ...form, ora_inizio: v })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Città <span className="text-destructive">*</span></Label>
-                  <Select value={form.citta} onValueChange={v => setForm({ ...form, citta: v })}>
-                    <SelectTrigger><SelectValue placeholder="Seleziona città" /></SelectTrigger>
-                    <SelectContent>
-                      {CITTA_OPZIONI.map(c => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>Tipologia <span className="text-destructive">*</span></Label>
-                  <Select value={form.tipologia_servizio} onValueChange={v => setForm({ ...form, tipologia_servizio: v, tour_tipo: v === "tour" ? form.tour_tipo : "" })}>
-                    <SelectTrigger><SelectValue placeholder="Seleziona tipologia" /></SelectTrigger>
-                    <SelectContent>
-                      {TIPOLOGIA_OPZIONI.map(t => (
-                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {form.tipologia_servizio === "tour" && (
-                  <div className="space-y-1 sm:col-span-2">
-                    <Label>Tipo Tour</Label>
-                    <Select value={form.tour_tipo} onValueChange={v => setForm({ ...form, tour_tipo: v })}>
-                      <SelectTrigger><SelectValue placeholder="Seleziona tour" /></SelectTrigger>
-                      <SelectContent>
-                        {TOUR_OPZIONI.map(t => (
-                          <SelectItem key={t} value={t}>{t}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-                <div className="sm:col-span-2">
-                  <LuogoField
-                    label="Luogo Inizio"
-                    value={form.luogo_inizio}
-                    onChange={(v) => setForm({ ...form, luogo_inizio: v })}
-                    dettaglio={form.luogo_inizio_dettaglio}
-                    onDettaglioChange={(v) => setForm({ ...form, luogo_inizio_dettaglio: v })}
-                    speciale={luogoInizioSpeciale}
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <LuogoField
-                    label="Luogo Fine"
-                    value={form.luogo_fine}
-                    onChange={(v) => setForm({ ...form, luogo_fine: v })}
-                    dettaglio={form.luogo_fine_dettaglio}
-                    onDettaglioChange={(v) => setForm({ ...form, luogo_fine_dettaglio: v })}
-                    speciale={luogoFineSpeciale}
-                  />
-                </div>
-                <div className="space-y-1 sm:col-span-2">
-                  <Label>Itinerario</Label>
-                  <Textarea value={form.itinerario} onChange={e => setForm({ ...form, itinerario: e.target.value })} className="min-h-[60px]" />
-                </div>
-                <div className="space-y-1">
-                  <Label>Veicolo (tipo)</Label>
-                  <Select value={form.veicolo_tipo} onValueChange={v => setForm({ ...form, veicolo_tipo: v })}>
-                    <SelectTrigger><SelectValue placeholder="Seleziona veicolo" /></SelectTrigger>
-                    <SelectContent>
-                      {VEICOLI_DISPONIBILI.map(v => (
-                        <SelectItem key={v} value={v}>{v}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>Tipo Pagamento</Label>
-                  <Select value={form.tipo_pagamento} onValueChange={v => setForm({ ...form, tipo_pagamento: v })}>
-                    <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
-                    <SelectContent>
-                      {PAGAMENTO_OPZIONI.map(p => (
-                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>Prezzo €</Label>
-                  <Input type="number" step="0.01" value={form.prezzo} onChange={e => setForm({ ...form, prezzo: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Stato</Label>
-                  <Select value={form.stato} onValueChange={v => setForm({ ...form, stato: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(statusLabels).map(([k, v]) => (
-                        <SelectItem key={k} value={k}>{v}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1 sm:col-span-2">
-                  <Separator className="my-2" />
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Passeggero</p>
-                </div>
-                <div className="space-y-1">
-                  <Label>Società Cliente</Label>
-                  <Select value={form.client_id} onValueChange={v => setForm({ ...form, client_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
-                    <SelectContent>
-                      {clients.map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.company || c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>Contatto</Label>
-                  <Input value={form.contatto} onChange={e => setForm({ ...form, contatto: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Telefono Contatto</Label>
-                  <Input value={form.telefono_contatto} onChange={e => setForm({ ...form, telefono_contatto: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Email Contatto</Label>
-                  <Input type="email" value={form.email_contatto} onChange={e => setForm({ ...form, email_contatto: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>N. Passeggeri</Label>
-                  <Input type="number" value={form.n_passeggeri} onChange={e => setForm({ ...form, n_passeggeri: +e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>N. Bagagli</Label>
-                  <Input type="number" value={form.n_bagagli} onChange={e => setForm({ ...form, n_bagagli: +e.target.value })} />
-                </div>
-                <div className="space-y-1 sm:col-span-2">
-                  <Label>Accessori</Label>
-                  <Input value={form.accessori} onChange={e => setForm({ ...form, accessori: e.target.value })} />
-                </div>
-                <div className="space-y-1 sm:col-span-2">
-                  <Separator className="my-2" />
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Assegnazione e gestione interna</p>
-                </div>
-                <div className="space-y-1">
-                  <Label>Autista</Label>
-                  <Select value={form.autista_id} onValueChange={v => setForm({ ...form, autista_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
-                    <SelectContent>
-                      {autisti.map(a => (
-                        <SelectItem key={a.id} value={a.id}>{a.cognome} {a.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>Veicolo (mezzo)</Label>
-                  <Select value={form.veicolo_id} onValueChange={v => setForm({ ...form, veicolo_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
-                    <SelectContent>
-                      {veicoli.map(v => (
-                        <SelectItem key={v.id} value={v.id}>{v.targa} - {v.tipo_macchina || ""}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label>Fornitore CS</Label>
-                  <Select value={form.fornitore_cs_id} onValueChange={v => setForm({ ...form, fornitore_cs_id: v })}>
-                    <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
-                    <SelectContent>
-                      {fornitori.map(f => (
-                        <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1 sm:col-span-2">
-                  <Label>Info Autista</Label>
-                  <Textarea value={form.info_autista} onChange={e => setForm({ ...form, info_autista: e.target.value })} className="min-h-[60px]" />
-                </div>
-                <div className="space-y-1">
-                  <Label>Codice</Label>
-                  <Input value={form.codice} onChange={e => setForm({ ...form, codice: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Foglio</Label>
-                  <Input value={form.foglio} onChange={e => setForm({ ...form, foglio: e.target.value })} />
-                </div>
-                {isAdmin && (
-                  <>
-                    <div className="space-y-1 sm:col-span-2">
-                      <Separator className="my-1" />
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sezione economica (solo admin)</p>
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Incasso € (Inc)</Label>
-                      <Input type="number" step="0.01" value={form.incasso} onChange={e => setForm({ ...form, incasso: +e.target.value })} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Non incassato € (No Inc)</Label>
-                      <Input type="number" step="0.01" value={form.non_incassato} onChange={e => setForm({ ...form, non_incassato: +e.target.value })} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Costo CS €</Label>
-                      <Input type="number" step="0.01" value={form.costo_cs} onChange={e => setForm({ ...form, costo_cs: +e.target.value })} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Costo Autista € (Aut €)</Label>
-                      <Input type="number" step="0.01" value={form.costo_autista} onChange={e => setForm({ ...form, costo_autista: +e.target.value })} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Centro di costo (etichetta)</Label>
-                      <Input value={form.centro_costo} onChange={e => setForm({ ...form, centro_costo: e.target.value })} placeholder="es. Marketing" />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Costo centro € (C.C €)</Label>
-                      <Input type="number" step="0.01" value={form.costo_centro} onChange={e => setForm({ ...form, costo_centro: +e.target.value })} />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>Commissione € (Com €)</Label>
-                      <Input type="number" step="0.01" value={form.costo_commissione} onChange={e => setForm({ ...form, costo_commissione: +e.target.value })} />
-                    </div>
-                  </>
-                )}
-                <div className="space-y-1 sm:col-span-2">
-                  <Label>Note</Label>
-                  <Textarea value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
-                </div>
-              </div>
-              <div className="flex justify-end mt-4">
-                <Button onClick={handleCreate}>Crea Servizio</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2 items-center w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={globalSearch}
+                onChange={e => setGlobalSearch(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") loadServizi(); }}
+                placeholder="Cerca (codice, contatto, luogo)…"
+                className="h-9 pl-7 text-xs"
+              />
+            </div>
+            <Button className="gap-2" onClick={() => setDialogOpen(true)}>
+              <PlusCircle className="h-4 w-4" /> Nuovo Servizio
+            </Button>
+          </div>
+
         </div>
 
         {/* Quick day chips + collapsible filters */}
@@ -1256,9 +921,17 @@ export default function Servizi() {
                       {s.ora_inizio && ` · ${s.ora_inizio}`}
                     </DialogTitle>
                   </DialogHeader>
-                  <div className="flex flex-wrap gap-2 mt-1">
+                  <div className="flex flex-wrap gap-2 mt-1 items-center">
                     <Badge variant="outline" className={statusColors[s.stato] || ""}>{statusLabels[s.stato] || s.stato}</Badge>
                     {s.citta && <Badge variant="outline">{s.citta}</Badge>}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="ml-auto gap-1.5 h-7 text-xs"
+                      onClick={() => openEditServizio(s.id)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Modifica
+                    </Button>
                   </div>
 
                   <Separator className="my-2" />
@@ -1330,6 +1003,35 @@ export default function Servizi() {
             })()}
           </DialogContent>
         </Dialog>
+
+        {/* Nuovo servizio */}
+        <ServizioFormDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          mode="create"
+          clients={clients}
+          autisti={autisti}
+          veicoli={veicoli}
+          fornitori={fornitori}
+          isAdmin={isAdmin}
+          userId={user?.id}
+          onSaved={loadServizi}
+        />
+
+        {/* Modifica servizio */}
+        <ServizioFormDialog
+          open={!!editServizio}
+          onOpenChange={o => { if (!o) setEditServizio(null); }}
+          mode="edit"
+          initialData={editServizio}
+          clients={clients}
+          autisti={autisti}
+          veicoli={veicoli}
+          fornitori={fornitori}
+          isAdmin={isAdmin}
+          userId={user?.id}
+          onSaved={loadServizi}
+        />
       </div>
     </DashboardLayout>
   );
