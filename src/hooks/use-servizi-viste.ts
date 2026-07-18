@@ -218,6 +218,45 @@ export function useServiziViste(userId: string | undefined) {
     await saveNewView(nome, sys.columns);
   }, [saveNewView]);
 
+  /** Aggiorna le larghezze di una vista.
+   *  - Applica subito la cache in localStorage + state (reattività).
+   *  - Se la vista è personale, persiste il jsonb `colonne` sul DB (debounced 400ms). */
+  const updateColumnWidths = useCallback((viewId: string, widths: WidthMap) => {
+    writeWidthsCache(viewId, widths);
+    setWidthsById((prev) => ({ ...prev, [viewId]: widths }));
+
+    if (SYSTEM_VIEW_IDS.has(viewId)) return; // sistema → solo LS
+
+    // Debounce salvataggio DB
+    if (dbDebounce.current[viewId]) clearTimeout(dbDebounce.current[viewId]);
+    dbDebounce.current[viewId] = setTimeout(async () => {
+      const view = personal.find((v) => v.id === viewId);
+      if (!view) return;
+      const merged = applyWidthsToColumns(view.columns, widths);
+      const { error } = await supabase
+        .from("dashboard_viste")
+        .update({ colonne: merged as any })
+        .eq("id", viewId);
+      if (!error) await reload();
+    }, 400);
+  }, [personal, reload]);
+
+  /** Ripristina le larghezze predefinite: rimuove sia la cache LS sia i valori DB. */
+  const resetColumnWidths = useCallback(async (viewId: string) => {
+    clearWidthsCache(viewId);
+    setWidthsById((prev) => ({ ...prev, [viewId]: {} }));
+    if (SYSTEM_VIEW_IDS.has(viewId)) return;
+    const view = personal.find((v) => v.id === viewId);
+    if (!view) return;
+    const stripped = view.columns.map(({ width, ...rest }) => rest);
+    const { error } = await supabase
+      .from("dashboard_viste")
+      .update({ colonne: stripped as any })
+      .eq("id", viewId);
+    if (!error) await reload();
+  }, [personal, reload]);
+
+
   return {
     viste,
     activeView,
