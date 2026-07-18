@@ -928,10 +928,10 @@ export default function Servizi() {
           return (
             <div className="hidden md:block -mx-3 lg:-mx-4 overflow-x-hidden border-y bg-card">
               <TooltipProvider delayDuration={200}>
-                <table className="w-full table-auto border-collapse text-[8px] font-semibold italic leading-[1.15] text-foreground xl:text-[8.5px]" style={{ borderSpacing: 0 }}>
+                <table className="w-full table-fixed border-collapse text-[8px] font-semibold italic leading-[1.15] text-foreground xl:text-[8.5px]" style={{ borderSpacing: 0 }}>
                       <colgroup>
                         <col style={{ width: `${CHECKBOX_PCT}%` }} />
-                        {visibleCols.map((c) => <col key={c.key} />)}
+                        {visibleCols.map((c) => <col key={c.key} style={{ width: colWidth(c.key) }} />)}
                       </colgroup>
                       <thead className="border-b border-border bg-muted/70">
                         <tr className="text-[7.5px] font-bold not-italic leading-[1.05] text-foreground xl:text-[8px]">
@@ -943,10 +943,11 @@ export default function Servizi() {
                               aria-label="Seleziona tutti i servizi visibili"
                             />
                           </th>
-                          {visibleCols.map((c) => {
+                          {visibleCols.map((c, idx) => {
                             const def = COLUMNS_MAP[c.key];
+                            const edgePad = idx === 0 ? "pl-[3px] pr-0" : idx === visibleCols.length - 1 ? "pl-0 pr-[3px]" : "px-0";
                             return (
-                              <th key={c.key} className={`border-r border-border px-0 py-0.5 overflow-hidden ${alignClass(c.key)}`}>
+                              <th key={c.key} className={`border-r border-border ${edgePad} py-0.5 overflow-hidden ${alignClass(c.key)}`}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <span className="cursor-help block whitespace-pre-line break-words px-0" title={def.label}>{def.short || def.label}</span>
@@ -995,10 +996,12 @@ export default function Servizi() {
                                 {visibleCols.map((c, idx) => {
                                   const isInteractive = INTERACTIVE_COLS.includes(c.key);
                                   const isFirst = idx === 0;
+                                  const isLast = idx === visibleCols.length - 1;
+                                  const edgePad = isFirst ? "pl-[3px] pr-0" : isLast ? "pl-0 pr-[3px]" : "px-0";
                                   return (
                                     <td
                                       key={c.key}
-                                      className={`${cellCls} ${alignClass(c.key)} [&>*]:max-w-full`}
+                                      className={`border-r border-border ${edgePad} py-0.5 align-middle overflow-hidden break-words min-w-0 ${alignClass(c.key)} [&>*]:max-w-full`}
                                       onClick={isInteractive ? (e) => e.stopPropagation() : undefined}
                                     >
                                       {isFirst && (modificato || networkInfo) && (
