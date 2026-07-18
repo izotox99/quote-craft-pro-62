@@ -126,15 +126,29 @@ export default function Clients() {
     load();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (client: Client) => {
     const { data: fnData, error: fnError } = await supabase.functions.invoke("delete-client-account", {
-      body: { client_id: id },
+      body: { client_id: client.id },
     });
+    if (fnData?.code === "has_servizi") {
+      setDeleteTarget(null);
+      setDeactivatePrompt({ client, count: Number(fnData.servizi_count ?? 0) });
+      return;
+    }
     if (fnError || fnData?.error) {
       toast.error(fnData?.error || fnError?.message || "Errore durante l'eliminazione");
       return;
     }
     toast.success("Cliente eliminato");
+    setDeleteTarget(null);
+    load();
+  };
+
+  const handleDeactivate = async (clientId: string) => {
+    const { error } = await supabase.from("clients").update({ attivo: false }).eq("id", clientId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Cliente disattivato");
+    setDeactivatePrompt(null);
     load();
   };
 
