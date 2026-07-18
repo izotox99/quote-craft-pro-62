@@ -926,7 +926,7 @@ export default function Servizi() {
           const INTERACTIVE_COLS: ColumnKey[] = ["autista", "foglio"];
 
           return (
-            <div className="hidden md:block w-[100vw] ml-[calc(50%-50vw)] overflow-hidden border-y bg-card">
+            <div className="hidden md:block -mx-3 lg:-mx-4 overflow-hidden border-y bg-card">
               <TooltipProvider delayDuration={200}>
                 <table className="w-full table-fixed text-[10.5px] leading-tight" style={{ tableLayout: "fixed" }}>
                       <colgroup>
