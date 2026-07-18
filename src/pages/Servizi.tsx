@@ -118,6 +118,97 @@ function buildTServ(s: Servizio): string {
   return parts.join(" · ") || "—";
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+}
+
+function printFoglioServizio(s: Servizio, org: { name: string; logo_url: string | null; address: string | null; phone: string | null; website: string | null } | null) {
+  const row = (label: string, value: string | number | null | undefined) => {
+    if (value === null || value === undefined || value === "") return "";
+    return `<tr><td class="lbl">${escapeHtml(label)}</td><td>${escapeHtml(String(value))}</td></tr>`;
+  };
+  const driverLabel = s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : (s.autisti_esterni?.nome || "");
+  const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || "";
+  const targa = s.autisti_esterni?.targa || s.veicoli?.targa || "";
+  const veicolo = s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "");
+  const dataStr = format(new Date(s.data_servizio), "dd/MM/yyyy");
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Foglio Servizio ${escapeHtml(s.codice || s.id.slice(0, 8))}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: #111; margin: 32px; }
+    header { display: flex; align-items: center; gap: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 20px; }
+    header img { max-height: 60px; }
+    header .org { flex: 1; }
+    header .org h1 { margin: 0; font-size: 20px; }
+    header .org p { margin: 2px 0; font-size: 11px; color: #555; }
+    header .meta { text-align: right; font-size: 11px; }
+    h2 { font-size: 14px; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+    table.data { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.data td { padding: 4px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
+    table.data td.lbl { color: #666; width: 30%; font-weight: 500; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    footer { margin-top: 40px; font-size: 10px; color: #888; text-align: center; }
+    @media print { body { margin: 12mm; } }
+  </style></head><body>
+  <header>
+    ${org?.logo_url ? `<img src="${escapeHtml(org.logo_url)}" alt="logo" />` : ""}
+    <div class="org">
+      <h1>${escapeHtml(org?.name || "")}</h1>
+      ${org?.address ? `<p>${escapeHtml(org.address)}</p>` : ""}
+      ${org?.phone ? `<p>Tel: ${escapeHtml(org.phone)}</p>` : ""}
+      ${org?.website ? `<p>${escapeHtml(org.website)}</p>` : ""}
+    </div>
+    <div class="meta">
+      <div><strong>Foglio di servizio</strong></div>
+      <div>Codice: ${escapeHtml(s.codice || "—")}</div>
+      <div>${dataStr}${s.ora_inizio ? " · " + escapeHtml(s.ora_inizio) : ""}</div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div>
+      <h2>Cliente</h2>
+      <table class="data">
+        ${row("Società", s.clients?.company || s.clients?.name)}
+        ${row("Contatto", s.contatto)}
+        ${row("Telefono", s.telefono_contatto)}
+        ${row("Passeggeri", s.n_passeggeri)}
+        ${row("Bagagli", s.n_bagagli)}
+      </table>
+      <h2>Servizio</h2>
+      <table class="data">
+        ${row("Città", s.citta)}
+        ${row("Tipo", buildTServ(s))}
+        ${row("Luogo inizio", s.luogo_inizio)}
+        ${row("Itinerario", s.itinerario)}
+        ${row("Luogo fine", s.luogo_fine)}
+        ${row("Accessori", s.accessori)}
+      </table>
+    </div>
+    <div>
+      <h2>Veicolo & Autista</h2>
+      <table class="data">
+        ${row("Veicolo", veicolo)}
+        ${row("Targa", targa)}
+        ${row("Autista", driverLabel)}
+        ${row("Telefono autista", driverTel)}
+        ${row("Info autista", s.info_autista)}
+      </table>
+      <h2>Note</h2>
+      <table class="data">
+        ${row("Note", s.note)}
+      </table>
+    </div>
+  </div>
+
+  <footer>Documento generato il ${format(new Date(), "dd/MM/yyyy HH:mm")}</footer>
+  <script>window.onload = () => window.print();</script>
+  </body></html>`;
+  const w = window.open("", "_blank", "width=900,height=1200");
+  if (w) { w.document.write(html); w.document.close(); }
+}
+
+
 export default function Servizi() {
   const { user, role, organization } = useAuth();
   const isAdmin = role === "admin";
