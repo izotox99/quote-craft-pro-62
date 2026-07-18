@@ -560,7 +560,7 @@ export default function Servizi() {
 
         {/* Quick day chips + collapsible filters */}
         <Card>
-          <CardContent className="py-4 space-y-3">
+          <CardContent className="py-2 px-3 space-y-2">
             {/* Day chips row */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Nuovi:</span>
