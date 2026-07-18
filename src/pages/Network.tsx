@@ -39,19 +39,18 @@ export default function Network() {
     setLoading(true);
     const { data, error } = await supabase
       .from("network_partners")
-      .select("*")
+      .select("id, org_a, org_b, invited_by_email, invite_code, stato, invited_at, responded_at")
       .order("invited_at", { ascending: false });
     if (error) {
       toast.error(error.message);
       setLoading(false);
       return;
     }
-    const orgIds = Array.from(new Set(((data ?? []) as PartnerRow[]).flatMap(r => [r.org_a, r.org_b].filter(Boolean) as string[])));
-    let orgMap: Record<string, string> = {};
-    if (orgIds.length) {
-      const { data: orgs } = await supabase.from("organizations").select("id, name").in("id", orgIds);
-      orgMap = Object.fromEntries((orgs ?? []).map(o => [o.id, o.name]));
-    }
+    const { data: orgs, error: orgsErr } = await supabase.rpc("network_visible_orgs");
+    if (orgsErr) toast.error(orgsErr.message);
+    const orgMap: Record<string, string> = Object.fromEntries(
+      ((orgs ?? []) as { id: string; name: string }[]).map((o) => [o.id, o.name])
+    );
     setRows(((data ?? []) as PartnerRow[]).map(r => ({
       ...r,
       org_a_name: orgMap[r.org_a],
@@ -204,7 +203,7 @@ export default function Network() {
               <TableBody>
                 {inviatiFromMe.map(r => (
                   <TableRow key={r.id}>
-                    <TableCell>{r.invited_by_email || r.org_b_name}</TableCell>
+                    <TableCell>Invito inviato a <span className="font-medium">{r.org_b_name || r.invited_by_email || "—"}</span></TableCell>
                     <TableCell className="font-mono text-xs">
                       <div className="flex items-center gap-2">
                         <span className="truncate max-w-[240px]">{r.invite_code}</span>
@@ -243,7 +242,7 @@ export default function Network() {
               <TableBody>
                 {inviatiToMe.map(r => (
                   <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.org_a_name || "—"}</TableCell>
+                    <TableCell>Invito ricevuto da <span className="font-medium">{r.org_a_name || "—"}</span></TableCell>
                     <TableCell>{new Date(r.invited_at).toLocaleDateString("it-IT")}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">

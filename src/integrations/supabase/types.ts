@@ -2029,6 +2029,7 @@ export type Database = {
               isSetofReturn: false
             }
           }
+      current_user_email: { Args: never; Returns: string }
       get_active_utenza_id: { Args: { _user_id: string }; Returns: string }
       get_client_org_id: { Args: { _user_id: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
@@ -2118,6 +2119,13 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      network_visible_orgs: {
+        Args: never
+        Returns: {
+          id: string
+          name: string
+        }[]
       }
       verify_share_password: {
         Args: { _password: string; _share_id: string }
