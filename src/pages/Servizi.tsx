@@ -274,6 +274,24 @@ export default function Servizi() {
     const nextServizi = (data ?? []) as unknown as Servizio[];
     setServizi(nextServizi);
     setSelectedServiziIds(prev => prev.filter(id => nextServizi.some(servizio => servizio.id === id)));
+
+    // Carica riepilogo accessori
+    const ids = nextServizi.map(s => s.id);
+    if (ids.length) {
+      const { data: acc } = await supabase
+        .from("servizi_accessori")
+        .select("servizio_id, quantita, accessori_catalogo(nome)")
+        .in("servizio_id", ids);
+      const map: Record<string, string[]> = {};
+      (acc ?? []).forEach((r: any) => {
+        const nome = r.accessori_catalogo?.nome;
+        if (!nome) return;
+        (map[r.servizio_id] ||= []).push(`${r.quantita}× ${nome}`);
+      });
+      setAccessoriMap(Object.fromEntries(Object.entries(map).map(([k, v]) => [k, v.join(", ")])));
+    } else {
+      setAccessoriMap({});
+    }
     setLoading(false);
   };
 
