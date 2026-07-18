@@ -867,12 +867,15 @@ export default function Servizi() {
             servizi.map((s) => {
               const senzaAutista = !s.autista_id && !s.autista_esterno_id;
               const modificato = s.modificato_da_cliente;
+              const isNuovoRosso = s.stato === "nuovo" && senzaAutista;
+              const isDaConfermare = s.stato === "da_confermare";
               return (
                 <Card
                   key={s.id}
                   className={`cursor-pointer hover:shadow-md transition-all hover:border-primary/30 group ${
-                    senzaAutista ? "bg-red-50/60 dark:bg-red-950/20 border-red-200 dark:border-red-900" : ""
-                  } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
+                    isNuovoRosso ? "bg-red-50/60 dark:bg-red-950/20 border-red-200 dark:border-red-900" :
+                    isDaConfermare ? "bg-orange-50/70 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900" : ""
+                  } ${modificato ? "border-l-4 border-l-orange-700 dark:border-l-orange-500" : ""}`}
                   onClick={() => setDetailServizio(s)}
                 >
                   <CardContent className="p-4 flex items-center gap-4">
@@ -895,8 +898,8 @@ export default function Servizi() {
                       <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground">
                         <Users className="h-3.5 w-3.5" /> {s.n_passeggeri ?? 0}
                       </div>
-                      <Badge variant="outline" className={senzaAutista ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" : (statusColors[s.stato] || "")}>
-                        {senzaAutista ? "Senza autista" : (statusLabels[s.stato] || s.stato)}
+                      <Badge variant="outline" className={isNuovoRosso ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" : (statusColors[s.stato] || "")}>
+                        {isNuovoRosso ? "Senza autista" : (statusLabels[s.stato] || s.stato)}
                       </Badge>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                     </div>
