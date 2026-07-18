@@ -865,6 +865,27 @@ export default function Servizi() {
           </div>
         )}
 
+        {(() => {
+          const selectedDaConfermare = servizi.filter(s => selectedServiziIds.includes(s.id) && s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id)).length;
+          if (selectedDaConfermare === 0) return null;
+          return (
+            <div className="flex items-center gap-2 rounded-lg border border-orange-300 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-900 px-3 py-2">
+              <CheckCircle2 className="h-4 w-4 text-orange-700 dark:text-orange-300" />
+              <span className="text-xs font-medium text-orange-900 dark:text-orange-100">
+                {selectedDaConfermare} da confermare tra i selezionati
+              </span>
+              <Button
+                size="sm"
+                className="ml-auto h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white gap-1.5"
+                onClick={handleBulkConfirm}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Conferma selezionati ({selectedDaConfermare})
+              </Button>
+            </div>
+          );
+        })()}
+
         {/* MOBILE: card list */}
         <div className="space-y-2 md:hidden">
           {loading ? (
