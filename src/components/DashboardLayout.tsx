@@ -53,6 +53,7 @@ const mezziSubItems = [
 
 const mainNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
+  { to: "/agenda", icon: Calendar, label: "Agenda" },
   { to: "/fornitori", icon: Truck, label: "Fornitori CS" },
   { to: "/network", icon: Users, label: "Network partner" },
 ];
