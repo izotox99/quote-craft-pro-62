@@ -295,64 +295,13 @@ export default function Servizi() {
 
   const handleSearch = () => loadServizi();
 
-  const handleCreate = async () => {
-    if (!form.citta) { toast.error("Seleziona la città"); return; }
-    if (!form.tipologia_servizio) { toast.error("Seleziona la tipologia di servizio"); return; }
-
-    const luogoInizioFinale = form.luogo_inizio_dettaglio
-      ? `${form.luogo_inizio} - ${form.luogo_inizio_dettaglio}`
-      : form.luogo_inizio;
-    const luogoFineFinale = form.luogo_fine_dettaglio
-      ? `${form.luogo_fine} - ${form.luogo_fine_dettaglio}`
-      : form.luogo_fine;
-
-    const insertData: Record<string, unknown> = {
-      data_servizio: form.data_servizio,
-      ora_inizio: form.ora_inizio || null,
-      citta: form.citta || null,
-      luogo_inizio: luogoInizioFinale || null,
-      luogo_fine: luogoFineFinale || null,
-      itinerario: form.itinerario || null,
-      stato: form.stato,
-      tipologia: tipologiaToDB(form.tipologia_servizio),
-      transfer_tipo: transferTipoForDB(form.tipologia_servizio),
-      tour_tipo: form.tipologia_servizio === "tour" ? (form.tour_tipo || null) : null,
-      veicolo_tipo: form.veicolo_tipo || null,
-      tipo_pagamento: form.tipo_pagamento || null,
-      prezzo: form.prezzo ? parseFloat(form.prezzo) : null,
-      contatto: form.contatto || null,
-      telefono_contatto: form.telefono_contatto || null,
-      email_contatto: form.email_contatto || null,
-      n_passeggeri: form.n_passeggeri,
-      n_bagagli: form.n_bagagli,
-      accessori: form.accessori || null,
-      info_autista: form.info_autista || null,
-      codice: form.codice || null,
-      foglio: form.foglio || null,
-      incasso: form.incasso,
-      non_incassato: form.non_incassato || null,
-      costo_cs: form.costo_cs,
-      costo_autista: form.costo_autista,
-      costo_commissione: form.costo_commissione,
-      costo_centro: form.costo_centro || null,
-      centro_costo: form.centro_costo || null,
-      note: form.note || null,
-      created_by: user?.id,
-    };
-    if (form.client_id) insertData.client_id = form.client_id;
-    if (form.autista_id) insertData.autista_id = form.autista_id;
-    if (form.veicolo_id) insertData.veicolo_id = form.veicolo_id;
-    if (form.fornitore_cs_id) insertData.fornitore_cs_id = form.fornitore_cs_id;
-
-    const { error } = await supabase.from("servizi").insert(insertData as any);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Servizio creato!");
-      setDialogOpen(false);
-      loadServizi();
-    }
+  const openEditServizio = async (id: string) => {
+    const { data, error } = await supabase.from("servizi").select("*").eq("id", id).single();
+    if (error) { toast.error(error.message); return; }
+    setEditServizio(data as any);
+    setDetailServizio(null);
   };
+
 
   const handleToggleServizioSelection = (servizioId: string) => {
     setSelectedServiziIds(prev => prev.includes(servizioId)
