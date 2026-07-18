@@ -58,6 +58,8 @@ type Servizio = {
   tipo_pagamento: string | null;
   prezzo: number | null;
   centro_costo: string | null;
+  costo_centro: number | null;
+  non_incassato: number | null;
   codice: string | null;
   foglio: string | null;
   incasso: number | null;
@@ -67,13 +69,15 @@ type Servizio = {
   note: string | null;
   autista_id: string | null;
   autista_esterno_id: string | null;
+  veicolo_id: string | null;
+  fornitore_cs_id: string | null;
   modificato_da_cliente: boolean | null;
   modificato_at: string | null;
   clients: { name: string; company: string | null } | null;
-  autisti: { nome: string; cognome: string } | null;
-  autisti_esterni: { nome: string } | null;
+  autisti: { nome: string; cognome: string; cellulare: string | null } | null;
+  autisti_esterni: { nome: string; cellulare: string | null; targa: string | null } | null;
   veicoli: { targa: string; tipo_macchina: string | null } | null;
-  fornitori_cs: { nome: string } | null;
+  fornitori_cs: { nome: string; telefono: string | null } | null;
 };
 
 type Client = { id: string; name: string; company: string | null };
