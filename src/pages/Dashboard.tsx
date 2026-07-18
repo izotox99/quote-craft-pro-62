@@ -172,6 +172,7 @@ export default function Dashboard() {
       senzaAutista: attivi.filter(s => !s.autista_id && !s.autista_esterno_id).length,
       modificati: attivi.filter(s => s.modificato_da_cliente).length,
       nuovi: attivi.filter(s => s.stato === "nuovo").length,
+      daConfermare: attivi.filter(s => s.stato === "da_confermare").length,
       confermati: attivi.filter(s => s.stato === "confermato").length,
       annullati: servizi.filter(s => s.stato === "annullato").length,
     };
