@@ -1185,11 +1185,19 @@ export default function Servizi() {
         <div className="hidden md:flex flex-wrap gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-1.5">
             <span className="inline-block w-3 h-3 rounded bg-red-100 border border-red-300" />
-            Riga rossa = senza autista (da assegnare per confermare)
+            Rosso = nuovo senza autista (da assegnare)
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="inline-block w-1 h-3 bg-amber-500 rounded" />
-            Bordo giallo = modificato dal cliente
+            <span className="inline-block w-3 h-3 rounded bg-orange-100 border border-orange-300" />
+            Arancione = autista assegnato, da confermare
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-3 h-3 rounded bg-background border border-border" />
+            Bianco = confermato
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="inline-block w-1 h-3 bg-orange-700 rounded" />
+            Bordo arancione scuro = modificato dal cliente
           </div>
         </div>
 
