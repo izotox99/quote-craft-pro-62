@@ -79,6 +79,21 @@ export default function ClientDetail() {
         </Card>
 
         <Card>
+          <CardHeader><CardTitle>Tariffario</CardTitle></CardHeader>
+          <CardContent>
+            <TariffarioUpload
+              clientId={client.id}
+              orgId={client.org_id}
+              currentUrl={client.tariffario_url}
+              currentName={client.tariffario_nome}
+              onChange={() => {
+                supabase.from("clients").select("*").eq("id", client.id!).single().then(({ data }) => data && setClient(data as Client));
+              }}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
           <CardHeader><CardTitle>Servizi</CardTitle></CardHeader>
           <CardContent>
             {servizi.length === 0 ? (
