@@ -179,7 +179,7 @@ export default function AutistiCollaboratori() {
                   <TableHead>Num patente</TableHead>
                   <TableHead>Cellulare</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Password</TableHead>
+                  
                   <TableHead>Tipo macchina</TableHead>
                   <TableHead>Targa</TableHead>
                   <TableHead>Level</TableHead>
