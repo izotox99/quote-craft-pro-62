@@ -87,6 +87,14 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: msg, code: "delete_failed" }, 400);
     }
 
+    // Rimuovi il fingerprint della password (libera l'unicità per altri account).
+    await admin
+      .from("password_fingerprints")
+      .delete()
+      .eq("owner_type", "client")
+      .eq("owner_id", client_id);
+
+
     // Try to delete the auth user too, if no other client / utenza references it.
     if (authUserId) {
       const [{ data: otherClient }, { data: utenzaLink }] = await Promise.all([
