@@ -67,7 +67,7 @@ type Servizio = {
   fornitori_cs: { nome: string; telefono: string | null } | null;
 };
 
-type Client = { id: string; name: string; company: string | null };
+type Client = { id: string; name: string; company: string | null; phone: string | null };
 type Autista = { id: string; nome: string; cognome: string };
 type Veicolo = { id: string; targa: string; tipo_macchina: string | null };
 type Fornitore = { id: string; nome: string };
