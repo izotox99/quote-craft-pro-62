@@ -928,10 +928,10 @@ export default function Servizi() {
           return (
             <div className="hidden md:block -mx-3 lg:-mx-4 overflow-x-hidden border-y bg-card">
               <TooltipProvider delayDuration={200}>
-                <table className="w-full table-fixed border-collapse text-[8px] font-semibold italic leading-[1.15] text-foreground xl:text-[8.5px]" style={{ borderSpacing: 0 }}>
+                <table className="w-full table-auto border-collapse text-[8px] font-semibold italic leading-[1.15] text-foreground xl:text-[8.5px]" style={{ borderSpacing: 0 }}>
                       <colgroup>
                         <col style={{ width: `${CHECKBOX_PCT}%` }} />
-                        {visibleCols.map((c) => <col key={c.key} style={{ width: colWidth(c.key) }} />)}
+                        {visibleCols.map((c) => <col key={c.key} />)}
                       </colgroup>
                       <thead className="border-b border-border bg-muted/70">
                         <tr className="text-[7.5px] font-bold not-italic leading-[1.05] text-foreground xl:text-[8px]">
