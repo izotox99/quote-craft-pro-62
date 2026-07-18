@@ -996,10 +996,12 @@ export default function Servizi() {
                                 {visibleCols.map((c, idx) => {
                                   const isInteractive = INTERACTIVE_COLS.includes(c.key);
                                   const isFirst = idx === 0;
+                                  const isLast = idx === visibleCols.length - 1;
+                                  const edgePad = isFirst ? "pl-[3px] pr-0" : isLast ? "pl-0 pr-[3px]" : "px-0";
                                   return (
                                     <td
                                       key={c.key}
-                                      className={`${cellCls} ${alignClass(c.key)} [&>*]:max-w-full`}
+                                      className={`border-r border-border ${edgePad} py-0.5 align-middle overflow-hidden break-words min-w-0 ${alignClass(c.key)} [&>*]:max-w-full`}
                                       onClick={isInteractive ? (e) => e.stopPropagation() : undefined}
                                     >
                                       {isFirst && (modificato || networkInfo) && (
