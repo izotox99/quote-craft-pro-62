@@ -10,8 +10,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { PlusCircle, Search, Users, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Search, Users, Pencil, Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { TariffarioUpload } from "@/components/clients/TariffarioUpload";
 
 type Client = {
   id: string; name: string; email: string | null; company: string | null;
