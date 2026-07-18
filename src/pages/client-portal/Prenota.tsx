@@ -388,6 +388,10 @@ export default function Prenota() {
 
     await upsertPasseggero();
 
+    // Salva accessori (righe strutturate)
+    try { await saveServizioAccessori(inserted.id, accessoriRows); } catch (e) { console.error(e); }
+
+
     if (allegato) {
       const safeName = allegato.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `${orgId}/${inserted.id}/${Date.now()}_${safeName}`;
