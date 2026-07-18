@@ -68,7 +68,7 @@ export const COLUMNS: ColumnDef[] = [
   { key: "costo_centro", label: "C.C €", short: "CC€", description: "Costo imputato a un centro di costo aziendale (spesa interna).", weight: 3, align: "right" },
   { key: "commissione", label: "Com €", short: "Com€", description: "Commissione applicata al servizio.", weight: 3, align: "right" },
   { key: "codice", label: "Codice", short: "Cod.", description: "Codice interno identificativo del servizio.", weight: 3 },
-  { key: "foglio", label: "Foglio", short: "PDF", description: "Pulsante di stampa del foglio di servizio in PDF.", weight: 2, align: "center" },
+  { key: "foglio", label: "Foglio", short: "Fog.", description: "Pulsante di stampa del foglio di servizio in PDF.", weight: 2, align: "center" },
   { key: "network_stato", label: "Network", short: "Net", description: "Stato del passaggio al partner del network (inviato, accettato, ritirato).", weight: 4 },
 ];
 
