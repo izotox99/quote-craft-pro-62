@@ -313,6 +313,48 @@ export default function Clients() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminare questo cliente?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Stai per eliminare definitivamente <strong>{deleteTarget?.company ?? deleteTarget?.name}</strong>. L'operazione non è reversibile.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => deleteTarget && handleDelete(deleteTarget)}
+              >
+                Elimina
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!deactivatePrompt} onOpenChange={(o) => !o && setDeactivatePrompt(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Impossibile eliminare il cliente</AlertDialogTitle>
+              <AlertDialogDescription>
+                Il cliente <strong>{deactivatePrompt?.client.company ?? deactivatePrompt?.client.name}</strong> ha{" "}
+                <strong>{deactivatePrompt?.count}</strong> servizi associati e non può essere eliminato per preservare lo storico.
+                <br /><br />
+                Puoi <strong>disattivarlo</strong>: rimarrà consultabile ma non selezionabile per nuovi servizi.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deactivatePrompt && handleDeactivate(deactivatePrompt.client.id)}
+              >
+                Disattiva cliente
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
