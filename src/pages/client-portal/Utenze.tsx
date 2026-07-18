@@ -70,7 +70,7 @@ export default function Utenze() {
 
   const openEdit = (u: Utenza) => {
     setEditingId(u.id);
-    setForm({ nome: u.nome, cognome: u.cognome, cellulare: u.cellulare || "", email: u.email, password: u.password, tipo: u.tipo });
+    setForm({ nome: u.nome, cognome: u.cognome, cellulare: u.cellulare || "", email: u.email, password: "", tipo: u.tipo });
     setDialogOpen(true);
   };
 
