@@ -8,7 +8,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Info, GripVertical, Star, Trash2, Pencil, Save, Copy } from "lucide-react";
+import { Info, GripVertical, Star, Trash2, Pencil, Save, Copy, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { COLUMNS_MAP, type ViewColumnState, SYSTEM_VIEW_IDS } from "@/lib/servizi-columns";
 import type { ViewRef } from "@/hooks/use-servizi-viste";
@@ -22,11 +22,12 @@ type Props = {
   onRename: (nome: string) => Promise<void>;
   onDelete: () => Promise<void>;
   onSetDefault: () => Promise<void>;
+  onResetWidths?: () => Promise<void> | void;
 };
 
 export function ColumnCustomizer({
   open, onOpenChange, activeView,
-  onUpdateColumns, onSaveAs, onRename, onDelete, onSetDefault,
+  onUpdateColumns, onSaveAs, onRename, onDelete, onSetDefault, onResetWidths,
 }: Props) {
   const [draft, setDraft] = useState<ViewColumnState[]>(activeView.columns);
   const [draggingKey, setDraggingKey] = useState<string | null>(null);
