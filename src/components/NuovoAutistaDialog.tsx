@@ -289,12 +289,7 @@ export function NuovoAutistaDialog({
               />
             </Field>
 
-            <Field label="Password">
-              <Input
-                value={common.password}
-                onChange={(e) => setCommon({ ...common, password: e.target.value })}
-              />
-            </Field>
+
 
             <Field label="Calcola riposi">
               <Select
