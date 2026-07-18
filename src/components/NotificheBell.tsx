@@ -64,7 +64,8 @@ export function NotificheBell() {
       setNotifiche(prev => prev.map(x => x.id === n.id ? { ...x, letta: true } : x));
     }
     setOpen(false);
-    navigate("/dashboard");
+    if (n.tipo === "agenda_promemoria") navigate("/agenda");
+    else navigate("/dashboard");
   };
 
   const segnaTutteLette = async () => {
