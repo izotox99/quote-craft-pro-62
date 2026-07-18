@@ -13,7 +13,7 @@ import {
   FileText, LayoutDashboard, Users, Car, UserCheck, Truck, Settings, LogOut, User, Menu,
   ChevronDown, List, Receipt, Star, Package, UserPlus, StickyNote, Clock, FileSpreadsheet,
   Users2, Fuel, ClipboardCheck, ClipboardList, TrendingUp, FilePlus, FileText as FileTextIcon, CalendarDays,
-  AlertTriangle, Wrench, Droplet, PlusCircle,
+  AlertTriangle, Wrench, Droplet, PlusCircle, Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificheBell } from "@/components/NotificheBell";
