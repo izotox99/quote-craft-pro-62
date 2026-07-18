@@ -211,7 +211,17 @@ export default function Clients() {
                         <TableCell className="text-muted-foreground">{c.phone ?? "—"}</TableCell>
                         <TableCell className="text-muted-foreground">{c.email ?? "—"}</TableCell>
                         <TableCell className="text-muted-foreground">{c.citta ?? "—"}</TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          {c.tariffario_url ? (
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title={c.tariffario_nome ?? "Apri tariffario"} onClick={async () => {
+                              const { data } = await supabase.storage.from("tariffari-clienti").createSignedUrl(c.tariffario_url!, 300);
+                              if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+                              else toast.error("Impossibile aprire");
+                            }}>
+                              <FileText className="h-4 w-4 text-primary" />
+                            </Button>
+                          ) : <span className="text-muted-foreground/40">—</span>}
+                        </TableCell>
                           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(c)}>
                               <Pencil className="h-3.5 w-3.5" />
