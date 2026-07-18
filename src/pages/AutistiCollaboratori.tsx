@@ -196,7 +196,7 @@ export default function AutistiCollaboratori() {
                     <TableCell className="font-mono text-xs uppercase">{a.patente ?? "—"}</TableCell>
                     <TableCell>{a.cellulare ?? "—"}</TableCell>
                     <TableCell className="lowercase">{a.email ?? "—"}</TableCell>
-                    <TableCell className="font-mono text-xs">{a.password ?? "—"}</TableCell>
+                    
                     <TableCell className="italic">{a.tipo_macchina ?? "—"}</TableCell>
                     <TableCell className="font-mono text-xs uppercase">{a.targa ?? "—"}</TableCell>
                     <TableCell>{a.level ?? "—"}</TableCell>
