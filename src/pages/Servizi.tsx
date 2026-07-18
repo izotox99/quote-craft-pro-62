@@ -973,7 +973,7 @@ export default function Servizi() {
                       <button
                         type="button"
                         onClick={(e) => e.stopPropagation()}
-                        className={`inline-flex w-full min-w-0 max-w-full flex-col items-start gap-0 overflow-hidden rounded-sm px-0.5 py-0 text-left transition-colors leading-[1.05] ${
+                        className={`inline-flex w-full min-w-0 max-w-full flex-col items-center text-center gap-0 overflow-hidden rounded-sm px-0.5 py-0 transition-colors leading-[1.05] ${
                           driverLabel ? "hover:bg-accent" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
                         }`}
                       >
