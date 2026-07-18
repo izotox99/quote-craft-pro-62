@@ -30,6 +30,7 @@ import AutistiCollaboratori from "./pages/AutistiCollaboratori";
 import FornitoriCS from "./pages/FornitoriCS";
 import Network from "./pages/Network";
 import Settings from "./pages/Settings";
+import Agenda from "./pages/Agenda";
 import NotFound from "./pages/NotFound";
 
 // Client portal
