@@ -137,6 +137,8 @@ export function ColumnCustomizer({
               {draft.map((col) => {
                 const def = COLUMNS_MAP[col.key];
                 if (!def) return null;
+                if (PINNED_COLUMNS.has(col.key)) return null;
+
                 return (
                   <div
                     key={col.key}
