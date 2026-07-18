@@ -572,6 +572,17 @@ export default function Servizi() {
     await loadServizi();
   };
 
+  const handleBulkConfirm = async () => {
+    const ids = servizi
+      .filter(s => selectedServiziIds.includes(s.id) && s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id))
+      .map(s => s.id);
+    if (ids.length === 0) { toast.info("Nessun servizio da confermare tra i selezionati"); return; }
+    const { error } = await supabase.from("servizi").update({ stato: "confermato" as any }).in("id", ids);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${ids.length} servizi confermati`);
+    setSelectedServiziIds([]);
+    await loadServizi();
+
   // Quick day filters for "Nuovi" services
   const [quickDay, setQuickDay] = useState<string | null>(null);
   const quickDayOptions = useMemo(() => {
