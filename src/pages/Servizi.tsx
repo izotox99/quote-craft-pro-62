@@ -524,11 +524,13 @@ export default function Servizi() {
   );
 
   const handleAssignDriver = async (servizioId: string, driver: DriverOption | null) => {
+    // Il flag modificato_da_cliente NON viene azzerato dal cambio autista:
+    // resta attivo finché l'operatore non preme esplicitamente "Conferma".
     const payload = driver === null
       ? { autista_id: null, autista_esterno_id: null }
       : driver.kind === "interno"
-        ? { autista_id: driver.id, autista_esterno_id: null, modificato_da_cliente: false, modificato_at: null }
-        : { autista_id: null, autista_esterno_id: driver.id, modificato_da_cliente: false, modificato_at: null };
+        ? { autista_id: driver.id, autista_esterno_id: null }
+        : { autista_id: null, autista_esterno_id: driver.id };
 
     const { error } = await supabase.from("servizi").update(payload as any).eq("id", servizioId);
 
@@ -545,8 +547,8 @@ export default function Servizi() {
     if (selectedServiziIds.length === 0) return;
 
     const payload = driver.kind === "interno"
-      ? { autista_id: driver.id, autista_esterno_id: null, modificato_da_cliente: false, modificato_at: null }
-      : { autista_id: null, autista_esterno_id: driver.id, modificato_da_cliente: false, modificato_at: null };
+      ? { autista_id: driver.id, autista_esterno_id: null }
+      : { autista_id: null, autista_esterno_id: driver.id };
 
     const { error } = await supabase.from("servizi").update(payload as any).in("id", selectedServiziIds);
 
@@ -559,6 +561,7 @@ export default function Servizi() {
     setSelectedServiziIds([]);
     await loadServizi();
   };
+
 
   const nuoviCount = servizi.filter(s => s.stato === "nuovo").length;
   const daConfermareCount = servizi.filter(s => s.stato === "da_confermare").length;
