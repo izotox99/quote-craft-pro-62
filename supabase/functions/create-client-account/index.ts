@@ -271,7 +271,30 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: saveError?.message ?? "Errore salvataggio cliente", code: "client_save_failed" }, 400);
     }
 
+    // Registra il fingerprint della nuova password (rimpiazza quello precedente per lo stesso cliente).
+    if (passwordFingerprint) {
+      await admin
+        .from("password_fingerprints")
+        .delete()
+        .eq("owner_type", "client")
+        .eq("owner_id", savedClient.id);
+      const { error: fpErr } = await admin.from("password_fingerprints").insert({
+        fingerprint: passwordFingerprint,
+        owner_type: "client",
+        owner_id: savedClient.id,
+        org_id: callerProfile.org_id,
+      });
+      if (fpErr) {
+        // Race molto improbabile: un altro account ha appena registrato lo stesso fingerprint.
+        return jsonResponse({
+          error: "Password già in uso da un altro account, scegline una diversa.",
+          code: "password_in_use",
+        }, 409);
+      }
+    }
+
     return jsonResponse({ success: true, client_id: savedClient.id, user_id: authUserId, action: existingClient ? "updated" : "created", auth_action: authAction });
+
   } catch (err) {
     return jsonResponse({ error: (err as Error).message ?? "Errore interno", code: "internal_error" }, 500);
   }
