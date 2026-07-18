@@ -611,6 +611,13 @@ export default function Servizi() {
     await loadServizi();
   };
 
+  const modificatiCount = useMemo(() => servizi.filter(s => s.modificato_da_cliente).length, [servizi]);
+  const displayServizi = useMemo(
+    () => filterOnlyModified ? servizi.filter(s => s.modificato_da_cliente) : servizi,
+    [servizi, filterOnlyModified],
+  );
+
+
 
 
 
