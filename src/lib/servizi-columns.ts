@@ -76,7 +76,7 @@ export const COLUMNS_MAP: Record<ColumnKey, ColumnDef> = Object.fromEntries(
   COLUMNS.map((c) => [c.key, c]),
 ) as Record<ColumnKey, ColumnDef>;
 
-export type ViewColumnState = { key: ColumnKey; visible: boolean };
+export type ViewColumnState = { key: ColumnKey; visible: boolean; width?: number };
 
 /** Le colonne legacy (25) — ordine e visibilità della vista "Completa" di default. */
 export const LEGACY_ORDER: ColumnKey[] = [
