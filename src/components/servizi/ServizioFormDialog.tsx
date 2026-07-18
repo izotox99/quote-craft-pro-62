@@ -262,6 +262,14 @@ export function ServizioFormDialog({
       note: f.note || null,
     };
 
+    // Se l'operatore ha cliccato "Conferma servizio" nel dialog, azzera
+    // esplicitamente il flag modificato_da_cliente (viene rilevato dal trigger).
+    if (mode === "edit" && (f as any).modificato_da_cliente === false) {
+      payload.modificato_da_cliente = false;
+      payload.modificato_at = null;
+    }
+
+
     if (isAdmin) {
       Object.assign(payload, {
         prezzo_fattura: n(f.prezzo_fattura),
