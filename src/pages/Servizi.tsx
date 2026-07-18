@@ -951,14 +951,15 @@ export default function Servizi() {
             <div className="space-y-2">
               {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />)}
             </div>
-          ) : servizi.length === 0 ? (
+          ) : displayServizi.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-sm text-muted-foreground">Nessun servizio trovato</p>
               </CardContent>
             </Card>
           ) : (
-            servizi.map((s) => {
+            displayServizi.map((s) => {
+
               const senzaAutista = !s.autista_id && !s.autista_esterno_id;
               const modificato = s.modificato_da_cliente;
               const isNuovoRosso = s.stato === "nuovo" && senzaAutista;
