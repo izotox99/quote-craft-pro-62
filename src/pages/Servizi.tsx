@@ -17,7 +17,7 @@ import { ServizioFormDialog, type ServizioFormInitial } from "@/components/servi
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil, Network, Columns3, CheckCircle2 } from "lucide-react";
+import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil, Network, Columns3, CheckCircle2, AlertTriangle } from "lucide-react";
 import { ModificheClientePopover } from "@/components/ModificheClientePopover";
 import { NetworkDispatchDialog } from "@/components/servizi/NetworkDispatchDialog";
 import { ViewSelector } from "@/components/servizi/ViewSelector";
