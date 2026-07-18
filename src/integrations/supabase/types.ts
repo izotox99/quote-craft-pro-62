@@ -1182,6 +1182,9 @@ export type Database = {
           modificato_da_cliente: boolean
           n_bagagli: number | null
           n_passeggeri: number | null
+          network_autista_nome: string | null
+          network_autista_targa: string | null
+          network_autista_telefono: string | null
           non_incassato: number | null
           note: string | null
           ora_inizio: string | null
@@ -1243,6 +1246,9 @@ export type Database = {
           modificato_da_cliente?: boolean
           n_bagagli?: number | null
           n_passeggeri?: number | null
+          network_autista_nome?: string | null
+          network_autista_targa?: string | null
+          network_autista_telefono?: string | null
           non_incassato?: number | null
           note?: string | null
           ora_inizio?: string | null
@@ -1304,6 +1310,9 @@ export type Database = {
           modificato_da_cliente?: boolean
           n_bagagli?: number | null
           n_passeggeri?: number | null
+          network_autista_nome?: string | null
+          network_autista_targa?: string | null
+          network_autista_telefono?: string | null
           non_incassato?: number | null
           note?: string | null
           ora_inizio?: string | null
@@ -2039,6 +2048,9 @@ export type Database = {
               modificato_da_cliente: boolean
               n_bagagli: number | null
               n_passeggeri: number | null
+              network_autista_nome: string | null
+              network_autista_targa: string | null
+              network_autista_telefono: string | null
               non_incassato: number | null
               note: string | null
               ora_inizio: string | null
@@ -2136,6 +2148,9 @@ export type Database = {
               modificato_da_cliente: boolean
               n_bagagli: number | null
               n_passeggeri: number | null
+              network_autista_nome: string | null
+              network_autista_targa: string | null
+              network_autista_telefono: string | null
               non_incassato: number | null
               note: string | null
               ora_inizio: string | null

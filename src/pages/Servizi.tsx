@@ -81,6 +81,9 @@ type Servizio = {
   fornitore_cs_id: string | null;
   modificato_da_cliente: boolean | null;
   modificato_at: string | null;
+  network_autista_nome: string | null;
+  network_autista_telefono: string | null;
+  network_autista_targa: string | null;
   clients: { name: string; company: string | null } | null;
   autisti: { nome: string; cognome: string; cellulare: string | null } | null;
   autisti_esterni: { nome: string; cellulare: string | null; targa: string | null } | null;
@@ -135,9 +138,11 @@ function printFoglioServizio(s: Servizio, org: { name: string; logo_url: string 
     if (value === null || value === undefined || value === "") return "";
     return `<tr><td class="lbl">${escapeHtml(label)}</td><td>${escapeHtml(String(value))}</td></tr>`;
   };
-  const driverLabel = s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : (s.autisti_esterni?.nome || "");
-  const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || "";
-  const targa = s.autisti_esterni?.targa || s.veicoli?.targa || "";
+  const hasLocalDriver = !!(s.autista_id || s.autista_esterno_id);
+  const partnerDriver = !hasLocalDriver && s.network_autista_nome ? s.network_autista_nome : "";
+  const driverLabel = s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : (s.autisti_esterni?.nome || partnerDriver);
+  const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || (partnerDriver ? (s.network_autista_telefono || "") : "");
+  const targa = s.autisti_esterni?.targa || s.veicoli?.targa || (partnerDriver ? (s.network_autista_targa || "") : "");
   const veicolo = s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "");
   const dataStr = format(new Date(s.data_servizio), "dd/MM/yyyy");
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>Foglio Servizio ${escapeHtml(s.codice || s.id.slice(0, 8))}</title>
@@ -198,7 +203,7 @@ function printFoglioServizio(s: Servizio, org: { name: string; logo_url: string 
       <table class="data">
         ${row("Veicolo", veicolo)}
         ${row("Targa", targa)}
-        ${row("Autista", driverLabel)}
+        ${row("Autista", driverLabel + (partnerDriver ? " (autista partner network)" : ""))}
         ${row("Telefono autista", driverTel)}
         ${row("Info autista", s.info_autista)}
       </table>
@@ -326,9 +331,9 @@ export default function Servizi() {
     if (ids.length) {
       const { data: nets } = await supabase
         .from("servizi_network")
-        .select("servizio_a_id, stato, org_b_id")
+        .select("servizio_a_id, stato, org_b")
         .in("servizio_a_id", ids);
-      const orgIds = Array.from(new Set((nets ?? []).map((r: any) => r.org_b_id).filter(Boolean)));
+      const orgIds = Array.from(new Set((nets ?? []).map((r: any) => r.org_b).filter(Boolean)));
       let orgNames: Record<string, string> = {};
       if (orgIds.length) {
         const { data: orgs } = await supabase.rpc("network_visible_orgs" as any);
@@ -336,11 +341,10 @@ export default function Servizi() {
       }
       const nMap: Record<string, { stato: string; partnerName: string | null }> = {};
       (nets ?? []).forEach((r: any) => {
-        // Se ci sono più passaggi (rifiutati e rilanciati), tieni il più recente/attivo
         const prev = nMap[r.servizio_a_id];
         const priority: Record<string, number> = { accettato: 4, inviato: 3, completato: 2, rifiutato: 1, annullato: 0 };
         if (!prev || (priority[r.stato] ?? 0) > (priority[prev.stato] ?? 0)) {
-          nMap[r.servizio_a_id] = { stato: r.stato, partnerName: orgNames[r.org_b_id] || null };
+          nMap[r.servizio_a_id] = { stato: r.stato, partnerName: orgNames[r.org_b] || null };
         }
       });
       setNetworkMap(nMap);
@@ -837,6 +841,26 @@ export default function Servizi() {
                 const driverLabel = s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : s.autisti_esterni?.nome || null;
                 const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || null;
                 const driverTarga = s.autisti_esterni?.targa || s.veicoli?.targa || null;
+                const hasLocal = !!(s.autista_id || s.autista_esterno_id);
+                const partnerNome = s.network_autista_nome;
+                const partnerName = networkMap[s.id]?.partnerName;
+                if (!hasLocal && partnerNome) {
+                  return (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex flex-col leading-tight rounded-md px-1 py-0.5 border border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30 dark:border-indigo-900"
+                      title="Autista assegnato dal partner del network"
+                    >
+                      <span className="flex items-center gap-1 font-medium text-indigo-900 dark:text-indigo-200">
+                        <span className="break-words">{partnerNome}</span>
+                        <Badge variant="outline" className="h-3.5 px-1 py-0 text-[9px] border-indigo-400 text-indigo-700 dark:text-indigo-300">NET</Badge>
+                      </span>
+                      {s.network_autista_telefono && <span className="text-indigo-800/80 dark:text-indigo-300/80 text-[10px]">{s.network_autista_telefono}</span>}
+                      {s.network_autista_targa && <span className="text-indigo-800/80 dark:text-indigo-300/80 text-[10px] font-mono">{s.network_autista_targa}</span>}
+                      {partnerName && <span className="text-[9px] italic text-indigo-700/70 dark:text-indigo-300/70">via {partnerName}</span>}
+                    </div>
+                  );
+                }
                 return (
                   <AssignDriverPopover
                     currentInternoId={s.autista_id}
