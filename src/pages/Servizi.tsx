@@ -790,7 +790,7 @@ export default function Servizi() {
           const visibleCols = viste.activeView.columns.filter((c) => c.visible);
           const totalWeight = visibleCols.reduce((sum, c) => sum + (COLUMNS_MAP[c.key]?.weight ?? 3), 0);
           // Checkbox quasi nulla: la tabella deve comportarsi come il foglio legacy.
-          const CHECKBOX_PCT = 0.85;
+          const CHECKBOX_PCT = 0.65;
           const remaining = 100 - CHECKBOX_PCT;
           const colWidth = (key: ColumnKey) =>
             `${((COLUMNS_MAP[key]?.weight ?? 3) / (totalWeight || 1)) * remaining}%`;
@@ -926,14 +926,18 @@ export default function Servizi() {
           const INTERACTIVE_COLS: ColumnKey[] = ["autista", "foglio"];
 
           return (
-            <div className="hidden md:block -mx-3 lg:-mx-4 overflow-x-auto border-y bg-card">
+            <div className="hidden md:block -mx-3 lg:-mx-4 overflow-x-hidden border-y bg-card">
               <TooltipProvider delayDuration={200}>
-                <table className="w-full table-auto border-collapse text-[8.5px] font-semibold italic leading-[1.35] text-foreground xl:text-[9px]" style={{ borderSpacing: 0 }}>
+                <table className="w-full table-fixed border-collapse text-[8px] font-semibold italic leading-[1.15] text-foreground xl:text-[8.5px]" style={{ borderSpacing: 0 }}>
+                      <colgroup>
+                        <col style={{ width: `${CHECKBOX_PCT}%` }} />
+                        {visibleCols.map((c) => <col key={c.key} style={{ width: colWidth(c.key) }} />)}
+                      </colgroup>
                       <thead className="border-b border-border bg-muted/70">
-                        <tr className="text-[8px] font-bold not-italic leading-[1.1] text-foreground xl:text-[8.5px]">
-                          <th className="border-r border-border px-0 py-1 overflow-hidden">
+                        <tr className="text-[7.5px] font-bold not-italic leading-[1.05] text-foreground xl:text-[8px]">
+                          <th className="border-r border-border px-0 py-0.5 overflow-hidden">
                             <Checkbox
-                              className="h-2.5 w-2.5 rounded-[2px]"
+                              className="h-2 w-2 rounded-[2px]"
                               checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
                               onCheckedChange={handleToggleAllVisible}
                               aria-label="Seleziona tutti i servizi visibili"
@@ -942,10 +946,10 @@ export default function Servizi() {
                           {visibleCols.map((c) => {
                             const def = COLUMNS_MAP[c.key];
                             return (
-                              <th key={c.key} className={`border-r border-border px-px py-1 overflow-hidden ${alignClass(c.key)}`}>
+                              <th key={c.key} className={`border-r border-border px-0 py-0.5 overflow-hidden ${alignClass(c.key)}`}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className="cursor-help block whitespace-pre-line break-words" title={def.label}>{def.short || def.label}</span>
+                                    <span className="cursor-help block whitespace-pre-line break-words px-0" title={def.label}>{def.short || def.label}</span>
                                   </TooltipTrigger>
                                   <TooltipContent side="bottom" className="max-w-xs text-xs">
                                     <p><span className="font-semibold">{def.label}</span> — {def.description}</p>
@@ -967,7 +971,7 @@ export default function Servizi() {
                             const modificato = !!s.modificato_da_cliente;
                             const isSelected = selectedServiziIds.includes(s.id);
                             const networkInfo = networkMap[s.id];
-                            const cellCls = "border-r border-border px-px py-1 align-middle overflow-hidden break-words min-w-0";
+                            const cellCls = "border-r border-border px-0 py-0.5 align-middle overflow-hidden break-words min-w-0";
                             return (
                               <tr
                                 key={s.id}
