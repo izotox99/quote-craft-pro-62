@@ -28,7 +28,7 @@ type Autista = {
   cellulare: string | null;
   telefono: string | null;
   email: string | null;
-  password: string | null;
+  
   note: string | null;
   attivo: boolean;
 };
