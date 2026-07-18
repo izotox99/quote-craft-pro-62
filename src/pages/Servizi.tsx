@@ -1077,20 +1077,40 @@ export default function Servizi() {
                 const isDaConf = s.stato === "da_confermare" && hasLocal;
                 if (isDaConf) {
                   return (
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); handleConfirmServizio(s.id); }}
-                      title="Conferma servizio"
-                      className="inline-flex w-full min-w-0 max-w-full flex-col items-center text-center gap-0 overflow-hidden rounded-sm px-0.5 py-0.5 leading-[1.05] bg-orange-500 text-white hover:bg-orange-600 font-semibold"
-                    >
-                      <span className="flex items-center gap-0.5 font-semibold">
+                    <div className="flex flex-col gap-0.5 w-full min-w-0">
+                      <AssignDriverPopover
+                        currentInternoId={s.autista_id}
+                        currentEsternoId={s.autista_esterno_id}
+                        currentLabel={driverLabel}
+                        onAssign={(driver) => handleAssignDriver(s.id, driver)}
+                        trigger={
+                          <button
+                            type="button"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Cambia autista"
+                            className="inline-flex w-full min-w-0 max-w-full flex-col items-center text-center gap-0 overflow-hidden rounded-sm px-0.5 py-0 leading-[1.05] hover:bg-accent border border-orange-300 dark:border-orange-800"
+                          >
+                            <span className="flex max-w-full items-center gap-0.5 overflow-hidden font-medium">
+                              <span className="truncate">{driverLabel}</span>
+                              {s.autisti_esterni && <Badge variant="outline" className="h-3 px-0.5 py-0 text-[7px]">E</Badge>}
+                            </span>
+                            {driverTel && <span className="truncate text-muted-foreground text-[7.5px]">{driverTel}</span>}
+                          </button>
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleConfirmServizio(s.id); }}
+                        title="Conferma servizio"
+                        className="inline-flex w-full min-w-0 items-center justify-center gap-0.5 rounded-sm px-0.5 py-0.5 leading-none bg-orange-500 text-white hover:bg-orange-600 font-semibold"
+                      >
                         <CheckCircle2 className="h-2.5 w-2.5" />
                         <span className="truncate">Conferma</span>
-                      </span>
-                      {driverLabel && <span className="truncate text-white/90 text-[7.5px] font-normal">{driverLabel}</span>}
-                    </button>
+                      </button>
+                    </div>
                   );
                 }
+
                 return (
                   <AssignDriverPopover
                     currentInternoId={s.autista_id}
