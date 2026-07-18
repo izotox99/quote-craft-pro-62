@@ -839,6 +839,26 @@ export default function Servizi() {
                 const driverLabel = s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : s.autisti_esterni?.nome || null;
                 const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || null;
                 const driverTarga = s.autisti_esterni?.targa || s.veicoli?.targa || null;
+                const hasLocal = !!(s.autista_id || s.autista_esterno_id);
+                const partnerNome = s.network_autista_nome;
+                const partnerName = networkMap[s.id]?.partnerName;
+                if (!hasLocal && partnerNome) {
+                  return (
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex flex-col leading-tight rounded-md px-1 py-0.5 border border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30 dark:border-indigo-900"
+                      title="Autista assegnato dal partner del network"
+                    >
+                      <span className="flex items-center gap-1 font-medium text-indigo-900 dark:text-indigo-200">
+                        <span className="break-words">{partnerNome}</span>
+                        <Badge variant="outline" className="h-3.5 px-1 py-0 text-[9px] border-indigo-400 text-indigo-700 dark:text-indigo-300">NET</Badge>
+                      </span>
+                      {s.network_autista_telefono && <span className="text-indigo-800/80 dark:text-indigo-300/80 text-[10px]">{s.network_autista_telefono}</span>}
+                      {s.network_autista_targa && <span className="text-indigo-800/80 dark:text-indigo-300/80 text-[10px] font-mono">{s.network_autista_targa}</span>}
+                      {partnerName && <span className="text-[9px] italic text-indigo-700/70 dark:text-indigo-300/70">via {partnerName}</span>}
+                    </div>
+                  );
+                }
                 return (
                   <AssignDriverPopover
                     currentInternoId={s.autista_id}
