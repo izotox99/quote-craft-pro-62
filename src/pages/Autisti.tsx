@@ -28,7 +28,7 @@ type Autista = {
   cellulare: string | null;
   telefono: string | null;
   email: string | null;
-  password: string | null;
+  
   note: string | null;
   attivo: boolean;
 };
@@ -198,7 +198,7 @@ export default function Autisti() {
                   <TableHead className="text-right">Prezzo Ora.Straord</TableHead>
                   <TableHead>Cellulare</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Password</TableHead>
+                  
                   <TableHead className="text-center w-32">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
@@ -214,7 +214,7 @@ export default function Autisti() {
                     <TableCell className="text-right tabular-nums">{a.prezzo_ora_straord?.toFixed(2) ?? "0.00"}</TableCell>
                     <TableCell>{a.cellulare ?? a.telefono ?? "—"}</TableCell>
                     <TableCell className="lowercase">{a.email ?? "—"}</TableCell>
-                    <TableCell className="font-mono text-xs">{a.password ?? "—"}</TableCell>
+                    
                     <TableCell>
                       <div className="flex justify-center gap-1">
                         <Button variant="ghost" size="icon" title="Spese / Scadenze" onClick={() => openSpese(a)}>

@@ -29,9 +29,9 @@ const emptyCommon = {
   cellulare: "",
   patente: "",
   email: "",
-  password: "",
   calcola_riposi: "Si",
 };
+
 
 const emptyInterno = {
   mansione: "",
@@ -93,7 +93,7 @@ export function NuovoAutistaDialog({
         cellulare: d.cellulare ?? d.telefono ?? "",
         patente: d.patente ?? "",
         email: d.email ?? "",
-        password: d.password ?? "",
+
         calcola_riposi: d.calcola_riposi === false ? "No" : "Si",
       });
       if (editing.tipo === "interno") {
@@ -153,8 +153,8 @@ export function NuovoAutistaDialog({
           cellulare: common.cellulare || null,
           telefono: common.cellulare || null,
           email: common.email || null,
-          password: common.password || null,
           calcola_riposi: common.calcola_riposi === "Si",
+
           numero_ore_ord: interno.numero_ore_ord ? Number(interno.numero_ore_ord) : null,
           prezzo_ora_ord: interno.prezzo_ora_ord ? Number(interno.prezzo_ora_ord) : 0,
           prezzo_ora_straord: interno.prezzo_ora_straord ? Number(interno.prezzo_ora_straord) : 0,
@@ -175,7 +175,7 @@ export function NuovoAutistaDialog({
           patente: common.patente || null,
           cellulare: common.cellulare || null,
           email: common.email || null,
-          password: common.password || null,
+          
           calcola_riposi: common.calcola_riposi === "Si",
           tipo_macchina: esterno.tipo_macchina || null,
           targa: esterno.targa || null,
@@ -289,12 +289,7 @@ export function NuovoAutistaDialog({
               />
             </Field>
 
-            <Field label="Password">
-              <Input
-                value={common.password}
-                onChange={(e) => setCommon({ ...common, password: e.target.value })}
-              />
-            </Field>
+
 
             <Field label="Calcola riposi">
               <Select

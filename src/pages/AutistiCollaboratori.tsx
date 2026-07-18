@@ -20,7 +20,7 @@ type Esterno = {
   patente: string | null;
   cellulare: string | null;
   email: string | null;
-  password: string | null;
+  
   tipo_macchina: string | null;
   targa: string | null;
   level: string | null;
@@ -179,7 +179,7 @@ export default function AutistiCollaboratori() {
                   <TableHead>Num patente</TableHead>
                   <TableHead>Cellulare</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Password</TableHead>
+                  
                   <TableHead>Tipo macchina</TableHead>
                   <TableHead>Targa</TableHead>
                   <TableHead>Level</TableHead>
@@ -196,7 +196,7 @@ export default function AutistiCollaboratori() {
                     <TableCell className="font-mono text-xs uppercase">{a.patente ?? "—"}</TableCell>
                     <TableCell>{a.cellulare ?? "—"}</TableCell>
                     <TableCell className="lowercase">{a.email ?? "—"}</TableCell>
-                    <TableCell className="font-mono text-xs">{a.password ?? "—"}</TableCell>
+                    
                     <TableCell className="italic">{a.tipo_macchina ?? "—"}</TableCell>
                     <TableCell className="font-mono text-xs uppercase">{a.targa ?? "—"}</TableCell>
                     <TableCell>{a.level ?? "—"}</TableCell>
