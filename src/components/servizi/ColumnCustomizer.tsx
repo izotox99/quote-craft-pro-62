@@ -198,16 +198,31 @@ export function ColumnCustomizer({
                 <Copy className="h-3.5 w-3.5" /> Salva come nuova vista
               </Button>
             </div>
-            {!isSystem && (
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="ghost" onClick={() => setRenameDialog({ open: true, nome: activeView.nome })} className="gap-1.5">
-                  <Pencil className="h-3.5 w-3.5" /> Rinomina
+            <div className="flex flex-wrap gap-2">
+              {onResetWidths && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={async () => {
+                    try { await onResetWidths(); toast.success("Larghezze ripristinate"); }
+                    catch (e: any) { toast.error(e.message || "Errore"); }
+                  }}
+                  className="gap-1.5"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Ripristina larghezze predefinite
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setDeleteDialog(true)} className="gap-1.5 text-destructive hover:text-destructive">
-                  <Trash2 className="h-3.5 w-3.5" /> Elimina
-                </Button>
-              </div>
-            )}
+              )}
+              {!isSystem && (
+                <>
+                  <Button size="sm" variant="ghost" onClick={() => setRenameDialog({ open: true, nome: activeView.nome })} className="gap-1.5">
+                    <Pencil className="h-3.5 w-3.5" /> Rinomina
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setDeleteDialog(true)} className="gap-1.5 text-destructive hover:text-destructive">
+                    <Trash2 className="h-3.5 w-3.5" /> Elimina
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </SheetContent>
       </Sheet>
