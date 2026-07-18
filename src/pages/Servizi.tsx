@@ -937,7 +937,7 @@ export default function Servizi() {
                       </colgroup>
                       <thead className="bg-muted/40 border-b">
                         <tr className="text-[7.5px] font-semibold text-muted-foreground xl:text-[8px]">
-                          <th className="px-px py-0.5 overflow-hidden">
+                          <th className="px-0 py-0.5 overflow-hidden">
                             <Checkbox
                               className="h-3 w-3 rounded-[2px]"
                               checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
@@ -948,7 +948,7 @@ export default function Servizi() {
                           {visibleCols.map((c) => {
                             const def = COLUMNS_MAP[c.key];
                             return (
-                              <th key={c.key} className={`px-px py-0.5 overflow-hidden ${alignClass(c.key)}`}>
+                              <th key={c.key} className={`px-0 py-0.5 overflow-hidden ${alignClass(c.key)}`}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <span className="cursor-help block truncate uppercase" title={def.label}>{def.short || def.label}</span>
@@ -973,7 +973,7 @@ export default function Servizi() {
                             const modificato = !!s.modificato_da_cliente;
                             const isSelected = selectedServiziIds.includes(s.id);
                             const networkInfo = networkMap[s.id];
-                            const cellCls = "px-px py-0.5 align-top overflow-hidden break-words min-w-0";
+                            const cellCls = "px-0 py-0.5 align-top overflow-hidden break-words min-w-0";
                             return (
                               <tr
                                 key={s.id}
