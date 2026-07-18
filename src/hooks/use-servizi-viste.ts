@@ -137,11 +137,21 @@ export function useServiziViste(userId: string | undefined) {
 
   const viste: ViewRef[] = useMemo(() => [...systemRefs, ...personal], [systemRefs, personal]);
 
+  // Cache reattiva delle larghezze per-vista (localStorage-first).
+  const [widthsById, setWidthsById] = useState<Record<string, WidthMap>>({});
+  const dbDebounce = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
   const activeView: ViewRef = useMemo(() => {
     const found = viste.find((v) => v.id === activeId);
-    if (found) return found;
-    return systemRefs[0];
-  }, [viste, activeId, systemRefs]);
+    const base = found ?? systemRefs[0];
+    // Merge: LS cache (state) ha priorità sulle width del DB già presenti in base.columns.
+    let cache = widthsById[base.id];
+    if (cache === undefined) {
+      cache = readWidthsCache(base.id);
+    }
+    if (Object.keys(cache).length === 0) return base;
+    return { ...base, columns: applyWidthsToColumns(base.columns, cache) };
+  }, [viste, activeId, systemRefs, widthsById]);
 
   const selectView = useCallback((id: string) => {
     setActiveId(id);
