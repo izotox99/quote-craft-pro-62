@@ -658,22 +658,42 @@ export default function Servizi() {
                   <Label>Foglio</Label>
                   <Input value={form.foglio} onChange={e => setForm({ ...form, foglio: e.target.value })} />
                 </div>
-                <div className="space-y-1">
-                  <Label>Incasso €</Label>
-                  <Input type="number" step="0.01" value={form.incasso} onChange={e => setForm({ ...form, incasso: +e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Costo CS €</Label>
-                  <Input type="number" step="0.01" value={form.costo_cs} onChange={e => setForm({ ...form, costo_cs: +e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Costo Autista €</Label>
-                  <Input type="number" step="0.01" value={form.costo_autista} onChange={e => setForm({ ...form, costo_autista: +e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Costo Commissione €</Label>
-                  <Input type="number" step="0.01" value={form.costo_commissione} onChange={e => setForm({ ...form, costo_commissione: +e.target.value })} />
-                </div>
+                {isAdmin && (
+                  <>
+                    <div className="space-y-1 sm:col-span-2">
+                      <Separator className="my-1" />
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sezione economica (solo admin)</p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Incasso € (Inc)</Label>
+                      <Input type="number" step="0.01" value={form.incasso} onChange={e => setForm({ ...form, incasso: +e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Non incassato € (No Inc)</Label>
+                      <Input type="number" step="0.01" value={form.non_incassato} onChange={e => setForm({ ...form, non_incassato: +e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Costo CS €</Label>
+                      <Input type="number" step="0.01" value={form.costo_cs} onChange={e => setForm({ ...form, costo_cs: +e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Costo Autista € (Aut €)</Label>
+                      <Input type="number" step="0.01" value={form.costo_autista} onChange={e => setForm({ ...form, costo_autista: +e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Centro di costo (etichetta)</Label>
+                      <Input value={form.centro_costo} onChange={e => setForm({ ...form, centro_costo: e.target.value })} placeholder="es. Marketing" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Costo centro € (C.C €)</Label>
+                      <Input type="number" step="0.01" value={form.costo_centro} onChange={e => setForm({ ...form, costo_centro: +e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Commissione € (Com €)</Label>
+                      <Input type="number" step="0.01" value={form.costo_commissione} onChange={e => setForm({ ...form, costo_commissione: +e.target.value })} />
+                    </div>
+                  </>
+                )}
                 <div className="space-y-1 sm:col-span-2">
                   <Label>Note</Label>
                   <Textarea value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
