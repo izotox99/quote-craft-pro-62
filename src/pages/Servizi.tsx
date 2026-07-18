@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
 import { ServizioFormDialog, type ServizioFormInitial } from "@/components/servizi/ServizioFormDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -584,6 +585,22 @@ export default function Servizi() {
     await loadServizi();
   };
 
+  const [confermaTuttiOpen, setConfermaTuttiOpen] = useState(false);
+  const idsDaConfermareVisibili = useMemo(
+    () => servizi.filter(s => s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id)).map(s => s.id),
+    [servizi],
+  );
+  const handleConfermaTutti = async () => {
+    const ids = idsDaConfermareVisibili;
+    if (ids.length === 0) { setConfermaTuttiOpen(false); return; }
+    const { error } = await supabase.from("servizi").update({ stato: "confermato" as any }).in("id", ids);
+    setConfermaTuttiOpen(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${ids.length} servizi confermati`);
+    await loadServizi();
+  };
+
+
 
 
   // Quick day filters for "Nuovi" services
@@ -719,7 +736,7 @@ export default function Servizi() {
                     }`}>
                       {quickDayCounts[opt.key]}
                     </span>
-                  )}
+                )}
                 </button>
               ))}
 
@@ -727,6 +744,17 @@ export default function Servizi() {
                 {(quickDay || hasActiveFilters) && (
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground" onClick={() => { resetAllFilters(); setTimeout(() => loadServizi(), 0); }}>
                     <X className="h-3 w-3" /> Reset
+                  </Button>
+                )}
+                {idsDaConfermareVisibili.length > 0 && (
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs gap-1.5 bg-orange-600 hover:bg-orange-700 text-white"
+                    onClick={() => setConfermaTuttiOpen(true)}
+                    title="Conferma tutti i servizi da confermare nella vista corrente"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Conferma tutti ({idsDaConfermareVisibili.length})
                   </Button>
                 )}
                 <Button
@@ -1417,6 +1445,23 @@ export default function Servizi() {
           onSetDefault={() => viste.setAsDefault(viste.activeView.id)}
           onResetWidths={() => viste.resetColumnWidths(viste.activeView.id)}
         />
+
+        <AlertDialog open={confermaTuttiOpen} onOpenChange={setConfermaTuttiOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Conferma tutti i servizi</AlertDialogTitle>
+              <AlertDialogDescription>
+                Stai per confermare {idsDaConfermareVisibili.length} servizi. Procedere?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfermaTutti} className="bg-orange-600 hover:bg-orange-700 text-white">
+                Conferma
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
