@@ -17,6 +17,8 @@ import {
   CITTA_OPZIONI,
   DISPOSIZIONE_OPZIONI,
 } from "@/lib/booking-shared";
+import { AccessoriEditor, type AccessorioRow, loadServizioAccessori, saveServizioAccessori } from "./AccessoriEditor";
+
 
 const TRANSFER_OPZIONI = [
   { value: "Transfer interno città", label: "Transfer interno città" },
