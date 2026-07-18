@@ -259,31 +259,50 @@ export default function ListaServizi() {
     setDetailOpen(true);
   };
 
-  const openEdit = (s: Servizio) => {
+  const openEdit = async (s: Servizio) => {
     setSelected(s);
-    const inizio = splitLuogo(s.luogo_inizio);
-    const fine = splitLuogo(s.luogo_fine);
-    setEditForm({
-      data_servizio: s.data_servizio ?? "",
-      ora_inizio: s.ora_inizio ?? "",
-      citta: s.citta ?? "",
-      n_passeggeri: String(s.n_passeggeri ?? 1),
-      n_bagagli: String(s.n_bagagli ?? 0),
-      tipologia: tipologiaFromDB(s.tipologia, s.transfer_tipo),
-      tour_tipo: s.tour_tipo ?? "",
-      veicolo_tipo: s.veicolo_tipo ?? "",
-      luogo_inizio: inizio.base,
-      luogo_inizio_dettaglio: inizio.dettaglio,
-      luogo_fine: fine.base,
-      luogo_fine_dettaglio: fine.dettaglio,
-      itinerario: s.itinerario ?? "",
-      info_autista: s.info_autista ?? "",
-      tipo_pagamento: s.tipo_pagamento ?? "",
-      centro_costo: s.centro_costo ?? "",
-      accessori: s.accessori ?? "",
-      note: s.note ?? "",
-    });
+    setEditForm(servizioToBookingForm(s));
     loadServizioAccessori(s.id).then(setEditAccessori);
+    setEditClientId(null);
+    setEditOrgId(s.org_id ?? null);
+    setEditPasseggeri([]);
+    // Resolve client_id, passeggeri and autore for the shared form
+    if (user) {
+      const { data: parent } = await supabase
+        .from("clients")
+        .select("id, org_id, name")
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      let cid: string | null = null;
+      let oid: string | null = null;
+      let autore = "";
+      if (parent) {
+        cid = parent.id; oid = parent.org_id; autore = parent.name ?? user.email ?? "";
+      } else {
+        const { data: utenza } = await supabase
+          .from("client_utenze")
+          .select("nome, cognome, parent_client_id, clients:parent_client_id(id, org_id)")
+          .eq("auth_user_id", user.id)
+          .eq("attivo", true)
+          .maybeSingle();
+        if (utenza) {
+          cid = (utenza as any).parent_client_id;
+          oid = (utenza as any).clients?.org_id ?? null;
+          autore = `${utenza.nome ?? ""} ${utenza.cognome ?? ""}`.trim() || (user.email ?? "");
+        }
+      }
+      setEditClientId(cid);
+      setEditOrgId(oid ?? s.org_id ?? null);
+      setAutoreName(autore);
+      if (cid) {
+        const { data: pass } = await supabase
+          .from("passeggeri_rubrica")
+          .select("id, nome, cognome, telefono, email")
+          .eq("client_id", cid)
+          .order("nome");
+        setEditPasseggeri(pass ?? []);
+      }
+    }
     setDetailOpen(false);
     setEditOpen(true);
   };
@@ -293,6 +312,7 @@ export default function ListaServizi() {
 
     const luogoInizioFinale = joinLuogo(editForm.luogo_inizio, editForm.luogo_inizio_dettaglio);
     const luogoFineFinale = joinLuogo(editForm.luogo_fine, editForm.luogo_fine_dettaglio);
+    const t = deriveTipologia(editForm);
 
     const { error } = await supabase.rpc("client_portal_update_servizio", {
       _servizio_id: selected.id,
@@ -301,10 +321,10 @@ export default function ListaServizi() {
       _citta: editForm.citta || null,
       _n_passeggeri: editForm.n_passeggeri ? parseInt(editForm.n_passeggeri) : null,
       _n_bagagli: editForm.n_bagagli ? parseInt(editForm.n_bagagli) : null,
-      _tipologia: (tipologiaToDB(editForm.tipologia) || null) as any,
-      _transfer_tipo: transferTipoForDB(editForm.tipologia),
-      _disposizione_oraria: null,
-      _tour_tipo: editForm.tipologia === "tour" ? (editForm.tour_tipo || null) : null,
+      _tipologia: t.tipologia as any,
+      _transfer_tipo: t.transfer_tipo,
+      _disposizione_oraria: t.disposizione_oraria,
+      _tour_tipo: t.tour_tipo,
       _veicolo_tipo: editForm.veicolo_tipo || null,
       _luogo_inizio: luogoInizioFinale || null,
       _luogo_fine: luogoFineFinale || null,
@@ -312,7 +332,7 @@ export default function ListaServizi() {
       _info_autista: editForm.info_autista || null,
       _tipo_pagamento: editForm.tipo_pagamento || null,
       _centro_costo: editForm.centro_costo || null,
-      _accessori: editForm.accessori || null,
+      _accessori: null,
       _note: editForm.note || null,
       _allegato_nome: selected.allegato_nome ?? null,
     });
@@ -322,15 +342,14 @@ export default function ListaServizi() {
       toast.error(`Errore: ${error.message}`);
       return;
     }
-    // Persisti accessori (righe strutturate)
     try {
-      const { saveServizioAccessori } = await import("@/components/servizi/AccessoriEditor");
       await saveServizioAccessori(selected.id, editAccessori);
     } catch (e) { console.error(e); }
     toast.success("Servizio aggiornato");
     setEditOpen(false);
     loadServizi();
   };
+
 
   const handleCancel = async (s: Servizio) => {
     if (!canModify(s)) {
