@@ -17,7 +17,7 @@ import { ServizioFormDialog, type ServizioFormInitial } from "@/components/servi
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil, Network, Columns3, CheckCircle2 } from "lucide-react";
+import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil, Network, Columns3, CheckCircle2, AlertTriangle } from "lucide-react";
 import { ModificheClientePopover } from "@/components/ModificheClientePopover";
 import { NetworkDispatchDialog } from "@/components/servizi/NetworkDispatchDialog";
 import { ViewSelector } from "@/components/servizi/ViewSelector";
@@ -256,6 +256,8 @@ export default function Servizi() {
   const [filterFornitore, setFilterFornitore] = useState("all");
   const [filterCodice, setFilterCodice] = useState("");
   const [filterArchiviati, setFilterArchiviati] = useState(false);
+  const [filterOnlyModified, setFilterOnlyModified] = useState(false);
+
 
   // Form state is managed inside <ServizioFormDialog />
 
@@ -524,11 +526,13 @@ export default function Servizi() {
   );
 
   const handleAssignDriver = async (servizioId: string, driver: DriverOption | null) => {
+    // Il flag modificato_da_cliente NON viene azzerato dal cambio autista:
+    // resta attivo finché l'operatore non preme esplicitamente "Conferma".
     const payload = driver === null
       ? { autista_id: null, autista_esterno_id: null }
       : driver.kind === "interno"
-        ? { autista_id: driver.id, autista_esterno_id: null, modificato_da_cliente: false, modificato_at: null }
-        : { autista_id: null, autista_esterno_id: driver.id, modificato_da_cliente: false, modificato_at: null };
+        ? { autista_id: driver.id, autista_esterno_id: null }
+        : { autista_id: null, autista_esterno_id: driver.id };
 
     const { error } = await supabase.from("servizi").update(payload as any).eq("id", servizioId);
 
@@ -545,8 +549,8 @@ export default function Servizi() {
     if (selectedServiziIds.length === 0) return;
 
     const payload = driver.kind === "interno"
-      ? { autista_id: driver.id, autista_esterno_id: null, modificato_da_cliente: false, modificato_at: null }
-      : { autista_id: null, autista_esterno_id: driver.id, modificato_da_cliente: false, modificato_at: null };
+      ? { autista_id: driver.id, autista_esterno_id: null }
+      : { autista_id: null, autista_esterno_id: driver.id };
 
     const { error } = await supabase.from("servizi").update(payload as any).in("id", selectedServiziIds);
 
@@ -560,13 +564,14 @@ export default function Servizi() {
     await loadServizi();
   };
 
+
   const nuoviCount = servizi.filter(s => s.stato === "nuovo").length;
   const daConfermareCount = servizi.filter(s => s.stato === "da_confermare").length;
 
   const handleConfirmServizio = async (servizioId: string) => {
     const { error } = await supabase
       .from("servizi")
-      .update({ stato: "confermato" as any })
+      .update({ stato: "confermato" as any, modificato_da_cliente: false, modificato_at: null })
       .eq("id", servizioId);
     if (error) { toast.error(error.message); return; }
     toast.success("Servizio confermato");
@@ -578,7 +583,10 @@ export default function Servizi() {
       .filter(s => selectedServiziIds.includes(s.id) && s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id))
       .map(s => s.id);
     if (ids.length === 0) { toast.info("Nessun servizio da confermare tra i selezionati"); return; }
-    const { error } = await supabase.from("servizi").update({ stato: "confermato" as any }).in("id", ids);
+    const { error } = await supabase
+      .from("servizi")
+      .update({ stato: "confermato" as any, modificato_da_cliente: false, modificato_at: null })
+      .in("id", ids);
     if (error) { toast.error(error.message); return; }
     toast.success(`${ids.length} servizi confermati`);
     setSelectedServiziIds([]);
@@ -593,12 +601,23 @@ export default function Servizi() {
   const handleConfermaTutti = async () => {
     const ids = idsDaConfermareVisibili;
     if (ids.length === 0) { setConfermaTuttiOpen(false); return; }
-    const { error } = await supabase.from("servizi").update({ stato: "confermato" as any }).in("id", ids);
+    const { error } = await supabase
+      .from("servizi")
+      .update({ stato: "confermato" as any, modificato_da_cliente: false, modificato_at: null })
+      .in("id", ids);
     setConfermaTuttiOpen(false);
     if (error) { toast.error(error.message); return; }
     toast.success(`${ids.length} servizi confermati`);
     await loadServizi();
   };
+
+  const modificatiCount = useMemo(() => servizi.filter(s => s.modificato_da_cliente).length, [servizi]);
+  const displayServizi = useMemo(
+    () => filterOnlyModified ? servizi.filter(s => s.modificato_da_cliente) : servizi,
+    [servizi, filterOnlyModified],
+  );
+
+
 
 
 
@@ -873,15 +892,27 @@ export default function Servizi() {
           </CardContent>
         </Card>
 
-        {/* Notifica modifiche cliente */}
-        {servizi.some(s => s.modificato_da_cliente) && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-900">
+        {/* Notifica modifiche cliente — click per filtrare */}
+        {modificatiCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setFilterOnlyModified(v => !v)}
+            className={`flex w-full items-center gap-2 px-3 py-2 rounded-lg border text-left transition-colors ${
+              filterOnlyModified
+                ? "bg-amber-100 border-amber-400 dark:bg-amber-900/50 dark:border-amber-700"
+                : "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-900 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+            }`}
+          >
             <Bell className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className="text-xs font-medium text-amber-900 dark:text-amber-200">
-              {servizi.filter(s => s.modificato_da_cliente).length} servizi modificati dal cliente — da rivedere
+            <span className="text-xs font-medium text-amber-900 dark:text-amber-200 flex-1">
+              {modificatiCount} servizi modificati dal cliente — da rivedere
             </span>
-          </div>
+            <span className="text-[10px] text-amber-800 dark:text-amber-300">
+              {filterOnlyModified ? "Mostra tutti" : "Filtra"}
+            </span>
+          </button>
         )}
+
 
         {selectedVisibleCount > 0 && (
           <div className="hidden md:block">
@@ -920,14 +951,15 @@ export default function Servizi() {
             <div className="space-y-2">
               {[1, 2, 3].map(i => <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />)}
             </div>
-          ) : servizi.length === 0 ? (
+          ) : displayServizi.length === 0 ? (
             <Card>
               <CardContent className="py-12 text-center">
                 <p className="text-sm text-muted-foreground">Nessun servizio trovato</p>
               </CardContent>
             </Card>
           ) : (
-            servizi.map((s) => {
+            displayServizi.map((s) => {
+
               const senzaAutista = !s.autista_id && !s.autista_esterno_id;
               const modificato = s.modificato_da_cliente;
               const isNuovoRosso = s.stato === "nuovo" && senzaAutista;
@@ -1045,20 +1077,40 @@ export default function Servizi() {
                 const isDaConf = s.stato === "da_confermare" && hasLocal;
                 if (isDaConf) {
                   return (
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); handleConfirmServizio(s.id); }}
-                      title="Conferma servizio"
-                      className="inline-flex w-full min-w-0 max-w-full flex-col items-center text-center gap-0 overflow-hidden rounded-sm px-0.5 py-0.5 leading-[1.05] bg-orange-500 text-white hover:bg-orange-600 font-semibold"
-                    >
-                      <span className="flex items-center gap-0.5 font-semibold">
+                    <div className="flex flex-col gap-0.5 w-full min-w-0">
+                      <AssignDriverPopover
+                        currentInternoId={s.autista_id}
+                        currentEsternoId={s.autista_esterno_id}
+                        currentLabel={driverLabel}
+                        onAssign={(driver) => handleAssignDriver(s.id, driver)}
+                        trigger={
+                          <button
+                            type="button"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Cambia autista"
+                            className="inline-flex w-full min-w-0 max-w-full flex-col items-center text-center gap-0 overflow-hidden rounded-sm px-0.5 py-0 leading-[1.05] hover:bg-accent border border-orange-300 dark:border-orange-800"
+                          >
+                            <span className="flex max-w-full items-center gap-0.5 overflow-hidden font-medium">
+                              <span className="truncate">{driverLabel}</span>
+                              {s.autisti_esterni && <Badge variant="outline" className="h-3 px-0.5 py-0 text-[7px]">E</Badge>}
+                            </span>
+                            {driverTel && <span className="truncate text-muted-foreground text-[7.5px]">{driverTel}</span>}
+                          </button>
+                        }
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); handleConfirmServizio(s.id); }}
+                        title="Conferma servizio"
+                        className="inline-flex w-full min-w-0 items-center justify-center gap-0.5 rounded-sm px-0.5 py-0.5 leading-none bg-orange-500 text-white hover:bg-orange-600 font-semibold"
+                      >
                         <CheckCircle2 className="h-2.5 w-2.5" />
                         <span className="truncate">Conferma</span>
-                      </span>
-                      {driverLabel && <span className="truncate text-white/90 text-[7.5px] font-normal">{driverLabel}</span>}
-                    </button>
+                      </button>
+                    </div>
                   );
                 }
+
                 return (
                   <AssignDriverPopover
                     currentInternoId={s.autista_id}
@@ -1176,10 +1228,11 @@ export default function Servizi() {
                       <tbody>
                         {loading ? (
                           <tr><td colSpan={visibleCols.length} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</td></tr>
-                        ) : servizi.length === 0 ? (
+                        ) : displayServizi.length === 0 ? (
                           <tr><td colSpan={visibleCols.length} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</td></tr>
                         ) : (
-                          servizi.map(s => {
+                          displayServizi.map(s => {
+
                             const senzaAutista = !s.autista_id && !s.autista_esterno_id;
                             const modificato = !!s.modificato_da_cliente;
                             const isNuovoRosso = s.stato === "nuovo" && senzaAutista;
@@ -1234,8 +1287,21 @@ export default function Servizi() {
                                               </TooltipContent>
                                             </Tooltip>
                                           )}
+                                          {modificato && networkInfo && (networkInfo.stato === "inviato" || networkInfo.stato === "accettato") && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <span className="inline-flex items-center gap-0.5 rounded-sm px-1 py-0 text-[9px] font-semibold bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-100">
+                                                  <AlertTriangle className="h-2.5 w-2.5" />!
+                                                </span>
+                                              </TooltipTrigger>
+                                              <TooltipContent side="right" className="text-xs max-w-[240px]">
+                                                Servizio passato al network e modificato dal cliente: verifica col partner. Le modifiche non sono state sincronizzate automaticamente.
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
                                         </div>
                                       )}
+
                                       {renderCell(c.key, s)}
                                     </td>
                                   );
