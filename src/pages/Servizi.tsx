@@ -261,6 +261,115 @@ export default function Servizi() {
   const [customizerOpen, setCustomizerOpen] = useState(false);
   const [networkMap, setNetworkMap] = useState<Record<string, { stato: string; partnerName: string | null }>>({});
 
+  // Ridimensionamento colonne (Excel-like)
+  const tableRef = useRef<HTMLTableElement>(null);
+  const MIN_COL_PX = 40;
+
+  const beginColumnResize = useCallback((e: React.MouseEvent, key: ColumnKey) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const table = tableRef.current;
+    if (!table) return;
+    const tableWidthPx = table.getBoundingClientRect().width;
+    if (tableWidthPx <= 0) return;
+
+    const visible = viste.activeView.columns.filter((c) => c.visible);
+    const idx = visible.findIndex((c) => c.key === key);
+    if (idx < 0 || idx === visible.length - 1) return; // niente handle sull'ultima
+
+    const effective = computeEffectiveWidths(visible);
+    const startWidths: Record<string, number> = { ...effective };
+    const startX = e.clientX;
+    const minPct = (MIN_COL_PX / tableWidthPx) * 100;
+
+    // Le colonne da cui sottraiamo lo spazio: tutte quelle a destra della draggata
+    const rightKeys = visible.slice(idx + 1).map((c) => c.key);
+    const rightStartSum = rightKeys.reduce((s, k) => s + startWidths[k], 0);
+    const leftMax = 100 - rightKeys.length * minPct - visible.slice(0, idx).reduce((s, c) => s + startWidths[c.key], 0);
+    const leftMin = minPct;
+
+    const onMove = (ev: MouseEvent) => {
+      const dxPx = ev.clientX - startX;
+      const dxPct = (dxPx / tableWidthPx) * 100;
+      let newLeft = startWidths[key] + dxPct;
+      if (newLeft < leftMin) newLeft = leftMin;
+      if (newLeft > leftMax) newLeft = leftMax;
+      const delta = newLeft - startWidths[key];
+      // Ridistribuisci -delta sulle colonne a destra proporzionalmente alla loro quota iniziale
+      const next: Record<string, number> = { ...startWidths, [key]: newLeft };
+      if (rightStartSum > 0) {
+        for (const k of rightKeys) {
+          const share = startWidths[k] / rightStartSum;
+          const w = startWidths[k] - delta * share;
+          next[k] = Math.max(minPct, w);
+        }
+      }
+      // Applica direttamente al DOM per fluidità (evita re-render ad ogni pixel)
+      const cols = table.querySelectorAll("colgroup > col");
+      visible.forEach((c, i) => {
+        const el = cols[i] as HTMLTableColElement | undefined;
+        if (el) el.style.width = `${next[c.key]}%`;
+      });
+      (table as any)._pendingWidths = next;
+    };
+
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      const pending = (table as any)._pendingWidths as Record<string, number> | undefined;
+      if (pending) {
+        // Salva la mappa completa (tutte le colonne visibili) per stabilità
+        viste.updateColumnWidths(viste.activeView.id, pending as any);
+        (table as any)._pendingWidths = undefined;
+      }
+    };
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [viste]);
+
+  const autofitColumn = useCallback((key: ColumnKey) => {
+    const table = tableRef.current;
+    if (!table) return;
+    const tableWidthPx = table.getBoundingClientRect().width;
+    if (tableWidthPx <= 0) return;
+    const visible = viste.activeView.columns.filter((c) => c.visible);
+    const idx = visible.findIndex((c) => c.key === key);
+    if (idx < 0) return;
+
+    // Misura il contenuto più largo nella colonna (header + celle)
+    const cellSelector = `tr > *:nth-child(${idx + 1})`;
+    const nodes = table.querySelectorAll<HTMLElement>(cellSelector);
+    let maxPx = MIN_COL_PX;
+    nodes.forEach((n) => {
+      const inner = n.firstElementChild as HTMLElement | null;
+      const w = (inner?.scrollWidth ?? n.scrollWidth) + 8; // +padding
+      if (w > maxPx) maxPx = w;
+    });
+
+    const targetPct = Math.max((MIN_COL_PX / tableWidthPx) * 100, (maxPx / tableWidthPx) * 100);
+    const effective = computeEffectiveWidths(visible);
+    const startWidths = { ...effective };
+    const minPct = (MIN_COL_PX / tableWidthPx) * 100;
+    const otherKeys = visible.filter((c) => c.key !== key).map((c) => c.key);
+    const otherStartSum = otherKeys.reduce((s, k) => s + startWidths[k], 0);
+    const maxLeft = 100 - otherKeys.length * minPct;
+    const newLeft = Math.min(targetPct, maxLeft);
+    const delta = newLeft - startWidths[key];
+    const next: Record<string, number> = { ...startWidths, [key]: newLeft };
+    if (otherStartSum > 0) {
+      for (const k of otherKeys) {
+        const share = startWidths[k] / otherStartSum;
+        next[k] = Math.max(minPct, startWidths[k] - delta * share);
+      }
+    }
+    viste.updateColumnWidths(viste.activeView.id, next as any);
+  }, [viste]);
+
 
 
 
