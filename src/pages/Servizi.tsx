@@ -210,6 +210,7 @@ export default function Servizi() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editServizio, setEditServizio] = useState<ServizioFormInitial | null>(null);
   const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
+  const [networkDialogId, setNetworkDialogId] = useState<string | null>(null);
   const [selectedServiziIds, setSelectedServiziIds] = useState<string[]>([]);
   const [globalSearch, setGlobalSearch] = useState("");
 
