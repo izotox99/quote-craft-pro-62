@@ -1445,6 +1445,23 @@ export default function Servizi() {
           onSetDefault={() => viste.setAsDefault(viste.activeView.id)}
           onResetWidths={() => viste.resetColumnWidths(viste.activeView.id)}
         />
+
+        <AlertDialog open={confermaTuttiOpen} onOpenChange={setConfermaTuttiOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Conferma tutti i servizi</AlertDialogTitle>
+              <AlertDialogDescription>
+                Stai per confermare {idsDaConfermareVisibili.length} servizi. Procedere?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfermaTutti} className="bg-orange-600 hover:bg-orange-700 text-white">
+                Conferma
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
