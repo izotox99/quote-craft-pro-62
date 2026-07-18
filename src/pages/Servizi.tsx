@@ -139,6 +139,7 @@ export default function Servizi() {
   const [filterAutista, setFilterAutista] = useState("all");
   const [filterFornitore, setFilterFornitore] = useState("all");
   const [filterCodice, setFilterCodice] = useState("");
+  const [filterArchiviati, setFilterArchiviati] = useState(false);
 
   // New service form
   const [form, setForm] = useState({
