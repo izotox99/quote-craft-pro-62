@@ -93,7 +93,7 @@ export function NuovoAutistaDialog({
         cellulare: d.cellulare ?? d.telefono ?? "",
         patente: d.patente ?? "",
         email: d.email ?? "",
-        email: d.email ?? "",
+
         calcola_riposi: d.calcola_riposi === false ? "No" : "Si",
       });
       if (editing.tipo === "interno") {
