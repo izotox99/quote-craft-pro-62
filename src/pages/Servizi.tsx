@@ -1032,17 +1032,6 @@ export default function Servizi() {
               case "codice": return <span className="block truncate text-center font-mono text-[8px]">{s.codice || "—"}</span>;
               case "foglio": return (
                 <div className="flex items-center justify-center gap-0.5">
-                  {s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id) && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-4 w-4 text-orange-700 hover:text-orange-900 hover:bg-orange-100 dark:text-orange-300 dark:hover:bg-orange-900/40"
-                      title="Conferma servizio"
-                      onClick={(e) => { e.stopPropagation(); handleConfirmServizio(s.id); }}
-                    >
-                      <CheckCircle2 className="h-3 w-3" />
-                    </Button>
-                  )}
                   <Button
                     size="icon"
                     variant="ghost"
