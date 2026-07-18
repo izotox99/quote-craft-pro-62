@@ -178,6 +178,9 @@ export default function Servizi() {
     costo_cs: 0,
     costo_autista: 0,
     costo_commissione: 0,
+    non_incassato: 0,
+    costo_centro: 0,
+    centro_costo: "",
     note: "",
   });
 
