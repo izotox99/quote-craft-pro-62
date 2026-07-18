@@ -486,6 +486,47 @@ export type Database = {
           },
         ]
       }
+      dashboard_viste: {
+        Row: {
+          colonne: Json
+          created_at: string
+          id: string
+          nome: string
+          org_id: string
+          predefinita: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          colonne?: Json
+          created_at?: string
+          id?: string
+          nome: string
+          org_id: string
+          predefinita?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          colonne?: Json
+          created_at?: string
+          id?: string
+          nome?: string
+          org_id?: string
+          predefinita?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboard_viste_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       departments: {
         Row: {
           created_at: string
