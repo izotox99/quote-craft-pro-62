@@ -16,11 +16,31 @@ import { ServizioFormDialog, type ServizioFormInitial } from "@/components/servi
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil, Network } from "lucide-react";
+import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil, Network, Columns3 } from "lucide-react";
 import { ModificheClientePopover } from "@/components/ModificheClientePopover";
 import { NetworkDispatchDialog } from "@/components/servizi/NetworkDispatchDialog";
+import { ViewSelector } from "@/components/servizi/ViewSelector";
+import { ColumnCustomizer } from "@/components/servizi/ColumnCustomizer";
+import { useServiziViste } from "@/hooks/use-servizi-viste";
+import { COLUMNS_MAP, type ColumnKey, type ViewColumnState } from "@/lib/servizi-columns";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { format, addDays } from "date-fns";
 import { it as itLocale } from "date-fns/locale";
+
+const NETWORK_STATO_LABEL: Record<string, string> = {
+  inviato: "Inviato",
+  accettato: "Accettato",
+  rifiutato: "Rifiutato",
+  annullato: "Annullato",
+  completato: "Completato",
+};
+const NETWORK_STATO_COLOR: Record<string, string> = {
+  inviato: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  accettato: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  rifiutato: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+  annullato: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
+  completato: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+};
 
 type Servizio = {
   id: string;
