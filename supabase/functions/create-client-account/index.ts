@@ -22,6 +22,22 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+async function computePasswordFingerprint(password: string): Promise<string> {
+  const secret = Deno.env.get("PASSWORD_FINGERPRINT_KEY");
+  if (!secret) throw new Error("PASSWORD_FINGERPRINT_KEY non configurato");
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(password));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+
 const writableClientFields = [
   "name",
   "email",
