@@ -582,6 +582,9 @@ export default function Servizi() {
     toast.success(`${ids.length} servizi confermati`);
     setSelectedServiziIds([]);
     await loadServizi();
+  };
+
+
 
   // Quick day filters for "Nuovi" services
   const [quickDay, setQuickDay] = useState<string | null>(null);
