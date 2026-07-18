@@ -210,7 +210,7 @@ export default function Servizi() {
     setLoading(true);
     let query = supabase
       .from("servizi")
-      .select("*, clients(name, company), autisti(nome, cognome), autisti_esterni(nome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
+      .select("*, clients(name, company), autisti(nome, cognome, cellulare), autisti_esterni(nome, cellulare, targa), veicoli(targa, tipo_macchina), fornitori_cs(nome, telefono)")
       .gte("data_servizio", filterDal)
       .lte("data_servizio", filterAl)
       .order("data_servizio", { ascending: true });
