@@ -242,7 +242,7 @@ export default function Network() {
               <TableBody>
                 {inviatiToMe.map(r => (
                   <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.org_a_name || "—"}</TableCell>
+                    <TableCell>Invito ricevuto da <span className="font-medium">{r.org_a_name || "—"}</span></TableCell>
                     <TableCell>{new Date(r.invited_at).toLocaleDateString("it-IT")}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
