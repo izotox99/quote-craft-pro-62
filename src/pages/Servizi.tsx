@@ -256,6 +256,8 @@ export default function Servizi() {
   const [filterFornitore, setFilterFornitore] = useState("all");
   const [filterCodice, setFilterCodice] = useState("");
   const [filterArchiviati, setFilterArchiviati] = useState(false);
+  const [filterOnlyModified, setFilterOnlyModified] = useState(false);
+
 
   // Form state is managed inside <ServizioFormDialog />
 
