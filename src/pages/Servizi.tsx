@@ -208,6 +208,10 @@ export default function Servizi() {
       .lte("data_servizio", filterAl)
       .order("data_servizio", { ascending: true });
 
+    // Archiviati: mostra solo i servizi archiviati (sola lettura), altrimenti li nasconde
+    if (filterArchiviati) query = query.eq("archiviato", true);
+    else query = query.eq("archiviato", false);
+
     if (filterStato === "all") query = query.neq("stato", "annullato");
     else query = query.eq("stato", filterStato as any);
     if (filterTipologia !== "all") query = query.eq("tipologia", filterTipologia as any);
