@@ -932,6 +932,7 @@ export type Database = {
           accessori: string | null
           allegato_nome: string | null
           allegato_path: string | null
+          archiviato: boolean
           autista_esterno_id: string | null
           autista_id: string | null
           centro_costo: string | null
@@ -978,6 +979,7 @@ export type Database = {
           accessori?: string | null
           allegato_nome?: string | null
           allegato_path?: string | null
+          archiviato?: boolean
           autista_esterno_id?: string | null
           autista_id?: string | null
           centro_costo?: string | null
@@ -1024,6 +1026,7 @@ export type Database = {
           accessori?: string | null
           allegato_nome?: string | null
           allegato_path?: string | null
+          archiviato?: boolean
           autista_esterno_id?: string | null
           autista_id?: string | null
           centro_costo?: string | null
@@ -1611,6 +1614,7 @@ export type Database = {
           accessori: string | null
           allegato_nome: string | null
           allegato_path: string | null
+          archiviato: boolean
           autista_esterno_id: string | null
           autista_id: string | null
           centro_costo: string | null
