@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +45,8 @@ export default function Clients() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
+  const [deactivatePrompt, setDeactivatePrompt] = useState<{ client: Client; count: number } | null>(null);
 
   const load = async () => {
     const { data } = await supabase.from("clients").select("*").order("name");
@@ -123,15 +126,29 @@ export default function Clients() {
     load();
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (client: Client) => {
     const { data: fnData, error: fnError } = await supabase.functions.invoke("delete-client-account", {
-      body: { client_id: id },
+      body: { client_id: client.id },
     });
+    if (fnData?.code === "has_servizi") {
+      setDeleteTarget(null);
+      setDeactivatePrompt({ client, count: Number(fnData.servizi_count ?? 0) });
+      return;
+    }
     if (fnError || fnData?.error) {
       toast.error(fnData?.error || fnError?.message || "Errore durante l'eliminazione");
       return;
     }
     toast.success("Cliente eliminato");
+    setDeleteTarget(null);
+    load();
+  };
+
+  const handleDeactivate = async (clientId: string) => {
+    const { error } = await supabase.from("clients").update({ attivo: false }).eq("id", clientId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Cliente disattivato");
+    setDeactivatePrompt(null);
     load();
   };
 
@@ -196,7 +213,7 @@ export default function Clients() {
                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(c)}>
                               <Pencil className="h-3.5 w-3.5" />
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:text-destructive" onClick={() => handleDelete(c.id)}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:text-destructive" onClick={() => setDeleteTarget(c)}>
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </div>
@@ -296,6 +313,48 @@ export default function Clients() {
             </div>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminare questo cliente?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Stai per eliminare definitivamente <strong>{deleteTarget?.company ?? deleteTarget?.name}</strong>. L'operazione non è reversibile.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => deleteTarget && handleDelete(deleteTarget)}
+              >
+                Elimina
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!deactivatePrompt} onOpenChange={(o) => !o && setDeactivatePrompt(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Impossibile eliminare il cliente</AlertDialogTitle>
+              <AlertDialogDescription>
+                Il cliente <strong>{deactivatePrompt?.client.company ?? deactivatePrompt?.client.name}</strong> ha{" "}
+                <strong>{deactivatePrompt?.count}</strong> servizi associati e non può essere eliminato per preservare lo storico.
+                <br /><br />
+                Puoi <strong>disattivarlo</strong>: rimarrà consultabile ma non selezionabile per nuovi servizi.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deactivatePrompt && handleDeactivate(deactivatePrompt.client.id)}
+              >
+                Disattiva cliente
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </DashboardLayout>
   );
