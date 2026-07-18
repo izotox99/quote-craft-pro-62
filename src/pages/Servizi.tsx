@@ -130,7 +130,7 @@ export default function Servizi() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
   const [selectedServiziIds, setSelectedServiziIds] = useState<string[]>([]);
-  const tableScrollRef = useHorizontalWheel<HTMLDivElement>();
+  
 
   // Filters
   const [filterDal, setFilterDal] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"));
