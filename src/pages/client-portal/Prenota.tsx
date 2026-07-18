@@ -596,7 +596,7 @@ export default function Prenota() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Accessori (opzionale)</Label>
-                <Input value={form.accessori} onChange={(e) => set("accessori", e.target.value)} placeholder="es. seggiolino, WiFi..." className="rounded-lg h-10" />
+                <AccessoriEditor value={accessoriRows} onChange={setAccessoriRows} />
               </div>
             </CardContent>
           </Card>
