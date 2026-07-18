@@ -31,8 +31,13 @@ export type ColumnKey =
   | "costo_centro"
   | "commissione"
   | "codice"
+  | "azioni"
   | "foglio"
   | "network_stato";
+
+/** Colonne sempre visibili, non nascondibili dall'utente. */
+export const PINNED_COLUMNS: ReadonlySet<ColumnKey> = new Set<ColumnKey>(["azioni"]);
+
 
 export type ColumnDef = {
   key: ColumnKey;
@@ -68,7 +73,9 @@ export const COLUMNS: ColumnDef[] = [
   { key: "costo_centro", label: "C.C €", short: "C.C\n€", description: "Costo imputato a un centro di costo aziendale (spesa interna).", weight: 2, align: "center" },
   { key: "commissione", label: "Com €", short: "Com\n€", description: "Commissione applicata al servizio.", weight: 2, align: "center" },
   { key: "codice", label: "Codice", short: "Codice", description: "Codice interno identificativo del servizio.", weight: 4 },
+  { key: "azioni", label: "Azioni", short: "Azioni", description: "Azioni contestuali sul servizio: assegna autista, conferma, stato.", weight: 5, align: "center" },
   { key: "foglio", label: "Foglio", short: "Foglio", description: "Pulsante di stampa del foglio di servizio in PDF.", weight: 2, align: "center" },
+
   { key: "network_stato", label: "Network", short: "Network", description: "Stato del passaggio al partner del network (inviato, accettato, ritirato).", weight: 4.2 },
 ];
 
@@ -84,8 +91,9 @@ export const LEGACY_ORDER: ColumnKey[] = [
   "np", "nb", "tserv", "luogo_inizio", "itinerario",
   "luogo_fine", "info_autista", "accessori", "veicolo", "tp",
   "non_incassato", "incasso", "cs", "costo_cs", "autista",
-  "costo_autista", "costo_centro", "commissione", "codice", "foglio",
+  "costo_autista", "costo_centro", "commissione", "codice", "azioni", "foglio",
 ];
+
 
 /**
  * Restituisce lo stato colonne "Completa": tutte le 25 legacy visibili + network_stato
@@ -100,15 +108,22 @@ export function makeCompletaState(): ViewColumnState[] {
 
 /** Costruisce uno stato colonne coerente: preserva l'ordine passato, nasconde le mancanti. */
 function buildState(visibleOrdered: ColumnKey[]): ViewColumnState[] {
-  const visibleSet = new Set(visibleOrdered);
+  // Le colonne "pinned" (es. Azioni) vengono sempre incluse come visibili in coda
+  // se non già presenti nell'elenco richiesto.
+  const withPinned: ColumnKey[] = [...visibleOrdered];
+  for (const key of PINNED_COLUMNS) {
+    if (!withPinned.includes(key)) withPinned.push(key);
+  }
+  const visibleSet = new Set(withPinned);
   const trailing = COLUMNS
     .map((c) => c.key)
     .filter((k) => !visibleSet.has(k));
   return [
-    ...visibleOrdered.map((k) => ({ key: k, visible: true })),
+    ...withPinned.map((k) => ({ key: k, visible: true })),
     ...trailing.map((k) => ({ key: k, visible: false })),
   ];
 }
+
 
 export type SystemView = {
   id: string;
@@ -168,13 +183,21 @@ export function reconcileColumns(saved: unknown): ViewColumnState[] {
     seen.add(key);
     const rawW = (item as any).width;
     const width = typeof rawW === "number" && isFinite(rawW) && rawW > 0 ? rawW : undefined;
-    result.push({ key, visible: Boolean((item as any).visible), width });
+    const visible = PINNED_COLUMNS.has(key) ? true : Boolean((item as any).visible);
+    result.push({ key, visible, width });
   }
   for (const c of COLUMNS) {
-    if (!seen.has(c.key)) result.push({ key: c.key, visible: false });
+    if (!seen.has(c.key)) result.push({ key: c.key, visible: PINNED_COLUMNS.has(c.key) });
+  }
+  // Le colonne "pinned" (es. Azioni) vanno sempre inserite se assenti dallo stato:
+  // se erano rimaste orfane sopra vengono forzate visibili qui.
+  for (const key of PINNED_COLUMNS) {
+    const idx = result.findIndex((c) => c.key === key);
+    if (idx >= 0 && !result[idx].visible) result[idx] = { ...result[idx], visible: true };
   }
   return result;
 }
+
 
 /** Larghezze effettive (in %) per le colonne visibili date le width esplicite + i pesi.
  *  Le colonne con width fissa sono rispettate; le altre si dividono lo spazio residuo
