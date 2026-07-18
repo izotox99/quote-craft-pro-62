@@ -203,7 +203,7 @@ function printFoglioServizio(s: Servizio, org: { name: string; logo_url: string 
       <table class="data">
         ${row("Veicolo", veicolo)}
         ${row("Targa", targa)}
-        ${row("Autista", driverLabel)}
+        ${row("Autista", driverLabel + (partnerDriver ? " (autista partner network)" : ""))}
         ${row("Telefono autista", driverTel)}
         ${row("Info autista", s.info_autista)}
       </table>
