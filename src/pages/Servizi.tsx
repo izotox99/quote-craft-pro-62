@@ -1097,6 +1097,8 @@ export default function Servizi() {
                           servizi.map(s => {
                             const senzaAutista = !s.autista_id && !s.autista_esterno_id;
                             const modificato = !!s.modificato_da_cliente;
+                            const isNuovoRosso = s.stato === "nuovo" && senzaAutista;
+                            const isDaConfermare = s.stato === "da_confermare";
                             const isSelected = selectedServiziIds.includes(s.id);
                             const networkInfo = networkMap[s.id];
                             return (
@@ -1106,11 +1108,14 @@ export default function Servizi() {
                                 className={`border-b cursor-pointer transition-colors ${
                                   isSelected
                                     ? "bg-primary/5 hover:bg-primary/10"
-                                    : senzaAutista
+                                    : isNuovoRosso
                                       ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/30"
-                                      : "hover:bg-muted/40"
-                                } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
+                                      : isDaConfermare
+                                        ? "bg-orange-50/70 hover:bg-orange-50 dark:bg-orange-950/20 dark:hover:bg-orange-950/30"
+                                        : "hover:bg-muted/40"
+                                } ${modificato ? "border-l-4 border-l-orange-700 dark:border-l-orange-500" : ""}`}
                               >
+
                                 {visibleCols.map((c, idx) => {
                                   const isInteractive = INTERACTIVE_COLS.includes(c.key);
                                   const isFirst = idx === 0;
