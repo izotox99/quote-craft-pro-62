@@ -263,6 +263,8 @@ export function useServiziViste(userId: string | undefined) {
     selectView,
     saveNewView,
     updateViewColumns,
+    updateColumnWidths,
+    resetColumnWidths,
     renameView,
     deleteView,
     setAsDefault,
