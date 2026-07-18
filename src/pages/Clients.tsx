@@ -313,6 +313,23 @@ export default function Clients() {
                   />
                 </div>
 
+                {editing && (
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tariffario</h3>
+                    <TariffarioUpload
+                      clientId={editing.id}
+                      orgId={editing.org_id}
+                      currentUrl={editing.tariffario_url}
+                      currentName={editing.tariffario_nome}
+                      onChange={async () => {
+                        const { data } = await supabase.from("clients").select("*").eq("id", editing.id).single();
+                        if (data) setEditing(data as Client);
+                        load();
+                      }}
+                    />
+                  </div>
+                )}
+
                 {/* Note */}
                 <div className="space-y-4">
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Note</h3>
