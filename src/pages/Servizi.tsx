@@ -928,7 +928,7 @@ export default function Servizi() {
           return (
             <div className="hidden md:block -mx-3 lg:-mx-4 overflow-hidden border-y bg-card">
               <TooltipProvider delayDuration={200}>
-                <table className="w-full table-fixed text-[10.5px] leading-tight" style={{ tableLayout: "fixed" }}>
+                <table className="w-full table-fixed text-[10px] leading-tight" style={{ tableLayout: "fixed" }}>
                       <colgroup>
                         <col style={{ width: `${CHECKBOX_PCT}%` }} />
                         {visibleCols.map((c) => (
@@ -937,7 +937,7 @@ export default function Servizi() {
                       </colgroup>
                       <thead className="bg-muted/40 border-b">
                         <tr className="text-[10px] font-semibold text-muted-foreground">
-                          <th className="px-1 py-1.5 overflow-hidden">
+                          <th className="px-0.5 py-1 overflow-hidden">
                             <Checkbox
                               checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
                               onCheckedChange={handleToggleAllVisible}
@@ -947,7 +947,7 @@ export default function Servizi() {
                           {visibleCols.map((c) => {
                             const def = COLUMNS_MAP[c.key];
                             return (
-                              <th key={c.key} className={`px-1 py-1.5 overflow-hidden ${alignClass(c.key)}`}>
+                              <th key={c.key} className={`px-0.5 py-1 overflow-hidden ${alignClass(c.key)}`}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <span className="cursor-help block truncate uppercase tracking-tight" title={def.label}>{def.short || def.label}</span>
