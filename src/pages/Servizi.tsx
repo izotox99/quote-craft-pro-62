@@ -979,6 +979,23 @@ export default function Servizi() {
                     </div>
                   );
                 }
+                const isDaConf = s.stato === "da_confermare" && hasLocal;
+                if (isDaConf) {
+                  return (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleConfirmServizio(s.id); }}
+                      title="Conferma servizio"
+                      className="inline-flex w-full min-w-0 max-w-full flex-col items-center text-center gap-0 overflow-hidden rounded-sm px-0.5 py-0.5 leading-[1.05] bg-orange-500 text-white hover:bg-orange-600 font-semibold"
+                    >
+                      <span className="flex items-center gap-0.5 font-semibold">
+                        <CheckCircle2 className="h-2.5 w-2.5" />
+                        <span className="truncate">Conferma</span>
+                      </span>
+                      {driverLabel && <span className="truncate text-white/90 text-[7.5px] font-normal">{driverLabel}</span>}
+                    </button>
+                  );
+                }
                 return (
                   <AssignDriverPopover
                     currentInternoId={s.autista_id}
