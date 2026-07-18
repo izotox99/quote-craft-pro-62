@@ -162,7 +162,7 @@ export default function Clients() {
       .select("id", { count: "exact", head: true })
       .eq("client_id", client.id)
       .eq("archiviato", false)
-      .in("stato", ["nuovo", "confermato", "in_corso"])
+      .in("stato", ["nuovo", "da_confermare", "confermato", "in_corso"])
       .gte("data_servizio", today);
 
     if ((count ?? 0) > 0) {
