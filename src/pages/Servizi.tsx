@@ -781,199 +781,239 @@ export default function Servizi() {
           )}
         </div>
 
-        {/* DESKTOP/TABLET: schema completo — full-bleed, 25 colonne senza scroll orizzontale */}
-        <div className="hidden md:block relative left-1/2 -translate-x-1/2 w-screen">
-          <Card className="rounded-none border-x-0">
-            <CardContent className="p-0">
-              <table className="w-full table-fixed text-[11px] leading-tight">
-                <colgroup>
-                  <col style={{ width: "2%" }} />
-                  <col style={{ width: "3%" }} />
-                  <col style={{ width: "4%" }} />
-                  <col style={{ width: "6%" }} />
-                  <col style={{ width: "4%" }} />
-                  <col style={{ width: "5%" }} />
-                  <col style={{ width: "2%" }} />
-                  <col style={{ width: "2%" }} />
-                  <col style={{ width: "5%" }} />
-                  <col style={{ width: "7%" }} />
-                  <col style={{ width: "7%" }} />
-                  <col style={{ width: "7%" }} />
-                  <col style={{ width: "5%" }} />
-                  <col style={{ width: "3%" }} />
-                  <col style={{ width: "4%" }} />
-                  <col style={{ width: "3%" }} />
-                  <col style={{ width: "3%" }} />
-                  <col style={{ width: "3%" }} />
-                  <col style={{ width: "4%" }} />
-                  <col style={{ width: "2%" }} />
-                  <col style={{ width: "5%" }} />
-                  <col style={{ width: "3%" }} />
-                  <col style={{ width: "3%" }} />
-                  <col style={{ width: "3%" }} />
-                  <col style={{ width: "3%" }} />
-                  <col style={{ width: "2%" }} />
-                </colgroup>
-                <thead className="bg-muted/40 border-b">
-                  <tr className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
-                    <th className="px-1 py-1.5">
-                      <Checkbox
-                        checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
-                        onCheckedChange={handleToggleAllVisible}
-                        aria-label="Seleziona tutti i servizi visibili"
-                      />
-                    </th>
-                    <th className="px-1 py-1.5 text-left" title="Città">Città</th>
-                    <th className="px-1 py-1.5 text-left" title="Data servizio">Data</th>
-                    <th className="px-1 py-1.5 text-left" title="Società cliente">Società</th>
-                    <th className="px-1 py-1.5 text-left" title="Contatti (referente/passeggero)">Contatti</th>
-                    <th className="px-1 py-1.5 text-left" title="Telefono">Telefono</th>
-                    <th className="px-1 py-1.5 text-center" title="Numero passeggeri">N.P</th>
-                    <th className="px-1 py-1.5 text-center" title="Numero bagagli">N.B</th>
-                    <th className="px-1 py-1.5 text-left" title="Tipo servizio">T.Serv</th>
-                    <th className="px-1 py-1.5 text-left" title="Luogo inizio">Luogo inizio</th>
-                    <th className="px-1 py-1.5 text-left" title="Itinerario">Itinerario</th>
-                    <th className="px-1 py-1.5 text-left" title="Luogo fine">Luogo fine</th>
-                    <th className="px-1 py-1.5 text-left" title="Info autista">Info autista</th>
-                    <th className="px-1 py-1.5 text-left" title="Accessori">Access.</th>
-                    <th className="px-1 py-1.5 text-left" title="Veicolo">Veicolo</th>
-                    <th className="px-1 py-1.5 text-left" title="Tipo pagamento">T.P</th>
-                    <th className="px-1 py-1.5 text-right" title="Non incassato €">No Inc €</th>
-                    <th className="px-1 py-1.5 text-right" title="Incassato €">Inc €</th>
-                    <th className="px-1 py-1.5 text-left" title="Fornitore Corriere Speciale (nome + telefono)">CS</th>
-                    <th className="px-1 py-1.5 text-right" title="Costo CS €">CS €</th>
-                    <th className="px-1 py-1.5 text-left" title="Autista (nome + telefono + targa)">Aut</th>
-                    <th className="px-1 py-1.5 text-right" title="Costo autista €">Aut €</th>
-                    <th className="px-1 py-1.5 text-right" title="Costo centro di costo €">C.C €</th>
-                    <th className="px-1 py-1.5 text-right" title="Commissione €">Com €</th>
-                    <th className="px-1 py-1.5 text-left" title="Codice">Codice</th>
-                    <th className="px-1 py-1.5 text-center" title="Stampa foglio di servizio">Foglio</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td colSpan={26} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</td></tr>
-                  ) : servizi.length === 0 ? (
-                    <tr><td colSpan={26} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</td></tr>
-                  ) : (
-                    servizi.map(s => {
-                      const senzaAutista = !s.autista_id && !s.autista_esterno_id;
-                      const modificato = s.modificato_da_cliente;
-                      const isSelected = selectedServiziIds.includes(s.id);
-                      const driverLabel = s.autisti
-                        ? `${s.autisti.nome} ${s.autisti.cognome}`
-                        : s.autisti_esterni?.nome || null;
-                      const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || null;
-                      const driverTarga = s.autisti_esterni?.targa || s.veicoli?.targa || null;
-                      const csNome = s.fornitori_cs?.nome || null;
-                      const csTel = s.fornitori_cs?.telefono || null;
-                      const cellCls = "px-1 py-1 align-top break-words";
-                      return (
-                        <tr
-                          key={s.id}
-                          onClick={() => setDetailServizio(s)}
-                          className={`border-b cursor-pointer transition-colors ${
-                            isSelected
-                              ? "bg-primary/5 hover:bg-primary/10"
-                              : senzaAutista
-                                ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/30"
-                                : "hover:bg-muted/40"
-                          } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
-                        >
-                          <td className={cellCls} onClick={(e) => e.stopPropagation()}>
+        {/* DESKTOP/TABLET: tabella dinamica basata sulla vista attiva — full-bleed senza scroll orizzontale */}
+        {(() => {
+          const visibleCols = viste.activeView.columns.filter((c) => c.visible);
+          const totalWeight = visibleCols.reduce((sum, c) => sum + (COLUMNS_MAP[c.key]?.weight ?? 3), 0);
+          // 2% riservato alla checkbox: il resto si spartisce sulle colonne visibili
+          const CHECKBOX_PCT = 2;
+          const remaining = 100 - CHECKBOX_PCT;
+          const colWidth = (key: ColumnKey) =>
+            `${((COLUMNS_MAP[key]?.weight ?? 3) / (totalWeight || 1)) * remaining}%`;
+
+          const alignClass = (key: ColumnKey) => {
+            const a = COLUMNS_MAP[key]?.align;
+            return a === "right" ? "text-right tabular-nums" : a === "center" ? "text-center" : "text-left";
+          };
+
+          const renderCell = (key: ColumnKey, s: Servizio): React.ReactNode => {
+            switch (key) {
+              case "citta": return <span className="font-medium">{s.citta || "—"}</span>;
+              case "data": return (
+                <div>
+                  <div className={(!s.autista_id && !s.autista_esterno_id) ? "text-red-700 dark:text-red-400 font-semibold" : "font-medium"}>
+                    {format(new Date(s.data_servizio), "dd/MM/yy")}
+                  </div>
+                  {s.ora_inizio && <div className="text-muted-foreground">{s.ora_inizio}</div>}
+                </div>
+              );
+              case "societa": return <span className="font-semibold italic">{s.clients?.company || s.clients?.name || "—"}</span>;
+              case "contatti": return s.contatto || "—";
+              case "telefono": return s.telefono_contatto || "—";
+              case "np": return s.n_passeggeri ?? 0;
+              case "nb": return s.n_bagagli ?? 0;
+              case "tserv": return buildTServ(s);
+              case "luogo_inizio": return s.luogo_inizio || "—";
+              case "itinerario": return s.itinerario || "—";
+              case "luogo_fine": return s.luogo_fine || "—";
+              case "info_autista": return s.info_autista || "—";
+              case "accessori": return accessoriMap[s.id] || s.accessori || "—";
+              case "veicolo": return s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—");
+              case "tp": return s.tipo_pagamento || "—";
+              case "non_incassato": return s.non_incassato != null ? s.non_incassato : "—";
+              case "incasso": return s.incasso ?? 0;
+              case "cs": {
+                const csNome = s.fornitori_cs?.nome;
+                const csTel = s.fornitori_cs?.telefono;
+                return csNome ? (
+                  <div className="flex flex-col leading-tight">
+                    <span className="font-medium">{csNome}</span>
+                    {csTel && <span className="text-muted-foreground text-[10px]">{csTel}</span>}
+                  </div>
+                ) : "—";
+              }
+              case "costo_cs": return s.costo_cs ?? 0;
+              case "autista": {
+                const driverLabel = s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : s.autisti_esterni?.nome || null;
+                const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || null;
+                const driverTarga = s.autisti_esterni?.targa || s.veicoli?.targa || null;
+                return (
+                  <AssignDriverPopover
+                    currentInternoId={s.autista_id}
+                    currentEsternoId={s.autista_esterno_id}
+                    currentLabel={driverLabel}
+                    onAssign={(driver) => handleAssignDriver(s.id, driver)}
+                    trigger={
+                      <button
+                        type="button"
+                        onClick={(e) => e.stopPropagation()}
+                        className={`inline-flex w-full flex-col items-start gap-0 rounded-md px-1 py-0.5 text-left transition-colors leading-tight ${
+                          driverLabel ? "hover:bg-accent" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                        }`}
+                      >
+                        <span className="flex items-center gap-1 font-medium">
+                          <span className="break-words">{driverLabel || "Assegna"}</span>
+                          {s.autisti_esterni && <Badge variant="outline" className="h-3.5 px-1 py-0 text-[9px]">EXT</Badge>}
+                        </span>
+                        {driverTel && <span className="text-muted-foreground text-[10px]">{driverTel}</span>}
+                        {driverTarga && <span className="text-muted-foreground text-[10px] font-mono">{driverTarga}</span>}
+                      </button>
+                    }
+                  />
+                );
+              }
+              case "costo_autista": return s.costo_autista ?? 0;
+              case "costo_centro": return (
+                <>
+                  {s.costo_centro != null ? s.costo_centro : "—"}
+                  {s.centro_costo && <div className="text-[9px] text-muted-foreground font-normal">{s.centro_costo}</div>}
+                </>
+              );
+              case "commissione": return s.costo_commissione ?? 0;
+              case "codice": return <span className="font-mono text-[10px]">{s.codice || "—"}</span>;
+              case "foglio": return (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6"
+                  title="Stampa foglio di servizio"
+                  onClick={(e) => { e.stopPropagation(); printFoglioServizio(s, organization); }}
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                </Button>
+              );
+              case "network_stato": {
+                const n = networkMap[s.id];
+                if (!n) return <span className="text-muted-foreground">—</span>;
+                return (
+                  <div className="flex flex-col leading-tight">
+                    <Badge variant="outline" className={`w-fit text-[10px] px-1.5 py-0 ${NETWORK_STATO_COLOR[n.stato] || ""}`}>
+                      {NETWORK_STATO_LABEL[n.stato] || n.stato}
+                    </Badge>
+                    {n.partnerName && <span className="text-muted-foreground text-[10px] mt-0.5">{n.partnerName}</span>}
+                  </div>
+                );
+              }
+              default: return null;
+            }
+          };
+
+          // Le celle che gestiscono un'interazione propria non devono aprire il dettaglio.
+          const INTERACTIVE_COLS: ColumnKey[] = ["autista", "foglio"];
+
+          return (
+            <div className="hidden md:block relative left-1/2 -translate-x-1/2 w-screen">
+              <Card className="rounded-none border-x-0">
+                <CardContent className="p-0">
+                  <TooltipProvider delayDuration={200}>
+                    <table className="w-full table-fixed text-[11px] leading-tight">
+                      <colgroup>
+                        <col style={{ width: `${CHECKBOX_PCT}%` }} />
+                        {visibleCols.map((c) => (
+                          <col key={c.key} style={{ width: colWidth(c.key) }} />
+                        ))}
+                      </colgroup>
+                      <thead className="bg-muted/40 border-b">
+                        <tr className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
+                          <th className="px-1 py-1.5">
                             <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => handleToggleServizioSelection(s.id)}
-                              aria-label="Seleziona servizio"
+                              checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
+                              onCheckedChange={handleToggleAllVisible}
+                              aria-label="Seleziona tutti i servizi visibili"
                             />
-                          </td>
-                          <td className={`${cellCls} font-medium`}>{s.citta || "—"}</td>
-                          <td className={cellCls}>
-                            <div className="flex items-start gap-1">
-                              {modificato && <ModificheClientePopover servizioId={s.id} />}
-                              <div>
-                                <div className={senzaAutista ? "text-red-700 dark:text-red-400 font-semibold" : "font-medium"}>
-                                  {format(new Date(s.data_servizio), "dd/MM/yy")}
-                                </div>
-                                {s.ora_inizio && <div className="text-muted-foreground">{s.ora_inizio}</div>}
-                              </div>
-                            </div>
-                          </td>
-                          <td className={`${cellCls} font-semibold italic`}>{s.clients?.company || s.clients?.name || "—"}</td>
-                          <td className={cellCls}>{s.contatto || "—"}</td>
-                          <td className={cellCls}>{s.telefono_contatto || "—"}</td>
-                          <td className={`${cellCls} text-center`}>{s.n_passeggeri ?? 0}</td>
-                          <td className={`${cellCls} text-center`}>{s.n_bagagli ?? 0}</td>
-                          <td className={cellCls}>{buildTServ(s)}</td>
-                          <td className={cellCls}>{s.luogo_inizio || "—"}</td>
-                          <td className={cellCls}>{s.itinerario || "—"}</td>
-                          <td className={cellCls}>{s.luogo_fine || "—"}</td>
-                          <td className={cellCls}>{s.info_autista || "—"}</td>
-                          <td className={cellCls}>{accessoriMap[s.id] || s.accessori || "—"}</td>
-                          <td className={cellCls}>{s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—")}</td>
-                          <td className={cellCls}>{s.tipo_pagamento || "—"}</td>
-                          <td className={`${cellCls} text-right tabular-nums`}>{s.non_incassato != null ? s.non_incassato : "—"}</td>
-                          <td className={`${cellCls} text-right tabular-nums`}>{s.incasso ?? 0}</td>
-                          <td className={cellCls}>
-                            {csNome ? (
-                              <div className="flex flex-col leading-tight">
-                                <span className="font-medium">{csNome}</span>
-                                {csTel && <span className="text-muted-foreground text-[10px]">{csTel}</span>}
-                              </div>
-                            ) : "—"}
-                          </td>
-                          <td className={`${cellCls} text-right tabular-nums`}>{s.costo_cs ?? 0}</td>
-                          <td className={cellCls} onClick={(e) => e.stopPropagation()}>
-                            <AssignDriverPopover
-                              currentInternoId={s.autista_id}
-                              currentEsternoId={s.autista_esterno_id}
-                              currentLabel={driverLabel}
-                              onAssign={(driver) => handleAssignDriver(s.id, driver)}
-                              trigger={
-                                <button
-                                  type="button"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className={`inline-flex w-full flex-col items-start gap-0 rounded-md px-1 py-0.5 text-left transition-colors leading-tight ${
-                                    driverLabel ? "hover:bg-accent" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
-                                  }`}
-                                >
-                                  <span className="flex items-center gap-1 font-medium">
-                                    <span className="break-words">{driverLabel || "Assegna"}</span>
-                                    {s.autisti_esterni && <Badge variant="outline" className="h-3.5 px-1 py-0 text-[9px]">EXT</Badge>}
-                                  </span>
-                                  {driverTel && <span className="text-muted-foreground text-[10px]">{driverTel}</span>}
-                                  {driverTarga && <span className="text-muted-foreground text-[10px] font-mono">{driverTarga}</span>}
-                                </button>
-                              }
-                            />
-                          </td>
-                          <td className={`${cellCls} text-right tabular-nums`}>{s.costo_autista ?? 0}</td>
-                          <td className={`${cellCls} text-right tabular-nums`}>
-                            {s.costo_centro != null ? s.costo_centro : "—"}
-                            {s.centro_costo && <div className="text-[9px] text-muted-foreground font-normal">{s.centro_costo}</div>}
-                          </td>
-                          <td className={`${cellCls} text-right tabular-nums`}>{s.costo_commissione ?? 0}</td>
-                          <td className={`${cellCls} font-mono text-[10px]`}>{s.codice || "—"}</td>
-                          <td className={`${cellCls} text-center`} onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-6 w-6"
-                              title="Stampa foglio di servizio"
-                              onClick={() => printFoglioServizio(s, organization)}
-                            >
-                              <Printer className="h-3.5 w-3.5" />
-                            </Button>
-                          </td>
+                          </th>
+                          {visibleCols.map((c) => {
+                            const def = COLUMNS_MAP[c.key];
+                            return (
+                              <th key={c.key} className={`px-1 py-1.5 ${alignClass(c.key)}`}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="cursor-help">{def.short || def.label}</span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" className="max-w-xs text-xs">
+                                    <p><span className="font-semibold">{def.label}</span> — {def.description}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </th>
+                            );
+                          })}
                         </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-        </div>
+                      </thead>
+                      <tbody>
+                        {loading ? (
+                          <tr><td colSpan={visibleCols.length + 1} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</td></tr>
+                        ) : servizi.length === 0 ? (
+                          <tr><td colSpan={visibleCols.length + 1} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</td></tr>
+                        ) : (
+                          servizi.map(s => {
+                            const senzaAutista = !s.autista_id && !s.autista_esterno_id;
+                            const modificato = !!s.modificato_da_cliente;
+                            const isSelected = selectedServiziIds.includes(s.id);
+                            const networkInfo = networkMap[s.id];
+                            const cellCls = "px-1 py-1 align-top break-words";
+                            return (
+                              <tr
+                                key={s.id}
+                                onClick={() => setDetailServizio(s)}
+                                className={`border-b cursor-pointer transition-colors ${
+                                  isSelected
+                                    ? "bg-primary/5 hover:bg-primary/10"
+                                    : senzaAutista
+                                      ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/30"
+                                      : "hover:bg-muted/40"
+                                } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
+                              >
+                                <td className={cellCls} onClick={(e) => e.stopPropagation()}>
+                                  <Checkbox
+                                    checked={isSelected}
+                                    onCheckedChange={() => handleToggleServizioSelection(s.id)}
+                                    aria-label="Seleziona servizio"
+                                  />
+                                </td>
+                                {visibleCols.map((c, idx) => {
+                                  const isInteractive = INTERACTIVE_COLS.includes(c.key);
+                                  const isFirst = idx === 0;
+                                  return (
+                                    <td
+                                      key={c.key}
+                                      className={`${cellCls} ${alignClass(c.key)}`}
+                                      onClick={isInteractive ? (e) => e.stopPropagation() : undefined}
+                                    >
+                                      {isFirst && (modificato || networkInfo) && (
+                                        <div className="flex items-center gap-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
+                                          {modificato && <ModificheClientePopover servizioId={s.id} />}
+                                          {networkInfo && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <span className={`inline-flex items-center gap-0.5 rounded-sm px-1 py-0 text-[9px] font-medium ${NETWORK_STATO_COLOR[networkInfo.stato] || ""}`}>
+                                                  <Network className="h-2.5 w-2.5" />
+                                                  {NETWORK_STATO_LABEL[networkInfo.stato] || networkInfo.stato}
+                                                </span>
+                                              </TooltipTrigger>
+                                              <TooltipContent side="right" className="text-xs">
+                                                Passato a {networkInfo.partnerName || "partner"} · {NETWORK_STATO_LABEL[networkInfo.stato] || networkInfo.stato}
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
+                                        </div>
+                                      )}
+                                      {renderCell(c.key, s)}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </TooltipProvider>
+                </CardContent>
+              </Card>
+            </div>
+          );
+        })()}
+
 
 
         {/* Legenda (solo desktop/tablet) */}
