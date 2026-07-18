@@ -1061,6 +1061,13 @@ export default function Servizi() {
           userId={user?.id}
           onSaved={loadServizi}
         />
+
+        <NetworkDispatchDialog
+          open={!!networkDialogId}
+          onOpenChange={(o) => { if (!o) setNetworkDialogId(null); }}
+          servizioId={networkDialogId}
+          onChanged={loadServizi}
+        />
       </div>
     </DashboardLayout>
   );
