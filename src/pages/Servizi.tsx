@@ -251,6 +251,13 @@ export default function Servizi() {
 
   // Form state is managed inside <ServizioFormDialog />
 
+  // Viste personalizzate
+  const viste = useServiziViste(user?.id);
+  const [customizerOpen, setCustomizerOpen] = useState(false);
+  const [networkMap, setNetworkMap] = useState<Record<string, { stato: string; partnerName: string | null }>>({});
+
+
+
 
   const loadLookups = async () => {
     const [c, a, v, f] = await Promise.all([
