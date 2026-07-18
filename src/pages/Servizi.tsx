@@ -933,51 +933,80 @@ export default function Servizi() {
           )}
         </div>
 
-        {/* DESKTOP/TABLET: schema completo */}
-        <Card className="hidden md:block">
-          <CardContent className="p-0">
-            <div ref={tableScrollRef} className="h-scroll">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead className="h-9 w-10 px-2">
+        {/* DESKTOP/TABLET: schema completo — full-bleed, 25 colonne senza scroll orizzontale */}
+        <div className="hidden md:block relative left-1/2 -translate-x-1/2 w-screen">
+          <Card className="rounded-none border-x-0">
+            <CardContent className="p-0">
+              <table className="w-full table-fixed text-[11px] leading-tight">
+                <colgroup>
+                  <col style={{ width: "2%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "4%" }} />
+                  <col style={{ width: "6%" }} />
+                  <col style={{ width: "4%" }} />
+                  <col style={{ width: "5%" }} />
+                  <col style={{ width: "2%" }} />
+                  <col style={{ width: "2%" }} />
+                  <col style={{ width: "5%" }} />
+                  <col style={{ width: "7%" }} />
+                  <col style={{ width: "7%" }} />
+                  <col style={{ width: "7%" }} />
+                  <col style={{ width: "5%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "4%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "4%" }} />
+                  <col style={{ width: "2%" }} />
+                  <col style={{ width: "5%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "2%" }} />
+                </colgroup>
+                <thead className="bg-muted/40 border-b">
+                  <tr className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
+                    <th className="px-1 py-1.5">
                       <Checkbox
                         checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
                         onCheckedChange={handleToggleAllVisible}
                         aria-label="Seleziona tutti i servizi visibili"
                       />
-                    </TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Città</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Data</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Società</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Contatti</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Telefono</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-center">N.P</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-center">N.B</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">T.Serv</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Luogo inizio</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Itinerario</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Luogo fine</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Info autista</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Accessori</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Veicolo</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">T.P</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">Inc €</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">CS</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">CS €</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Aut</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">Aut €</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">C.C</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">Com €</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Codice</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Foglio</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+                    </th>
+                    <th className="px-1 py-1.5 text-left" title="Città">Città</th>
+                    <th className="px-1 py-1.5 text-left" title="Data servizio">Data</th>
+                    <th className="px-1 py-1.5 text-left" title="Società cliente">Società</th>
+                    <th className="px-1 py-1.5 text-left" title="Contatti (referente/passeggero)">Contatti</th>
+                    <th className="px-1 py-1.5 text-left" title="Telefono">Telefono</th>
+                    <th className="px-1 py-1.5 text-center" title="Numero passeggeri">N.P</th>
+                    <th className="px-1 py-1.5 text-center" title="Numero bagagli">N.B</th>
+                    <th className="px-1 py-1.5 text-left" title="Tipo servizio">T.Serv</th>
+                    <th className="px-1 py-1.5 text-left" title="Luogo inizio">Luogo inizio</th>
+                    <th className="px-1 py-1.5 text-left" title="Itinerario">Itinerario</th>
+                    <th className="px-1 py-1.5 text-left" title="Luogo fine">Luogo fine</th>
+                    <th className="px-1 py-1.5 text-left" title="Info autista">Info autista</th>
+                    <th className="px-1 py-1.5 text-left" title="Accessori">Access.</th>
+                    <th className="px-1 py-1.5 text-left" title="Veicolo">Veicolo</th>
+                    <th className="px-1 py-1.5 text-left" title="Tipo pagamento">T.P</th>
+                    <th className="px-1 py-1.5 text-right" title="Non incassato €">No Inc €</th>
+                    <th className="px-1 py-1.5 text-right" title="Incassato €">Inc €</th>
+                    <th className="px-1 py-1.5 text-left" title="Fornitore Corriere Speciale (nome + telefono)">CS</th>
+                    <th className="px-1 py-1.5 text-right" title="Costo CS €">CS €</th>
+                    <th className="px-1 py-1.5 text-left" title="Autista (nome + telefono + targa)">Aut</th>
+                    <th className="px-1 py-1.5 text-right" title="Costo autista €">Aut €</th>
+                    <th className="px-1 py-1.5 text-right" title="Costo centro di costo €">C.C €</th>
+                    <th className="px-1 py-1.5 text-right" title="Commissione €">Com €</th>
+                    <th className="px-1 py-1.5 text-left" title="Codice">Codice</th>
+                    <th className="px-1 py-1.5 text-center" title="Stampa foglio di servizio">Foglio</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {loading ? (
-                    <TableRow><TableCell colSpan={25} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</TableCell></TableRow>
+                    <tr><td colSpan={26} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</td></tr>
                   ) : servizi.length === 0 ? (
-                    <TableRow><TableCell colSpan={25} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</TableCell></TableRow>
+                    <tr><td colSpan={26} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</td></tr>
                   ) : (
                     servizi.map(s => {
                       const senzaAutista = !s.autista_id && !s.autista_esterno_id;
@@ -986,56 +1015,67 @@ export default function Servizi() {
                       const driverLabel = s.autisti
                         ? `${s.autisti.nome} ${s.autisti.cognome}`
                         : s.autisti_esterni?.nome || null;
+                      const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || null;
+                      const driverTarga = s.autisti_esterni?.targa || s.veicoli?.targa || null;
+                      const csNome = s.fornitori_cs?.nome || null;
+                      const csTel = s.fornitori_cs?.telefono || null;
+                      const cellCls = "px-1 py-1 align-top break-words";
                       return (
-                        <TableRow
+                        <tr
                           key={s.id}
                           onClick={() => setDetailServizio(s)}
-                          className={`text-xs cursor-pointer ${
+                          className={`border-b cursor-pointer transition-colors ${
                             isSelected
                               ? "bg-primary/5 hover:bg-primary/10"
                               : senzaAutista
                                 ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/30"
-                                : ""
+                                : "hover:bg-muted/40"
                           } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
                         >
-                          <TableCell className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
+                          <td className={cellCls} onClick={(e) => e.stopPropagation()}>
                             <Checkbox
                               checked={isSelected}
                               onCheckedChange={() => handleToggleServizioSelection(s.id)}
                               aria-label="Seleziona servizio"
                             />
-                          </TableCell>
-                          <TableCell className="py-2 font-medium">{s.citta || "—"}</TableCell>
-                          <TableCell className="py-2 whitespace-nowrap">
-                            <div className="flex items-center gap-1.5">
-                              {modificato && (
-                                <ModificheClientePopover servizioId={s.id} />
-                              )}
+                          </td>
+                          <td className={`${cellCls} font-medium`}>{s.citta || "—"}</td>
+                          <td className={cellCls}>
+                            <div className="flex items-start gap-1">
+                              {modificato && <ModificheClientePopover servizioId={s.id} />}
                               <div>
-                                <div className={senzaAutista ? "text-red-700 dark:text-red-400 font-semibold" : ""}>
-                                  {format(new Date(s.data_servizio), "dd/MM/yyyy")}
+                                <div className={senzaAutista ? "text-red-700 dark:text-red-400 font-semibold" : "font-medium"}>
+                                  {format(new Date(s.data_servizio), "dd/MM/yy")}
                                 </div>
                                 {s.ora_inizio && <div className="text-muted-foreground">{s.ora_inizio}</div>}
                               </div>
                             </div>
-                          </TableCell>
-                          <TableCell className="py-2 font-semibold italic">{s.clients?.company || s.clients?.name || "—"}</TableCell>
-                          <TableCell className="py-2">{s.contatto || "—"}</TableCell>
-                          <TableCell className="py-2 whitespace-nowrap">{s.telefono_contatto || "—"}</TableCell>
-                          <TableCell className="py-2 text-center">{s.n_passeggeri ?? 0}</TableCell>
-                          <TableCell className="py-2 text-center">{s.n_bagagli ?? 0}</TableCell>
-                          <TableCell className="py-2">{buildTServ(s)}</TableCell>
-                          <TableCell className="py-2 max-w-[200px] truncate" title={s.luogo_inizio || ""}>{s.luogo_inizio || "—"}</TableCell>
-                          <TableCell className="py-2 max-w-[200px] truncate" title={s.itinerario || ""}>{s.itinerario || "—"}</TableCell>
-                          <TableCell className="py-2 max-w-[200px] truncate" title={s.luogo_fine || ""}>{s.luogo_fine || "—"}</TableCell>
-                          <TableCell className="py-2 max-w-[180px] truncate" title={s.info_autista || ""}>{s.info_autista || "—"}</TableCell>
-                          <TableCell className="py-2">{s.accessori || "—"}</TableCell>
-                          <TableCell className="py-2">{s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—")}</TableCell>
-                          <TableCell className="py-2">{s.tipo_pagamento || "—"}</TableCell>
-                          <TableCell className="py-2 text-right tabular-nums">{s.incasso ?? 0}</TableCell>
-                          <TableCell className="py-2">{s.fornitori_cs?.nome || "—"}</TableCell>
-                          <TableCell className="py-2 text-right tabular-nums">{s.costo_cs ?? 0}</TableCell>
-                          <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
+                          </td>
+                          <td className={`${cellCls} font-semibold italic`}>{s.clients?.company || s.clients?.name || "—"}</td>
+                          <td className={cellCls}>{s.contatto || "—"}</td>
+                          <td className={cellCls}>{s.telefono_contatto || "—"}</td>
+                          <td className={`${cellCls} text-center`}>{s.n_passeggeri ?? 0}</td>
+                          <td className={`${cellCls} text-center`}>{s.n_bagagli ?? 0}</td>
+                          <td className={cellCls}>{buildTServ(s)}</td>
+                          <td className={cellCls}>{s.luogo_inizio || "—"}</td>
+                          <td className={cellCls}>{s.itinerario || "—"}</td>
+                          <td className={cellCls}>{s.luogo_fine || "—"}</td>
+                          <td className={cellCls}>{s.info_autista || "—"}</td>
+                          <td className={cellCls}>{s.accessori || "—"}</td>
+                          <td className={cellCls}>{s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—")}</td>
+                          <td className={cellCls}>{s.tipo_pagamento || "—"}</td>
+                          <td className={`${cellCls} text-right tabular-nums`}>{s.non_incassato != null ? s.non_incassato : "—"}</td>
+                          <td className={`${cellCls} text-right tabular-nums`}>{s.incasso ?? 0}</td>
+                          <td className={cellCls}>
+                            {csNome ? (
+                              <div className="flex flex-col leading-tight">
+                                <span className="font-medium">{csNome}</span>
+                                {csTel && <span className="text-muted-foreground text-[10px]">{csTel}</span>}
+                              </div>
+                            ) : "—"}
+                          </td>
+                          <td className={`${cellCls} text-right tabular-nums`}>{s.costo_cs ?? 0}</td>
+                          <td className={cellCls} onClick={(e) => e.stopPropagation()}>
                             <AssignDriverPopover
                               currentInternoId={s.autista_id}
                               currentEsternoId={s.autista_esterno_id}
@@ -1045,34 +1085,48 @@ export default function Servizi() {
                                 <button
                                   type="button"
                                   onClick={(e) => e.stopPropagation()}
-                                  className={`inline-flex max-w-[150px] items-center gap-1.5 rounded-md px-2 py-1 text-left transition-colors ${
-                                    driverLabel
-                                      ? "hover:bg-accent"
-                                      : "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                  className={`inline-flex w-full flex-col items-start gap-0 rounded-md px-1 py-0.5 text-left transition-colors leading-tight ${
+                                    driverLabel ? "hover:bg-accent" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
                                   }`}
                                 >
-                                  <span className="truncate text-[11px] font-medium">{driverLabel || "Assegna"}</span>
-                                  {s.autisti_esterni && (
-                                    <Badge variant="outline" className="h-4 px-1 py-0 text-[9px]">EXT</Badge>
-                                  )}
+                                  <span className="flex items-center gap-1 font-medium">
+                                    <span className="break-words">{driverLabel || "Assegna"}</span>
+                                    {s.autisti_esterni && <Badge variant="outline" className="h-3.5 px-1 py-0 text-[9px]">EXT</Badge>}
+                                  </span>
+                                  {driverTel && <span className="text-muted-foreground text-[10px]">{driverTel}</span>}
+                                  {driverTarga && <span className="text-muted-foreground text-[10px] font-mono">{driverTarga}</span>}
                                 </button>
                               }
                             />
-                          </TableCell>
-                          <TableCell className="py-2 text-right tabular-nums">{s.costo_autista ?? 0}</TableCell>
-                          <TableCell className="py-2 text-right tabular-nums">{s.centro_costo || "—"}</TableCell>
-                          <TableCell className="py-2 text-right tabular-nums">{s.costo_commissione ?? 0}</TableCell>
-                          <TableCell className="py-2 font-mono text-[11px]">{s.codice || "—"}</TableCell>
-                          <TableCell className="py-2 font-mono text-[11px]">{s.foglio || "—"}</TableCell>
-                        </TableRow>
+                          </td>
+                          <td className={`${cellCls} text-right tabular-nums`}>{s.costo_autista ?? 0}</td>
+                          <td className={`${cellCls} text-right tabular-nums`}>
+                            {s.costo_centro != null ? s.costo_centro : "—"}
+                            {s.centro_costo && <div className="text-[9px] text-muted-foreground font-normal">{s.centro_costo}</div>}
+                          </td>
+                          <td className={`${cellCls} text-right tabular-nums`}>{s.costo_commissione ?? 0}</td>
+                          <td className={`${cellCls} font-mono text-[10px]`}>{s.codice || "—"}</td>
+                          <td className={`${cellCls} text-center`} onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              title="Stampa foglio di servizio"
+                              onClick={() => printFoglioServizio(s, organization)}
+                            >
+                              <Printer className="h-3.5 w-3.5" />
+                            </Button>
+                          </td>
+                        </tr>
                       );
                     })
                   )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
+
 
         {/* Legenda (solo desktop/tablet) */}
         <div className="hidden md:flex flex-wrap gap-4 text-xs text-muted-foreground">
