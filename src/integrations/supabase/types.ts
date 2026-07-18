@@ -1982,206 +1982,104 @@ export type Database = {
     }
     Functions: {
       cleanup_servizi_annullati: { Args: never; Returns: undefined }
-      client_portal_update_servizio:
-        | {
-            Args: {
-              _accessori?: string
-              _allegato_nome?: string
-              _allegato_path?: string
-              _cancel?: boolean
-              _centro_costo?: string
-              _citta?: string
-              _data_servizio?: string
-              _disposizione_oraria?: string
-              _info_autista?: string
-              _itinerario?: string
-              _luogo_fine?: string
-              _luogo_inizio?: string
-              _n_bagagli?: number
-              _n_passeggeri?: number
-              _note?: string
-              _ora_inizio?: string
-              _remove_allegato?: boolean
-              _servizio_id: string
-              _tipo_pagamento?: string
-              _tipologia?: Database["public"]["Enums"]["servizio_tipologia"]
-              _tour_tipo?: string
-              _transfer_tipo?: string
-              _veicolo_tipo?: string
-            }
-            Returns: {
-              accessori: string | null
-              allegato_nome: string | null
-              allegato_path: string | null
-              archiviato: boolean
-              autista_esterno_id: string | null
-              autista_id: string | null
-              centro_costo: string | null
-              citta: string | null
-              client_id: string | null
-              codice: string | null
-              com_cliente: number | null
-              con_assistente: boolean
-              con_guida: boolean
-              contatto: string | null
-              costo_autista: number | null
-              costo_centro: number | null
-              costo_commissione: number | null
-              costo_cs: number | null
-              created_at: string
-              created_by: string | null
-              data_servizio: string
-              disposizione_oraria: string | null
-              email_contatto: string | null
-              foglio: string | null
-              fornitore_cs_id: string | null
-              id: string
-              incasso: number | null
-              info_autista: string | null
-              info_cliente: string | null
-              info_cliente_autista: string | null
-              info_interne: string | null
-              itinerario: string | null
-              luogo_fine: string | null
-              luogo_inizio: string | null
-              modificato_at: string | null
-              modificato_da_cliente: boolean
-              n_bagagli: number | null
-              n_passeggeri: number | null
-              network_autista_nome: string | null
-              network_autista_targa: string | null
-              network_autista_telefono: string | null
-              non_incassato: number | null
-              note: string | null
-              ora_inizio: string | null
-              org_id: string
-              permesso_effettuato: boolean
-              prezzo: number | null
-              prezzo_ccredito: number | null
-              prezzo_contante: number | null
-              prezzo_fattura: number | null
-              ritirare_voucher: boolean
-              stato: Database["public"]["Enums"]["servizio_stato"]
-              telefono_contatto: string | null
-              telefono_d: string | null
-              tipo_pagamento: string | null
-              tipologia:
-                | Database["public"]["Enums"]["servizio_tipologia"]
-                | null
-              tour_tipo: string | null
-              transfer_tipo: string | null
-              updated_at: string
-              utenza_id: string | null
-              veicolo_id: string | null
-              veicolo_tipo: string | null
-            }
-            SetofOptions: {
-              from: "*"
-              to: "servizi"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: {
-              _accessori?: string
-              _accessori_items?: Json
-              _allegato_nome?: string
-              _allegato_path?: string
-              _cancel?: boolean
-              _centro_costo?: string
-              _citta?: string
-              _data_servizio?: string
-              _disposizione_oraria?: string
-              _info_autista?: string
-              _itinerario?: string
-              _luogo_fine?: string
-              _luogo_inizio?: string
-              _n_bagagli?: number
-              _n_passeggeri?: number
-              _note?: string
-              _ora_inizio?: string
-              _remove_allegato?: boolean
-              _servizio_id: string
-              _tipo_pagamento?: string
-              _tipologia?: Database["public"]["Enums"]["servizio_tipologia"]
-              _tour_tipo?: string
-              _transfer_tipo?: string
-              _veicolo_tipo?: string
-            }
-            Returns: {
-              accessori: string | null
-              allegato_nome: string | null
-              allegato_path: string | null
-              archiviato: boolean
-              autista_esterno_id: string | null
-              autista_id: string | null
-              centro_costo: string | null
-              citta: string | null
-              client_id: string | null
-              codice: string | null
-              com_cliente: number | null
-              con_assistente: boolean
-              con_guida: boolean
-              contatto: string | null
-              costo_autista: number | null
-              costo_centro: number | null
-              costo_commissione: number | null
-              costo_cs: number | null
-              created_at: string
-              created_by: string | null
-              data_servizio: string
-              disposizione_oraria: string | null
-              email_contatto: string | null
-              foglio: string | null
-              fornitore_cs_id: string | null
-              id: string
-              incasso: number | null
-              info_autista: string | null
-              info_cliente: string | null
-              info_cliente_autista: string | null
-              info_interne: string | null
-              itinerario: string | null
-              luogo_fine: string | null
-              luogo_inizio: string | null
-              modificato_at: string | null
-              modificato_da_cliente: boolean
-              n_bagagli: number | null
-              n_passeggeri: number | null
-              network_autista_nome: string | null
-              network_autista_targa: string | null
-              network_autista_telefono: string | null
-              non_incassato: number | null
-              note: string | null
-              ora_inizio: string | null
-              org_id: string
-              permesso_effettuato: boolean
-              prezzo: number | null
-              prezzo_ccredito: number | null
-              prezzo_contante: number | null
-              prezzo_fattura: number | null
-              ritirare_voucher: boolean
-              stato: Database["public"]["Enums"]["servizio_stato"]
-              telefono_contatto: string | null
-              telefono_d: string | null
-              tipo_pagamento: string | null
-              tipologia:
-                | Database["public"]["Enums"]["servizio_tipologia"]
-                | null
-              tour_tipo: string | null
-              transfer_tipo: string | null
-              updated_at: string
-              utenza_id: string | null
-              veicolo_id: string | null
-              veicolo_tipo: string | null
-            }
-            SetofOptions: {
-              from: "*"
-              to: "servizi"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
+      client_portal_update_servizio: {
+        Args: {
+          _accessori?: string
+          _accessori_items?: Json
+          _allegato_nome?: string
+          _allegato_path?: string
+          _cancel?: boolean
+          _centro_costo?: string
+          _citta?: string
+          _data_servizio?: string
+          _disposizione_oraria?: string
+          _info_autista?: string
+          _itinerario?: string
+          _luogo_fine?: string
+          _luogo_inizio?: string
+          _n_bagagli?: number
+          _n_passeggeri?: number
+          _note?: string
+          _ora_inizio?: string
+          _remove_allegato?: boolean
+          _servizio_id: string
+          _tipo_pagamento?: string
+          _tipologia?: Database["public"]["Enums"]["servizio_tipologia"]
+          _tour_tipo?: string
+          _transfer_tipo?: string
+          _veicolo_tipo?: string
+        }
+        Returns: {
+          accessori: string | null
+          allegato_nome: string | null
+          allegato_path: string | null
+          archiviato: boolean
+          autista_esterno_id: string | null
+          autista_id: string | null
+          centro_costo: string | null
+          citta: string | null
+          client_id: string | null
+          codice: string | null
+          com_cliente: number | null
+          con_assistente: boolean
+          con_guida: boolean
+          contatto: string | null
+          costo_autista: number | null
+          costo_centro: number | null
+          costo_commissione: number | null
+          costo_cs: number | null
+          created_at: string
+          created_by: string | null
+          data_servizio: string
+          disposizione_oraria: string | null
+          email_contatto: string | null
+          foglio: string | null
+          fornitore_cs_id: string | null
+          id: string
+          incasso: number | null
+          info_autista: string | null
+          info_cliente: string | null
+          info_cliente_autista: string | null
+          info_interne: string | null
+          itinerario: string | null
+          luogo_fine: string | null
+          luogo_inizio: string | null
+          modificato_at: string | null
+          modificato_da_cliente: boolean
+          n_bagagli: number | null
+          n_passeggeri: number | null
+          network_autista_nome: string | null
+          network_autista_targa: string | null
+          network_autista_telefono: string | null
+          non_incassato: number | null
+          note: string | null
+          ora_inizio: string | null
+          org_id: string
+          permesso_effettuato: boolean
+          prezzo: number | null
+          prezzo_ccredito: number | null
+          prezzo_contante: number | null
+          prezzo_fattura: number | null
+          ritirare_voucher: boolean
+          stato: Database["public"]["Enums"]["servizio_stato"]
+          telefono_contatto: string | null
+          telefono_d: string | null
+          tipo_pagamento: string | null
+          tipologia: Database["public"]["Enums"]["servizio_tipologia"] | null
+          tour_tipo: string | null
+          transfer_tipo: string | null
+          updated_at: string
+          utenza_id: string | null
+          veicolo_id: string | null
+          veicolo_tipo: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "servizi"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       current_user_email: { Args: never; Returns: string }
       get_active_utenza_id: { Args: { _user_id: string }; Returns: string }
       get_client_org_id: { Args: { _user_id: string }; Returns: string }
