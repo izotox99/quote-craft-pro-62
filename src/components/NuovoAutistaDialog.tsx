@@ -175,7 +175,7 @@ export function NuovoAutistaDialog({
           patente: common.patente || null,
           cellulare: common.cellulare || null,
           email: common.email || null,
-          password: common.password || null,
+          
           calcola_riposi: common.calcola_riposi === "Si",
           tipo_macchina: esterno.tipo_macchina || null,
           targa: esterno.targa || null,
