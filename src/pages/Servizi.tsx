@@ -1042,8 +1042,9 @@ export default function Servizi() {
                           {visibleCols.map((c, idx) => {
                             const def = COLUMNS_MAP[c.key];
                             const edgePad = idx === 0 ? "pl-[3px] pr-0" : idx === visibleCols.length - 1 ? "pl-0 pr-[3px]" : "px-0";
+                            const isLast = idx === visibleCols.length - 1;
                             return (
-                              <th key={c.key} className={`border-r border-border ${edgePad} py-0.5 overflow-hidden ${alignClass(c.key)}`}>
+                              <th key={c.key} className={`relative border-r border-border ${edgePad} py-0.5 overflow-hidden ${alignClass(c.key)}`}>
                                 <div className="flex items-center gap-1">
                                   {idx === 0 && (
                                     <Checkbox
@@ -1062,6 +1063,16 @@ export default function Servizi() {
                                     </TooltipContent>
                                   </Tooltip>
                                 </div>
+                                {!isLast && (
+                                  <div
+                                    role="separator"
+                                    aria-label={`Ridimensiona colonna ${def.label}`}
+                                    title="Trascina per ridimensionare · doppio click: auto-fit"
+                                    onMouseDown={(e) => beginColumnResize(e, c.key)}
+                                    onDoubleClick={(e) => { e.preventDefault(); e.stopPropagation(); autofitColumn(c.key); }}
+                                    className="absolute top-0 right-0 h-full w-[6px] -mr-[3px] z-10 cursor-col-resize select-none hover:bg-primary/30 active:bg-primary/60"
+                                  />
+                                )}
                               </th>
                             );
                           })}
