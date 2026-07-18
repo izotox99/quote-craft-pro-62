@@ -153,7 +153,8 @@ export function NuovoAutistaDialog({
           cellulare: common.cellulare || null,
           telefono: common.cellulare || null,
           email: common.email || null,
-          password: common.password || null,
+          calcola_riposi: common.calcola_riposi === "Si",
+
           calcola_riposi: common.calcola_riposi === "Si",
           numero_ore_ord: interno.numero_ore_ord ? Number(interno.numero_ore_ord) : null,
           prezzo_ora_ord: interno.prezzo_ora_ord ? Number(interno.prezzo_ora_ord) : 0,
