@@ -569,7 +569,7 @@ export default function Servizi() {
                   key={opt.key}
                   onClick={() => handleQuickDay(opt.key)}
                   className={`
-                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all
+                    inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all
                     ${quickDay === opt.key
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "bg-muted/60 text-muted-foreground hover:bg-muted"
