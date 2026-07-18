@@ -76,7 +76,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [mezziExpanded, setMezziExpanded] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-clip">
       <header className="sticky top-0 z-50 border-b border-border/50 bg-card/80 backdrop-blur-xl">
         <div className="flex h-16 items-center px-4 lg:px-8">
           <div className="flex items-center gap-4">
