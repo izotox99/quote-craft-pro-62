@@ -10,8 +10,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
-import { PlusCircle, Search, Users, Pencil, Trash2 } from "lucide-react";
+import { PlusCircle, Search, Users, Pencil, Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { TariffarioUpload } from "@/components/clients/TariffarioUpload";
 
 type Client = {
   id: string; name: string; email: string | null; company: string | null;
@@ -24,6 +25,7 @@ type Client = {
   telefono_urg2: string | null; telefono_urg2_nota: string | null;
   telefono_urg3: string | null; telefono_urg3_nota: string | null;
   fax: string | null; password_cliente: string | null; auth_user_id: string | null;
+  org_id: string; tariffario_url: string | null; tariffario_nome: string | null;
 };
 
 const emptyForm = {
@@ -195,6 +197,7 @@ export default function Clients() {
                       <TableHead>Telefono</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Città</TableHead>
+                      <TableHead className="w-12">Tarif.</TableHead>
                       <TableHead className="w-20" />
                     </TableRow>
                   </TableHeader>
@@ -208,6 +211,17 @@ export default function Clients() {
                         <TableCell className="text-muted-foreground">{c.phone ?? "—"}</TableCell>
                         <TableCell className="text-muted-foreground">{c.email ?? "—"}</TableCell>
                         <TableCell className="text-muted-foreground">{c.citta ?? "—"}</TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
+                          {c.tariffario_url ? (
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title={c.tariffario_nome ?? "Apri tariffario"} onClick={async () => {
+                              const { data } = await supabase.storage.from("tariffari-clienti").createSignedUrl(c.tariffario_url!, 300);
+                              if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+                              else toast.error("Impossibile aprire");
+                            }}>
+                              <FileText className="h-4 w-4 text-primary" />
+                            </Button>
+                          ) : <span className="text-muted-foreground/40">—</span>}
+                        </TableCell>
                         <TableCell>
                           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(c)}>
@@ -298,6 +312,23 @@ export default function Clients() {
                     type="password"
                   />
                 </div>
+
+                {editing && (
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Tariffario</h3>
+                    <TariffarioUpload
+                      clientId={editing.id}
+                      orgId={editing.org_id}
+                      currentUrl={editing.tariffario_url}
+                      currentName={editing.tariffario_nome}
+                      onChange={async () => {
+                        const { data } = await supabase.from("clients").select("*").eq("id", editing.id).single();
+                        if (data) setEditing(data as Client);
+                        load();
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* Note */}
                 <div className="space-y-4">

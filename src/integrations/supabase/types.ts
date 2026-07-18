@@ -380,6 +380,8 @@ export type Database = {
           provincia: string | null
           sede_legale: string | null
           societa_fattura: string | null
+          tariffario_nome: string | null
+          tariffario_url: string | null
           telefono_urg1: string | null
           telefono_urg1_nota: string | null
           telefono_urg2: string | null
@@ -414,6 +416,8 @@ export type Database = {
           provincia?: string | null
           sede_legale?: string | null
           societa_fattura?: string | null
+          tariffario_nome?: string | null
+          tariffario_url?: string | null
           telefono_urg1?: string | null
           telefono_urg1_nota?: string | null
           telefono_urg2?: string | null
@@ -448,6 +452,8 @@ export type Database = {
           provincia?: string | null
           sede_legale?: string | null
           societa_fattura?: string | null
+          tariffario_nome?: string | null
+          tariffario_url?: string | null
           telefono_urg1?: string | null
           telefono_urg1_nota?: string | null
           telefono_urg2?: string | null

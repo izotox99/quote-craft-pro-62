@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Mail, Phone, Building2, StickyNote } from "lucide-react";
+import { TariffarioUpload } from "@/components/clients/TariffarioUpload";
 import { format } from "date-fns";
 
 const statusColors: Record<string, string> = {
@@ -17,7 +18,7 @@ const statusColors: Record<string, string> = {
   annullato: "bg-red-100 text-red-800",
 };
 
-type Client = { id: string; name: string; email: string | null; company: string | null; phone: string | null; notes: string | null; created_at: string; };
+type Client = { id: string; name: string; email: string | null; company: string | null; phone: string | null; notes: string | null; created_at: string; org_id: string; tariffario_url: string | null; tariffario_nome: string | null; };
 type Servizio = { id: string; data_servizio: string; citta: string | null; luogo_inizio: string | null; luogo_fine: string | null; stato: string; incasso: number | null; };
 
 export default function ClientDetail() {
@@ -74,6 +75,21 @@ export default function ClientDetail() {
             {client.company && <div className="flex items-center gap-2 text-sm"><Building2 className="h-4 w-4 text-muted-foreground" /><span>{client.company}</span></div>}
             {client.notes && <div className="flex items-start gap-2 text-sm"><StickyNote className="h-4 w-4 text-muted-foreground mt-0.5" /><span className="text-muted-foreground whitespace-pre-wrap">{client.notes}</span></div>}
             {!client.email && !client.phone && !client.company && !client.notes && <p className="text-sm text-muted-foreground">Nessun dettaglio di contatto</p>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Tariffario</CardTitle></CardHeader>
+          <CardContent>
+            <TariffarioUpload
+              clientId={client.id}
+              orgId={client.org_id}
+              currentUrl={client.tariffario_url}
+              currentName={client.tariffario_nome}
+              onChange={() => {
+                supabase.from("clients").select("*").eq("id", client.id!).single().then(({ data }) => data && setClient(data as Client));
+              }}
+            />
           </CardContent>
         </Card>
 
