@@ -155,7 +155,6 @@ export function NuovoAutistaDialog({
           email: common.email || null,
           calcola_riposi: common.calcola_riposi === "Si",
 
-          calcola_riposi: common.calcola_riposi === "Si",
           numero_ore_ord: interno.numero_ore_ord ? Number(interno.numero_ore_ord) : null,
           prezzo_ora_ord: interno.prezzo_ora_ord ? Number(interno.prezzo_ora_ord) : 0,
           prezzo_ora_straord: interno.prezzo_ora_straord ? Number(interno.prezzo_ora_straord) : 0,
