@@ -163,27 +163,12 @@ export default function ListaServizi() {
 
   // Edit
   const [editOpen, setEditOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    data_servizio: "",
-    ora_inizio: "",
-    citta: "",
-    n_passeggeri: "1",
-    n_bagagli: "0",
-    tipologia: "" as string, // booking-style: transfer_interno|transfer_regionale|tour
-    tour_tipo: "",
-    veicolo_tipo: "",
-    luogo_inizio: "",
-    luogo_inizio_dettaglio: "",
-    luogo_fine: "",
-    luogo_fine_dettaglio: "",
-    itinerario: "",
-    info_autista: "",
-    tipo_pagamento: "",
-    centro_costo: "",
-    accessori: "",
-    note: "",
-  });
+  const [editForm, setEditForm] = useState<BookingFormState>(emptyBookingForm);
   const [editAccessori, setEditAccessori] = useState<AccessorioRow[]>([]);
+  const [editOrgId, setEditOrgId] = useState<string | null>(null);
+  const [editClientId, setEditClientId] = useState<string | null>(null);
+  const [editPasseggeri, setEditPasseggeri] = useState<{ id: string; nome: string; cognome: string | null; telefono: string | null; email: string | null }[]>([]);
+  const [autoreName, setAutoreName] = useState<string>("");
 
   const loadServizi = async () => {
     if (!user) return;
