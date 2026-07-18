@@ -830,9 +830,9 @@ export default function Servizi() {
                 const csNome = s.fornitori_cs?.nome;
                 const csTel = s.fornitori_cs?.telefono;
                 return csNome ? (
-                  <div className="flex flex-col leading-tight">
+                <div className="flex flex-col leading-[1.05]">
                     <span className="font-medium">{csNome}</span>
-                    {csTel && <span className="text-muted-foreground text-[10px]">{csTel}</span>}
+                  {csTel && <span className="text-muted-foreground text-[7.5px]">{csTel}</span>}
                   </div>
                 ) : "—";
               }
@@ -848,16 +848,16 @@ export default function Servizi() {
                   return (
                     <div
                       onClick={(e) => e.stopPropagation()}
-                      className="flex flex-col leading-tight rounded-md px-1 py-0.5 border border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30 dark:border-indigo-900"
+                      className="flex max-w-full flex-col overflow-hidden leading-[1.05] rounded-sm px-0.5 py-0 border border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30 dark:border-indigo-900"
                       title="Autista assegnato dal partner del network"
                     >
-                      <span className="flex items-center gap-1 font-medium text-indigo-900 dark:text-indigo-200">
-                        <span className="break-words">{partnerNome}</span>
-                        <Badge variant="outline" className="h-3.5 px-1 py-0 text-[9px] border-indigo-400 text-indigo-700 dark:text-indigo-300">NET</Badge>
+                      <span className="flex max-w-full items-center gap-0.5 overflow-hidden font-medium text-indigo-900 dark:text-indigo-200">
+                        <span className="truncate">{partnerNome}</span>
+                        <Badge variant="outline" className="h-3 px-0.5 py-0 text-[7px] border-indigo-400 text-indigo-700 dark:text-indigo-300">N</Badge>
                       </span>
-                      {s.network_autista_telefono && <span className="text-indigo-800/80 dark:text-indigo-300/80 text-[10px]">{s.network_autista_telefono}</span>}
-                      {s.network_autista_targa && <span className="text-indigo-800/80 dark:text-indigo-300/80 text-[10px] font-mono">{s.network_autista_targa}</span>}
-                      {partnerName && <span className="text-[9px] italic text-indigo-700/70 dark:text-indigo-300/70">via {partnerName}</span>}
+                      {s.network_autista_telefono && <span className="truncate text-indigo-800/80 dark:text-indigo-300/80 text-[7.5px]">{s.network_autista_telefono}</span>}
+                      {s.network_autista_targa && <span className="truncate text-indigo-800/80 dark:text-indigo-300/80 text-[7.5px] font-mono">{s.network_autista_targa}</span>}
+                      {partnerName && <span className="truncate text-[7px] italic text-indigo-700/70 dark:text-indigo-300/70">via {partnerName}</span>}
                     </div>
                   );
                 }
@@ -871,16 +871,16 @@ export default function Servizi() {
                       <button
                         type="button"
                         onClick={(e) => e.stopPropagation()}
-                        className={`inline-flex w-full flex-col items-start gap-0 rounded-md px-1 py-0.5 text-left transition-colors leading-tight ${
+                        className={`inline-flex w-full min-w-0 max-w-full flex-col items-start gap-0 overflow-hidden rounded-sm px-0.5 py-0 text-left transition-colors leading-[1.05] ${
                           driverLabel ? "hover:bg-accent" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
                         }`}
                       >
-                        <span className="flex items-center gap-1 font-medium">
-                          <span className="break-words">{driverLabel || "Assegna"}</span>
-                          {s.autisti_esterni && <Badge variant="outline" className="h-3.5 px-1 py-0 text-[9px]">EXT</Badge>}
+                        <span className="flex max-w-full items-center gap-0.5 overflow-hidden font-medium">
+                          <span className="truncate">{driverLabel || "Assegna"}</span>
+                          {s.autisti_esterni && <Badge variant="outline" className="h-3 px-0.5 py-0 text-[7px]">E</Badge>}
                         </span>
-                        {driverTel && <span className="text-muted-foreground text-[10px]">{driverTel}</span>}
-                        {driverTarga && <span className="text-muted-foreground text-[10px] font-mono">{driverTarga}</span>}
+                        {driverTel && <span className="truncate text-muted-foreground text-[7.5px]">{driverTel}</span>}
+                        {driverTarga && <span className="truncate text-muted-foreground text-[7.5px] font-mono">{driverTarga}</span>}
                       </button>
                     }
                   />
@@ -890,31 +890,31 @@ export default function Servizi() {
               case "costo_centro": return (
                 <>
                   {s.costo_centro != null ? s.costo_centro : "—"}
-                  {s.centro_costo && <div className="text-[9px] text-muted-foreground font-normal">{s.centro_costo}</div>}
+                  {s.centro_costo && <div className="truncate text-[7px] text-muted-foreground font-normal">{s.centro_costo}</div>}
                 </>
               );
               case "commissione": return s.costo_commissione ?? 0;
-              case "codice": return <span className="font-mono text-[10px]">{s.codice || "—"}</span>;
+              case "codice": return <span className="block truncate font-mono text-[8px]">{s.codice || "—"}</span>;
               case "foglio": return (
                 <Button
                   size="icon"
                   variant="ghost"
-                  className="h-6 w-6"
+                  className="h-4 w-4"
                   title="Stampa foglio di servizio"
                   onClick={(e) => { e.stopPropagation(); printFoglioServizio(s, organization); }}
                 >
-                  <Printer className="h-3.5 w-3.5" />
+                  <Printer className="h-2.5 w-2.5" />
                 </Button>
               );
               case "network_stato": {
                 const n = networkMap[s.id];
                 if (!n) return <span className="text-muted-foreground">—</span>;
                 return (
-                  <div className="flex flex-col leading-tight">
-                    <Badge variant="outline" className={`w-fit text-[10px] px-1.5 py-0 ${NETWORK_STATO_COLOR[n.stato] || ""}`}>
+                  <div className="flex max-w-full flex-col overflow-hidden leading-[1.05]">
+                    <Badge variant="outline" className={`w-fit max-w-full text-[7px] px-0.5 py-0 ${NETWORK_STATO_COLOR[n.stato] || ""}`}>
                       {NETWORK_STATO_LABEL[n.stato] || n.stato}
                     </Badge>
-                    {n.partnerName && <span className="text-muted-foreground text-[10px] mt-0.5">{n.partnerName}</span>}
+                    {n.partnerName && <span className="truncate text-muted-foreground text-[7.5px] mt-0.5">{n.partnerName}</span>}
                   </div>
                 );
               }
@@ -928,7 +928,7 @@ export default function Servizi() {
           return (
             <div className="hidden md:block -mx-3 lg:-mx-4 overflow-hidden border-y bg-card">
               <TooltipProvider delayDuration={200}>
-                <table className="w-full table-fixed text-[10px] leading-tight" style={{ tableLayout: "fixed" }}>
+                <table className="w-full table-fixed text-[8px] leading-[1.05] xl:text-[9px]" style={{ tableLayout: "fixed" }}>
                       <colgroup>
                         <col style={{ width: `${CHECKBOX_PCT}%` }} />
                         {visibleCols.map((c) => (
@@ -936,9 +936,10 @@ export default function Servizi() {
                         ))}
                       </colgroup>
                       <thead className="bg-muted/40 border-b">
-                        <tr className="text-[10px] font-semibold text-muted-foreground">
-                          <th className="px-0.5 py-1 overflow-hidden">
+                        <tr className="text-[7.5px] font-semibold text-muted-foreground xl:text-[8px]">
+                          <th className="px-px py-0.5 overflow-hidden">
                             <Checkbox
+                              className="h-3 w-3 rounded-[2px]"
                               checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
                               onCheckedChange={handleToggleAllVisible}
                               aria-label="Seleziona tutti i servizi visibili"
@@ -947,10 +948,10 @@ export default function Servizi() {
                           {visibleCols.map((c) => {
                             const def = COLUMNS_MAP[c.key];
                             return (
-                              <th key={c.key} className={`px-0.5 py-1 overflow-hidden ${alignClass(c.key)}`}>
+                              <th key={c.key} className={`px-px py-0.5 overflow-hidden ${alignClass(c.key)}`}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className="cursor-help block truncate uppercase tracking-tight" title={def.label}>{def.short || def.label}</span>
+                                    <span className="cursor-help block truncate uppercase" title={def.label}>{def.short || def.label}</span>
                                   </TooltipTrigger>
                                   <TooltipContent side="bottom" className="max-w-xs text-xs">
                                     <p><span className="font-semibold">{def.label}</span> — {def.description}</p>
@@ -972,7 +973,7 @@ export default function Servizi() {
                             const modificato = !!s.modificato_da_cliente;
                             const isSelected = selectedServiziIds.includes(s.id);
                             const networkInfo = networkMap[s.id];
-                            const cellCls = "px-0.5 py-1 align-top break-words overflow-hidden";
+                            const cellCls = "px-px py-0.5 align-top overflow-hidden break-words min-w-0";
                             return (
                               <tr
                                 key={s.id}
@@ -987,6 +988,7 @@ export default function Servizi() {
                               >
                                 <td className={cellCls} onClick={(e) => e.stopPropagation()}>
                                   <Checkbox
+                                    className="h-3 w-3 rounded-[2px]"
                                     checked={isSelected}
                                     onCheckedChange={() => handleToggleServizioSelection(s.id)}
                                     aria-label="Seleziona servizio"
