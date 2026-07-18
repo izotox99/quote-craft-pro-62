@@ -1208,10 +1208,11 @@ export default function Servizi() {
                       <tbody>
                         {loading ? (
                           <tr><td colSpan={visibleCols.length} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</td></tr>
-                        ) : servizi.length === 0 ? (
+                        ) : displayServizi.length === 0 ? (
                           <tr><td colSpan={visibleCols.length} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</td></tr>
                         ) : (
-                          servizi.map(s => {
+                          displayServizi.map(s => {
+
                             const senzaAutista = !s.autista_id && !s.autista_esterno_id;
                             const modificato = !!s.modificato_da_cliente;
                             const isNuovoRosso = s.stato === "nuovo" && senzaAutista;
