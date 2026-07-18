@@ -83,7 +83,7 @@ function computeClientStato(s: Servizio): { label: string; className: string } {
     return { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" };
   }
   const hasDriver = !!(s.autista_id || s.autista_esterno_id);
-  if (!hasDriver && (s.stato === "nuovo" || s.stato === "confermato")) {
+  if (!hasDriver && (s.stato === "nuovo" || s.stato === "da_confermare" || s.stato === "confermato")) {
     return { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" };
   }
   return statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" };
