@@ -513,6 +513,7 @@ export type Database = {
           nome: string
           note: string | null
           org_id: string
+          partner_org_id: string | null
           telefono: string | null
           updated_at: string
         }
@@ -523,6 +524,7 @@ export type Database = {
           nome: string
           note?: string | null
           org_id?: string
+          partner_org_id?: string | null
           telefono?: string | null
           updated_at?: string
         }
@@ -533,10 +535,19 @@ export type Database = {
           nome?: string
           note?: string | null
           org_id?: string
+          partner_org_id?: string | null
           telefono?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fornitori_cs_partner_org_id_fkey"
+            columns: ["partner_org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       line_items: {
         Row: {
@@ -605,6 +616,66 @@ export type Database = {
           success?: boolean
         }
         Relationships: []
+      }
+      network_partners: {
+        Row: {
+          created_at: string
+          id: string
+          invite_code: string
+          invited_at: string
+          invited_by_email: string | null
+          invited_by_user: string | null
+          org_a: string
+          org_b: string | null
+          responded_at: string | null
+          responded_by_user: string | null
+          stato: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invite_code: string
+          invited_at?: string
+          invited_by_email?: string | null
+          invited_by_user?: string | null
+          org_a: string
+          org_b?: string | null
+          responded_at?: string | null
+          responded_by_user?: string | null
+          stato?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invite_code?: string
+          invited_at?: string
+          invited_by_email?: string | null
+          invited_by_user?: string | null
+          org_a?: string
+          org_b?: string | null
+          responded_at?: string | null
+          responded_by_user?: string | null
+          stato?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "network_partners_org_a_fkey"
+            columns: ["org_a"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_partners_org_b_fkey"
+            columns: ["org_b"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifiche: {
         Row: {
@@ -1975,6 +2046,79 @@ export type Database = {
       hash_share_password: { Args: { _password: string }; Returns: string }
       hash_utenza_password: { Args: { _password: string }; Returns: string }
       is_client_user: { Args: { _user_id: string }; Returns: boolean }
+      network_invite_partner: {
+        Args: { _email?: string; _org_b?: string }
+        Returns: {
+          created_at: string
+          id: string
+          invite_code: string
+          invited_at: string
+          invited_by_email: string | null
+          invited_by_user: string | null
+          org_a: string
+          org_b: string | null
+          responded_at: string | null
+          responded_by_user: string | null
+          stato: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "network_partners"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      network_respond_invite: {
+        Args: {
+          _accept?: boolean
+          _invite_code?: string
+          _partnership_id?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          invite_code: string
+          invited_at: string
+          invited_by_email: string | null
+          invited_by_user: string | null
+          org_a: string
+          org_b: string | null
+          responded_at: string | null
+          responded_by_user: string | null
+          stato: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "network_partners"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      network_revoke_partnership: {
+        Args: { _partnership_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          invite_code: string
+          invited_at: string
+          invited_by_email: string | null
+          invited_by_user: string | null
+          org_a: string
+          org_b: string | null
+          responded_at: string | null
+          responded_by_user: string | null
+          stato: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "network_partners"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       verify_share_password: {
         Args: { _password: string; _share_id: string }
         Returns: boolean
