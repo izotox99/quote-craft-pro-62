@@ -54,6 +54,7 @@ const mezziSubItems = [
 const mainNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
   { to: "/fornitori", icon: Truck, label: "Fornitori CS" },
+  { to: "/network", icon: Users, label: "Network partner" },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
