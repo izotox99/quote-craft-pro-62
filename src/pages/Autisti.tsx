@@ -198,7 +198,7 @@ export default function Autisti() {
                   <TableHead className="text-right">Prezzo Ora.Straord</TableHead>
                   <TableHead>Cellulare</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Password</TableHead>
+                  
                   <TableHead className="text-center w-32">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
