@@ -379,7 +379,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </SheetContent>
       </Sheet>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 lg:px-8 overflow-x-clip">
+      <main className="w-full px-3 py-3 lg:px-4">
         {children}
       </main>
     </div>
