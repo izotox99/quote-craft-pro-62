@@ -176,13 +176,21 @@ export function reconcileColumns(saved: unknown): ViewColumnState[] {
     seen.add(key);
     const rawW = (item as any).width;
     const width = typeof rawW === "number" && isFinite(rawW) && rawW > 0 ? rawW : undefined;
-    result.push({ key, visible: Boolean((item as any).visible), width });
+    const visible = PINNED_COLUMNS.has(key) ? true : Boolean((item as any).visible);
+    result.push({ key, visible, width });
   }
   for (const c of COLUMNS) {
-    if (!seen.has(c.key)) result.push({ key: c.key, visible: false });
+    if (!seen.has(c.key)) result.push({ key: c.key, visible: PINNED_COLUMNS.has(c.key) });
+  }
+  // Le colonne "pinned" (es. Azioni) vanno sempre inserite se assenti dallo stato:
+  // se erano rimaste orfane sopra vengono forzate visibili qui.
+  for (const key of PINNED_COLUMNS) {
+    const idx = result.findIndex((c) => c.key === key);
+    if (idx >= 0 && !result[idx].visible) result[idx] = { ...result[idx], visible: true };
   }
   return result;
 }
+
 
 /** Larghezze effettive (in %) per le colonne visibili date le width esplicite + i pesi.
  *  Le colonne con width fissa sono rispettate; le altre si dividono lo spazio residuo
