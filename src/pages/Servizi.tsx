@@ -138,9 +138,11 @@ function printFoglioServizio(s: Servizio, org: { name: string; logo_url: string 
     if (value === null || value === undefined || value === "") return "";
     return `<tr><td class="lbl">${escapeHtml(label)}</td><td>${escapeHtml(String(value))}</td></tr>`;
   };
-  const driverLabel = s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : (s.autisti_esterni?.nome || "");
-  const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || "";
-  const targa = s.autisti_esterni?.targa || s.veicoli?.targa || "";
+  const hasLocalDriver = !!(s.autista_id || s.autista_esterno_id);
+  const partnerDriver = !hasLocalDriver && s.network_autista_nome ? s.network_autista_nome : "";
+  const driverLabel = s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : (s.autisti_esterni?.nome || partnerDriver);
+  const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || (partnerDriver ? (s.network_autista_telefono || "") : "");
+  const targa = s.autisti_esterni?.targa || s.veicoli?.targa || (partnerDriver ? (s.network_autista_targa || "") : "");
   const veicolo = s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "");
   const dataStr = format(new Date(s.data_servizio), "dd/MM/yyyy");
   const html = `<!doctype html><html><head><meta charset="utf-8"><title>Foglio Servizio ${escapeHtml(s.codice || s.id.slice(0, 8))}</title>
