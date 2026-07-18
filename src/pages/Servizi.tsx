@@ -1326,6 +1326,7 @@ export default function Servizi() {
           onRename={(nome) => viste.renameView(viste.activeView.id, nome)}
           onDelete={() => viste.deleteView(viste.activeView.id)}
           onSetDefault={() => viste.setAsDefault(viste.activeView.id)}
+          onResetWidths={() => viste.resetColumnWidths(viste.activeView.id)}
         />
       </div>
     </DashboardLayout>
