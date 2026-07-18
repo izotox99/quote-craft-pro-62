@@ -921,9 +921,17 @@ export default function Servizi() {
                       {s.ora_inizio && ` · ${s.ora_inizio}`}
                     </DialogTitle>
                   </DialogHeader>
-                  <div className="flex flex-wrap gap-2 mt-1">
+                  <div className="flex flex-wrap gap-2 mt-1 items-center">
                     <Badge variant="outline" className={statusColors[s.stato] || ""}>{statusLabels[s.stato] || s.stato}</Badge>
                     {s.citta && <Badge variant="outline">{s.citta}</Badge>}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="ml-auto gap-1.5 h-7 text-xs"
+                      onClick={() => openEditServizio(s.id)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Modifica
+                    </Button>
                   </div>
 
                   <Separator className="my-2" />
