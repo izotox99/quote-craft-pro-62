@@ -112,6 +112,7 @@ export default function Dashboard() {
       .select("*, clients(name, company), client_utenze(nome, cognome), autisti(nome, cognome), autisti_esterni(nome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
       .gte("data_servizio", dal)
       .lte("data_servizio", al)
+      .eq("archiviato", false)
       .order("data_servizio", { ascending: true })
       .order("ora_inizio", { ascending: true });
     setServizi((data ?? []) as unknown as Servizio[]);
