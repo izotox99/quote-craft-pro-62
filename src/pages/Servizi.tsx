@@ -789,8 +789,8 @@ export default function Servizi() {
         {(() => {
           const visibleCols = viste.activeView.columns.filter((c) => c.visible);
           const totalWeight = visibleCols.reduce((sum, c) => sum + (COLUMNS_MAP[c.key]?.weight ?? 3), 0);
-          // 2% riservato alla checkbox: il resto si spartisce sulle colonne visibili
-          const CHECKBOX_PCT = 2;
+          // Checkbox minima: recupera spazio utile per le colonne dati.
+          const CHECKBOX_PCT = 1.05;
           const remaining = 100 - CHECKBOX_PCT;
           const colWidth = (key: ColumnKey) =>
             `${((COLUMNS_MAP[key]?.weight ?? 3) / (totalWeight || 1)) * remaining}%`;
@@ -928,7 +928,7 @@ export default function Servizi() {
           return (
             <div className="hidden md:block -mx-3 lg:-mx-4 overflow-hidden border-y bg-card">
               <TooltipProvider delayDuration={200}>
-                <table className="w-full table-fixed text-[8px] leading-[1.05] xl:text-[9px]" style={{ tableLayout: "fixed" }}>
+                <table className="w-full table-fixed border-collapse text-[7px] leading-none xl:text-[8px]" style={{ tableLayout: "fixed", borderSpacing: 0 }}>
                       <colgroup>
                         <col style={{ width: `${CHECKBOX_PCT}%` }} />
                         {visibleCols.map((c) => (
@@ -936,10 +936,10 @@ export default function Servizi() {
                         ))}
                       </colgroup>
                       <thead className="bg-muted/40 border-b">
-                        <tr className="text-[7.5px] font-semibold text-muted-foreground xl:text-[8px]">
-                          <th className="px-0 py-0.5 overflow-hidden">
+                        <tr className="text-[6.5px] font-semibold text-muted-foreground xl:text-[7px]">
+                          <th className="px-0 py-px overflow-hidden">
                             <Checkbox
-                              className="h-3 w-3 rounded-[2px]"
+                              className="h-2.5 w-2.5 rounded-[2px]"
                               checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
                               onCheckedChange={handleToggleAllVisible}
                               aria-label="Seleziona tutti i servizi visibili"
@@ -948,7 +948,7 @@ export default function Servizi() {
                           {visibleCols.map((c) => {
                             const def = COLUMNS_MAP[c.key];
                             return (
-                              <th key={c.key} className={`px-0 py-0.5 overflow-hidden ${alignClass(c.key)}`}>
+                              <th key={c.key} className={`px-0 py-px overflow-hidden ${alignClass(c.key)}`}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <span className="cursor-help block truncate uppercase" title={def.label}>{def.short || def.label}</span>
@@ -973,7 +973,7 @@ export default function Servizi() {
                             const modificato = !!s.modificato_da_cliente;
                             const isSelected = selectedServiziIds.includes(s.id);
                             const networkInfo = networkMap[s.id];
-                            const cellCls = "px-0 py-0.5 align-top overflow-hidden break-words min-w-0";
+                            const cellCls = "px-0 py-px align-top overflow-hidden break-words min-w-0";
                             return (
                               <tr
                                 key={s.id}
@@ -1000,7 +1000,7 @@ export default function Servizi() {
                                   return (
                                     <td
                                       key={c.key}
-                                      className={`${cellCls} ${alignClass(c.key)}`}
+                                      className={`${cellCls} ${alignClass(c.key)} [&>*]:max-w-full`}
                                       onClick={isInteractive ? (e) => e.stopPropagation() : undefined}
                                     >
                                       {isFirst && (modificato || networkInfo) && (
