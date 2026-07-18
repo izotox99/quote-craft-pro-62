@@ -372,6 +372,7 @@ export type Database = {
           name: string
           nazione: string | null
           nome_rappresentante: string | null
+          nota_tariffario: string | null
           notes: string | null
           org_id: string | null
           p_iva: string | null
@@ -408,6 +409,7 @@ export type Database = {
           name: string
           nazione?: string | null
           nome_rappresentante?: string | null
+          nota_tariffario?: string | null
           notes?: string | null
           org_id?: string | null
           p_iva?: string | null
@@ -444,6 +446,7 @@ export type Database = {
           name?: string
           nazione?: string | null
           nome_rappresentante?: string | null
+          nota_tariffario?: string | null
           notes?: string | null
           org_id?: string | null
           p_iva?: string | null
