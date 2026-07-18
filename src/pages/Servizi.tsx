@@ -1003,6 +1003,35 @@ export default function Servizi() {
             })()}
           </DialogContent>
         </Dialog>
+
+        {/* Nuovo servizio */}
+        <ServizioFormDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          mode="create"
+          clients={clients}
+          autisti={autisti}
+          veicoli={veicoli}
+          fornitori={fornitori}
+          isAdmin={isAdmin}
+          userId={user?.id}
+          onSaved={loadServizi}
+        />
+
+        {/* Modifica servizio */}
+        <ServizioFormDialog
+          open={!!editServizio}
+          onOpenChange={o => { if (!o) setEditServizio(null); }}
+          mode="edit"
+          initialData={editServizio}
+          clients={clients}
+          autisti={autisti}
+          veicoli={veicoli}
+          fornitori={fornitori}
+          isAdmin={isAdmin}
+          userId={user?.id}
+          onSaved={loadServizi}
+        />
       </div>
     </DashboardLayout>
   );
