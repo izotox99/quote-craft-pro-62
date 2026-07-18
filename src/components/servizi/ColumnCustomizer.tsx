@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Info, GripVertical, Star, Trash2, Pencil, Save, Copy, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import { COLUMNS_MAP, type ViewColumnState, SYSTEM_VIEW_IDS } from "@/lib/servizi-columns";
+import { COLUMNS_MAP, PINNED_COLUMNS, type ViewColumnState, SYSTEM_VIEW_IDS } from "@/lib/servizi-columns";
 import type { ViewRef } from "@/hooks/use-servizi-viste";
 
 type Props = {
