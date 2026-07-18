@@ -562,6 +562,13 @@ export function ServizioFormDialog({
             )}
           </section>
 
+          <section className="bg-muted/40 rounded-md p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accessori</p>
+            </div>
+            <AccessoriEditor value={accessoriRows} onChange={setAccessoriRows} />
+          </section>
+
           <section className="bg-muted/40 rounded-md p-3">
             <Label>Note</Label>
             <Textarea value={f.note} onChange={e => set({ note: e.target.value })} className="min-h-[60px]" />
