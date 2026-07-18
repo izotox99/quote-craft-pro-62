@@ -444,9 +444,21 @@ export default function Servizi() {
             <h1 className="font-display text-2xl font-bold text-foreground">Servizi</h1>
             <p className="text-sm text-muted-foreground">{nuoviCount} nuovi · {servizi.length} totali</p>
           </div>
-          <Button className="gap-2 w-full sm:w-auto" onClick={() => setDialogOpen(true)}>
-            <PlusCircle className="h-4 w-4" /> Nuovo Servizio
-          </Button>
+          <div className="flex gap-2 items-center w-full sm:w-auto">
+            <div className="relative flex-1 sm:w-64">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={globalSearch}
+                onChange={e => setGlobalSearch(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") loadServizi(); }}
+                placeholder="Cerca (codice, contatto, luogo)…"
+                className="h-9 pl-7 text-xs"
+              />
+            </div>
+            <Button className="gap-2" onClick={() => setDialogOpen(true)}>
+              <PlusCircle className="h-4 w-4" /> Nuovo Servizio
+            </Button>
+          </div>
 
         </div>
 
