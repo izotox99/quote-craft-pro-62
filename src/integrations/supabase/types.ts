@@ -966,6 +966,9 @@ export type Database = {
           citta: string | null
           client_id: string | null
           codice: string | null
+          com_cliente: number | null
+          con_assistente: boolean
+          con_guida: boolean
           contatto: string | null
           costo_autista: number | null
           costo_centro: number | null
@@ -981,6 +984,9 @@ export type Database = {
           id: string
           incasso: number | null
           info_autista: string | null
+          info_cliente: string | null
+          info_cliente_autista: string | null
+          info_interne: string | null
           itinerario: string | null
           luogo_fine: string | null
           luogo_inizio: string | null
@@ -992,9 +998,15 @@ export type Database = {
           note: string | null
           ora_inizio: string | null
           org_id: string
+          permesso_effettuato: boolean
           prezzo: number | null
+          prezzo_ccredito: number | null
+          prezzo_contante: number | null
+          prezzo_fattura: number | null
+          ritirare_voucher: boolean
           stato: Database["public"]["Enums"]["servizio_stato"]
           telefono_contatto: string | null
+          telefono_d: string | null
           tipo_pagamento: string | null
           tipologia: Database["public"]["Enums"]["servizio_tipologia"] | null
           tour_tipo: string | null
@@ -1015,6 +1027,9 @@ export type Database = {
           citta?: string | null
           client_id?: string | null
           codice?: string | null
+          com_cliente?: number | null
+          con_assistente?: boolean
+          con_guida?: boolean
           contatto?: string | null
           costo_autista?: number | null
           costo_centro?: number | null
@@ -1030,6 +1045,9 @@ export type Database = {
           id?: string
           incasso?: number | null
           info_autista?: string | null
+          info_cliente?: string | null
+          info_cliente_autista?: string | null
+          info_interne?: string | null
           itinerario?: string | null
           luogo_fine?: string | null
           luogo_inizio?: string | null
@@ -1041,9 +1059,15 @@ export type Database = {
           note?: string | null
           ora_inizio?: string | null
           org_id?: string
+          permesso_effettuato?: boolean
           prezzo?: number | null
+          prezzo_ccredito?: number | null
+          prezzo_contante?: number | null
+          prezzo_fattura?: number | null
+          ritirare_voucher?: boolean
           stato?: Database["public"]["Enums"]["servizio_stato"]
           telefono_contatto?: string | null
+          telefono_d?: string | null
           tipo_pagamento?: string | null
           tipologia?: Database["public"]["Enums"]["servizio_tipologia"] | null
           tour_tipo?: string | null
@@ -1064,6 +1088,9 @@ export type Database = {
           citta?: string | null
           client_id?: string | null
           codice?: string | null
+          com_cliente?: number | null
+          con_assistente?: boolean
+          con_guida?: boolean
           contatto?: string | null
           costo_autista?: number | null
           costo_centro?: number | null
@@ -1079,6 +1106,9 @@ export type Database = {
           id?: string
           incasso?: number | null
           info_autista?: string | null
+          info_cliente?: string | null
+          info_cliente_autista?: string | null
+          info_interne?: string | null
           itinerario?: string | null
           luogo_fine?: string | null
           luogo_inizio?: string | null
@@ -1090,9 +1120,15 @@ export type Database = {
           note?: string | null
           ora_inizio?: string | null
           org_id?: string
+          permesso_effettuato?: boolean
           prezzo?: number | null
+          prezzo_ccredito?: number | null
+          prezzo_contante?: number | null
+          prezzo_fattura?: number | null
+          ritirare_voucher?: boolean
           stato?: Database["public"]["Enums"]["servizio_stato"]
           telefono_contatto?: string | null
+          telefono_d?: string | null
           tipo_pagamento?: string | null
           tipologia?: Database["public"]["Enums"]["servizio_tipologia"] | null
           tour_tipo?: string | null
@@ -1654,6 +1690,9 @@ export type Database = {
           citta: string | null
           client_id: string | null
           codice: string | null
+          com_cliente: number | null
+          con_assistente: boolean
+          con_guida: boolean
           contatto: string | null
           costo_autista: number | null
           costo_centro: number | null
@@ -1669,6 +1708,9 @@ export type Database = {
           id: string
           incasso: number | null
           info_autista: string | null
+          info_cliente: string | null
+          info_cliente_autista: string | null
+          info_interne: string | null
           itinerario: string | null
           luogo_fine: string | null
           luogo_inizio: string | null
@@ -1680,9 +1722,15 @@ export type Database = {
           note: string | null
           ora_inizio: string | null
           org_id: string
+          permesso_effettuato: boolean
           prezzo: number | null
+          prezzo_ccredito: number | null
+          prezzo_contante: number | null
+          prezzo_fattura: number | null
+          ritirare_voucher: boolean
           stato: Database["public"]["Enums"]["servizio_stato"]
           telefono_contatto: string | null
+          telefono_d: string | null
           tipo_pagamento: string | null
           tipologia: Database["public"]["Enums"]["servizio_tipologia"] | null
           tour_tipo: string | null
