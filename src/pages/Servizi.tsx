@@ -226,53 +226,8 @@ export default function Servizi() {
   const [filterCodice, setFilterCodice] = useState("");
   const [filterArchiviati, setFilterArchiviati] = useState(false);
 
-  // New service form
-  const [form, setForm] = useState({
-    data_servizio: format(new Date(), "yyyy-MM-dd"),
-    ora_inizio: "",
-    citta: "",
-    luogo_inizio: "",
-    luogo_inizio_dettaglio: "",
-    luogo_fine: "",
-    luogo_fine_dettaglio: "",
-    itinerario: "",
-    stato: "nuovo" as string,
-    tipologia_servizio: "" as string, // transfer_interno | transfer_regionale | tour
-    tour_tipo: "",
-    veicolo_tipo: "", // tipo veicolo (catalogo booking)
-    tipo_pagamento: "",
-    prezzo: "",
-    client_id: "",
-    contatto: "",
-    telefono_contatto: "",
-    email_contatto: "",
-    autista_id: "",
-    veicolo_id: "",
-    fornitore_cs_id: "",
-    n_passeggeri: 1,
-    n_bagagli: 0,
-    accessori: "",
-    info_autista: "",
-    codice: "",
-    foglio: "",
-    incasso: 0,
-    costo_cs: 0,
-    costo_autista: 0,
-    costo_commissione: 0,
-    non_incassato: 0,
-    costo_centro: 0,
-    centro_costo: "",
-    note: "",
-  });
+  // Form state is managed inside <ServizioFormDialog />
 
-  const luogoInizioSpeciale = useMemo(
-    () => detectLuogoSpeciale(form.luogo_inizio, form.citta, form.luogo_inizio_dettaglio),
-    [form.luogo_inizio, form.citta, form.luogo_inizio_dettaglio]
-  );
-  const luogoFineSpeciale = useMemo(
-    () => detectLuogoSpeciale(form.luogo_fine, form.citta, form.luogo_fine_dettaglio),
-    [form.luogo_fine, form.citta, form.luogo_fine_dettaglio]
-  );
 
   const loadLookups = async () => {
     const [c, a, v, f] = await Promise.all([
