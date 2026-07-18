@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -10,27 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { TimePicker } from "@/components/ui/time-picker";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
-import {
-  VEICOLI_DISPONIBILI,
-  TIPOLOGIA_OPZIONI,
-  TOUR_OPZIONI,
-  PAGAMENTO_OPZIONI,
-  CITTA_OPZIONI,
-  detectLuogoSpeciale,
-  LuogoField,
-  tipologiaToDB,
-  transferTipoForDB,
-} from "@/lib/booking-shared";
+import { ServizioFormDialog, type ServizioFormInitial } from "@/components/servizi/ServizioFormDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, AlertTriangle, Bell, Printer } from "lucide-react";
+import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, Bell, Printer, Pencil } from "lucide-react";
 import { ModificheClientePopover } from "@/components/ModificheClientePopover";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, addDays } from "date-fns";
 import { it as itLocale } from "date-fns/locale";
 
