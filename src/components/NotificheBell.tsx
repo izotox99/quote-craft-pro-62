@@ -25,6 +25,7 @@ const tipoIcon: Record<string, { icon: typeof Bell; className: string }> = {
   servizio_annullato: { icon: XCircle, className: "text-destructive" },
   servizio_modificato: { icon: Pencil, className: "text-amber-600 dark:text-amber-400" },
   servizio_creato: { icon: FilePlus, className: "text-emerald-600 dark:text-emerald-400" },
+  agenda_promemoria: { icon: CalendarClock, className: "text-blue-600 dark:text-blue-400" },
 };
 
 export function NotificheBell() {
