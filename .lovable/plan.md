@@ -1,22 +1,30 @@
-## Obiettivo
-Ridurre lo spazio interno tra le colonne della tabella Servizi (`/dashboard`) così che tutte le 25 voci restino leggibili anche a viewport strette (826px attuali dello screenshot, dove alcune colonne di destra come `Com €`, `Cod.`, `Fog.` risultano tagliate/troncate).
+Obiettivo: far apparire la tabella Servizi il più possibile come nello screenshot del vecchio gestionale: colonne separate da bordi sottili, testo compatto ma leggibile, nessuno spazio laterale/gap inutile tra una colonna e l'altra.
 
-## Modifiche
+Piano di intervento:
 
-### `src/pages/Servizi.tsx`
-- Header `<th>`: `px-1 py-1.5` → `px-0.5 py-1` (dimezza il padding orizzontale).
-- Celle `<td>` (`cellCls`): `px-1 py-1` → `px-0.5 py-1`.
-- Tabella: `text-[10.5px]` → `text-[10px]` per allineare corpo e header e recuperare ~5% larghezza.
-- Header font: resta `text-[10px]`, aggiungo `tracking-tight` per evitare wrap su label brevi.
-- Checkbox `<th>`/`<td>`: `px-1` → `px-0.5` così la prima colonna non ruba spazio.
+1. Ripristinare intestazioni leggibili come nello screenshot
+   - Usare label brevi ma non eccessivamente ridotte: “Città”, “Data servizio”, “Società”, “Contatti”, “Telefono”, “N.P”, “N.B”, “T.Serv”, ecc.
+   - Evitare intestazioni a una sola lettera dove non serve, perché nello screenshot le colonne sono compatte ma riconoscibili.
 
-### `src/lib/servizi-columns.ts`
-Ribilancio pesi delle colonne per dare più larghezza a quelle che nello screenshot risultano compresse/tagliate e ridurre quelle sovradimensionate:
-- `citta` 3 → 2, `data` 4 → 3, `np` 2 → 1, `nb` 2 → 1, `tp` 3 → 2, `foglio` 2 → 1.
-- `societa` 6 → 5, `luogo_inizio`/`itinerario`/`luogo_fine` 7 → 6.
-- Le colonne economiche di destra (`non_incassato`, `incasso`, `costo_cs`, `costo_autista`, `costo_centro`, `commissione`, `codice`) restano a 3 così i valori numerici e la label `Com €`/`Cod.` non vengono più troncati.
+2. Eliminare il finto “spazio” tra colonne
+   - Passare a una resa più simile a foglio gestionale legacy: `border-collapse: collapse`, bordi verticali visibili su ogni cella e zero gap tra colonne.
+   - Rimuovere padding orizzontale quasi del tutto: celle con `px-[1px]` o `px-0` dove possibile.
+   - Ridurre padding interno di badge, pulsanti, autista/network e altri elementi che oggi creano aria dentro le celle.
 
-Nessuna modifica a logica dati, RLS, o layout esterno alla tabella.
+3. Ricalibrare le larghezze per assomigliare allo screenshot
+   - Dare più spazio alle colonne testuali lunghe: Società, Contatti, Telefono, Luogo inizio, Itinerario, Luogo fine, CS, Codice.
+   - Comprimere molto le colonne numeriche e operative: N.P, N.B, T.P, No Inc €, Inc €, CS €, Aut €, C.C €, Com €, Foglio.
+   - La checkbox resterà minima o verrà resa praticamente invisibile in larghezza rispetto alla tabella.
 
-## Verifica
-Playwright headless a 826px, 1280px, 1440px: confermare che tutte le 26 `<th>` sono renderizzate, `scrollWidth === clientWidth` (nessun scroll orizzontale), e che le label `Com€`, `Cod.`, `Fog.` non sono clippate (bounding box interamente dentro il viewport).
+4. Cambiare il comportamento del contenuto nelle celle
+   - Usare wrapping compatto come nello screenshot, non solo `truncate` ovunque.
+   - Rendere font e line-height più simili al gestionale legacy: testo piccolo, grassetto/italico dove già usato, righe più dense.
+   - Evitare che elementi interni come badge e pulsanti allarghino visivamente la colonna.
+
+5. Verifica finale su preview
+   - Controllare a 1280px che la tabella occupi tutta la larghezza, non abbia scroll orizzontale e mostri tutte le colonne della vista Completa.
+   - Verificare visivamente che l’effetto sia quello dello screenshot: colonne attaccate tra loro con separatori verticali, non “spaziate”.
+
+File interessati:
+- `src/pages/Servizi.tsx`
+- `src/lib/servizi-columns.ts`
