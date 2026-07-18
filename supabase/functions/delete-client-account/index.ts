@@ -60,10 +60,32 @@ Deno.serve(async (req) => {
 
     const authUserId = clientRow.auth_user_id as string | null;
 
-    // Delete the client row first (cascades by FK as per current schema; manual cleanup not needed
-    // because related tables filter by org_id and don't FK to clients.id strictly).
+    // Blocca l'eliminazione se esistono servizi associati (FK ON DELETE RESTRICT).
+    const { count: serviziCount } = await admin
+      .from("servizi")
+      .select("id", { count: "exact", head: true })
+      .eq("client_id", client_id);
+
+    if ((serviziCount ?? 0) > 0) {
+      return jsonResponse({
+        error: `Impossibile eliminare: il cliente ha ${serviziCount} servizi associati. Disattivalo invece di eliminarlo.`,
+        code: "has_servizi",
+        servizi_count: serviziCount,
+      }, 409);
+    }
+
     const { error: delErr } = await admin.from("clients").delete().eq("id", client_id);
-    if (delErr) return jsonResponse({ error: delErr.message, code: "delete_failed" }, 400);
+    if (delErr) {
+      // Fallback: se PostgREST/PG restituisce violazione FK (23503), traduci in messaggio chiaro.
+      const msg = delErr.message ?? "";
+      if (msg.includes("servizi_client_id_fkey") || (delErr as { code?: string }).code === "23503") {
+        return jsonResponse({
+          error: "Impossibile eliminare: il cliente ha servizi associati. Disattivalo invece di eliminarlo.",
+          code: "has_servizi",
+        }, 409);
+      }
+      return jsonResponse({ error: msg, code: "delete_failed" }, 400);
+    }
 
     // Try to delete the auth user too, if no other client / utenza references it.
     if (authUserId) {
