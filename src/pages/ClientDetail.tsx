@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Mail, Phone, Building2, StickyNote } from "lucide-react";
+import { TariffarioUpload } from "@/components/clients/TariffarioUpload";
 import { format } from "date-fns";
 
 const statusColors: Record<string, string> = {
