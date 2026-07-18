@@ -972,7 +972,7 @@ export default function Servizi() {
                             const modificato = !!s.modificato_da_cliente;
                             const isSelected = selectedServiziIds.includes(s.id);
                             const networkInfo = networkMap[s.id];
-                            const cellCls = "px-1 py-1 align-top break-words overflow-hidden";
+                            const cellCls = "px-0.5 py-1 align-top break-words overflow-hidden";
                             return (
                               <tr
                                 key={s.id}
