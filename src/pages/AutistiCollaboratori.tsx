@@ -20,7 +20,7 @@ type Esterno = {
   patente: string | null;
   cellulare: string | null;
   email: string | null;
-  password: string | null;
+  
   tipo_macchina: string | null;
   targa: string | null;
   level: string | null;
