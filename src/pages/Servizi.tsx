@@ -1229,6 +1229,15 @@ export default function Servizi() {
                   <div className="flex flex-wrap gap-2 mt-1 items-center">
                     <Badge variant="outline" className={statusColors[s.stato] || ""}>{statusLabels[s.stato] || s.stato}</Badge>
                     {s.citta && <Badge variant="outline">{s.citta}</Badge>}
+                    {s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id) && (
+                      <Button
+                        size="sm"
+                        className="gap-1.5 h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white"
+                        onClick={() => handleConfirmServizio(s.id)}
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Conferma
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
