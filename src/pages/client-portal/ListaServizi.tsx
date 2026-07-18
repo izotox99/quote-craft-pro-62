@@ -31,6 +31,7 @@ import {
   tipologiaToDB,
   transferTipoForDB,
 } from "@/lib/booking-shared";
+import { AccessoriEditor, type AccessorioRow, loadServizioAccessori } from "@/components/servizi/AccessoriEditor";
 
 type Servizio = {
   id: string;
