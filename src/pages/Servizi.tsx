@@ -531,6 +531,22 @@ export default function Servizi() {
                 className="h-9 pl-7 text-xs"
               />
             </div>
+            <div className="hidden md:flex items-center gap-2">
+              <ViewSelector
+                viste={viste.viste}
+                activeId={viste.activeView.id}
+                onSelect={viste.selectView}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                onClick={() => setCustomizerOpen(true)}
+                title="Personalizza colonne"
+              >
+                <Columns3 className="h-3.5 w-3.5" /> Colonne
+              </Button>
+            </div>
             <Button className="gap-2" onClick={() => setDialogOpen(true)}>
               <PlusCircle className="h-4 w-4" /> Nuovo Servizio
             </Button>
