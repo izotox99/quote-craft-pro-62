@@ -560,6 +560,17 @@ export default function Servizi() {
   };
 
   const nuoviCount = servizi.filter(s => s.stato === "nuovo").length;
+  const daConfermareCount = servizi.filter(s => s.stato === "da_confermare").length;
+
+  const handleConfirmServizio = async (servizioId: string) => {
+    const { error } = await supabase
+      .from("servizi")
+      .update({ stato: "confermato" as any })
+      .eq("id", servizioId);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Servizio confermato");
+    await loadServizi();
+  };
 
   // Quick day filters for "Nuovi" services
   const [quickDay, setQuickDay] = useState<string | null>(null);
