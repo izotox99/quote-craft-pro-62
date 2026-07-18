@@ -8,7 +8,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Info, GripVertical, Star, Trash2, Pencil, Save, Copy } from "lucide-react";
+import { Info, GripVertical, Star, Trash2, Pencil, Save, Copy, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { COLUMNS_MAP, type ViewColumnState, SYSTEM_VIEW_IDS } from "@/lib/servizi-columns";
 import type { ViewRef } from "@/hooks/use-servizi-viste";
@@ -22,11 +22,12 @@ type Props = {
   onRename: (nome: string) => Promise<void>;
   onDelete: () => Promise<void>;
   onSetDefault: () => Promise<void>;
+  onResetWidths?: () => Promise<void> | void;
 };
 
 export function ColumnCustomizer({
   open, onOpenChange, activeView,
-  onUpdateColumns, onSaveAs, onRename, onDelete, onSetDefault,
+  onUpdateColumns, onSaveAs, onRename, onDelete, onSetDefault, onResetWidths,
 }: Props) {
   const [draft, setDraft] = useState<ViewColumnState[]>(activeView.columns);
   const [draggingKey, setDraggingKey] = useState<string | null>(null);
@@ -197,16 +198,31 @@ export function ColumnCustomizer({
                 <Copy className="h-3.5 w-3.5" /> Salva come nuova vista
               </Button>
             </div>
-            {!isSystem && (
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="ghost" onClick={() => setRenameDialog({ open: true, nome: activeView.nome })} className="gap-1.5">
-                  <Pencil className="h-3.5 w-3.5" /> Rinomina
+            <div className="flex flex-wrap gap-2">
+              {onResetWidths && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={async () => {
+                    try { await onResetWidths(); toast.success("Larghezze ripristinate"); }
+                    catch (e: any) { toast.error(e.message || "Errore"); }
+                  }}
+                  className="gap-1.5"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Ripristina larghezze predefinite
                 </Button>
-                <Button size="sm" variant="ghost" onClick={() => setDeleteDialog(true)} className="gap-1.5 text-destructive hover:text-destructive">
-                  <Trash2 className="h-3.5 w-3.5" /> Elimina
-                </Button>
-              </div>
-            )}
+              )}
+              {!isSystem && (
+                <>
+                  <Button size="sm" variant="ghost" onClick={() => setRenameDialog({ open: true, nome: activeView.nome })} className="gap-1.5">
+                    <Pencil className="h-3.5 w-3.5" /> Rinomina
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setDeleteDialog(true)} className="gap-1.5 text-destructive hover:text-destructive">
+                    <Trash2 className="h-3.5 w-3.5" /> Elimina
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
         </SheetContent>
       </Sheet>

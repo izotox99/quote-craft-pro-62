@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   SYSTEM_VIEWS,
   SYSTEM_VIEW_IDS,
   reconcileColumns,
   makeCompletaState,
+  type ColumnKey,
   type ViewColumnState,
   type SystemView,
 } from "@/lib/servizi-columns";
@@ -21,6 +22,45 @@ export type ViewRef = {
 const LS_VERSION = "v2";
 const LS_ACTIVE_KEY = `servizi_vista_attiva_id_${LS_VERSION}`;
 const LS_LEGACY_KEYS = ["servizi_vista_attiva_id"];
+const LS_WIDTHS_PREFIX = `servizi_col_widths_${LS_VERSION}:`;
+
+type WidthMap = Partial<Record<ColumnKey, number>>;
+
+function lsWidthsKey(viewId: string) { return `${LS_WIDTHS_PREFIX}${viewId}`; }
+
+export function readWidthsCache(viewId: string): WidthMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(lsWidthsKey(viewId));
+    if (!raw) return {};
+    const obj = JSON.parse(raw);
+    if (!obj || typeof obj !== "object") return {};
+    const out: WidthMap = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (typeof v === "number" && isFinite(v) && v > 0) out[k as ColumnKey] = v;
+    }
+    return out;
+  } catch { return {}; }
+}
+
+function writeWidthsCache(viewId: string, widths: WidthMap) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(lsWidthsKey(viewId), JSON.stringify(widths)); } catch {}
+}
+
+function clearWidthsCache(viewId: string) {
+  if (typeof window === "undefined") return;
+  try { localStorage.removeItem(lsWidthsKey(viewId)); } catch {}
+}
+
+/** Sovrappone la WidthMap allo stato colonne (LS ha priorità sul valore DB per reattività). */
+export function applyWidthsToColumns(cols: ViewColumnState[], widths: WidthMap): ViewColumnState[] {
+  return cols.map((c) => {
+    const w = widths[c.key];
+    if (typeof w === "number" && w > 0) return { ...c, width: w };
+    return c;
+  });
+}
 
 /** Legge la vista attiva salvata, scartando valori di versioni precedenti. */
 function readStoredActiveId(): string | null {
@@ -97,11 +137,21 @@ export function useServiziViste(userId: string | undefined) {
 
   const viste: ViewRef[] = useMemo(() => [...systemRefs, ...personal], [systemRefs, personal]);
 
+  // Cache reattiva delle larghezze per-vista (localStorage-first).
+  const [widthsById, setWidthsById] = useState<Record<string, WidthMap>>({});
+  const dbDebounce = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
   const activeView: ViewRef = useMemo(() => {
     const found = viste.find((v) => v.id === activeId);
-    if (found) return found;
-    return systemRefs[0];
-  }, [viste, activeId, systemRefs]);
+    const base = found ?? systemRefs[0];
+    // Merge: LS cache (state) ha priorità sulle width del DB già presenti in base.columns.
+    let cache = widthsById[base.id];
+    if (cache === undefined) {
+      cache = readWidthsCache(base.id);
+    }
+    if (Object.keys(cache).length === 0) return base;
+    return { ...base, columns: applyWidthsToColumns(base.columns, cache) };
+  }, [viste, activeId, systemRefs, widthsById]);
 
   const selectView = useCallback((id: string) => {
     setActiveId(id);
@@ -168,12 +218,53 @@ export function useServiziViste(userId: string | undefined) {
     await saveNewView(nome, sys.columns);
   }, [saveNewView]);
 
+  /** Aggiorna le larghezze di una vista.
+   *  - Applica subito la cache in localStorage + state (reattività).
+   *  - Se la vista è personale, persiste il jsonb `colonne` sul DB (debounced 400ms). */
+  const updateColumnWidths = useCallback((viewId: string, widths: WidthMap) => {
+    writeWidthsCache(viewId, widths);
+    setWidthsById((prev) => ({ ...prev, [viewId]: widths }));
+
+    if (SYSTEM_VIEW_IDS.has(viewId)) return; // sistema → solo LS
+
+    // Debounce salvataggio DB
+    if (dbDebounce.current[viewId]) clearTimeout(dbDebounce.current[viewId]);
+    dbDebounce.current[viewId] = setTimeout(async () => {
+      const view = personal.find((v) => v.id === viewId);
+      if (!view) return;
+      const merged = applyWidthsToColumns(view.columns, widths);
+      const { error } = await supabase
+        .from("dashboard_viste")
+        .update({ colonne: merged as any })
+        .eq("id", viewId);
+      if (!error) await reload();
+    }, 400);
+  }, [personal, reload]);
+
+  /** Ripristina le larghezze predefinite: rimuove sia la cache LS sia i valori DB. */
+  const resetColumnWidths = useCallback(async (viewId: string) => {
+    clearWidthsCache(viewId);
+    setWidthsById((prev) => ({ ...prev, [viewId]: {} }));
+    if (SYSTEM_VIEW_IDS.has(viewId)) return;
+    const view = personal.find((v) => v.id === viewId);
+    if (!view) return;
+    const stripped = view.columns.map(({ width, ...rest }) => rest);
+    const { error } = await supabase
+      .from("dashboard_viste")
+      .update({ colonne: stripped as any })
+      .eq("id", viewId);
+    if (!error) await reload();
+  }, [personal, reload]);
+
+
   return {
     viste,
     activeView,
     selectView,
     saveNewView,
     updateViewColumns,
+    updateColumnWidths,
+    resetColumnWidths,
     renameView,
     deleteView,
     setAsDefault,

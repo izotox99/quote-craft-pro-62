@@ -76,7 +76,7 @@ export const COLUMNS_MAP: Record<ColumnKey, ColumnDef> = Object.fromEntries(
   COLUMNS.map((c) => [c.key, c]),
 ) as Record<ColumnKey, ColumnDef>;
 
-export type ViewColumnState = { key: ColumnKey; visible: boolean };
+export type ViewColumnState = { key: ColumnKey; visible: boolean; width?: number };
 
 /** Le colonne legacy (25) — ordine e visibilità della vista "Completa" di default. */
 export const LEGACY_ORDER: ColumnKey[] = [
@@ -166,10 +166,50 @@ export function reconcileColumns(saved: unknown): ViewColumnState[] {
     const key = (item as any).key as ColumnKey;
     if (!registryKeys.has(key) || seen.has(key)) continue;
     seen.add(key);
-    result.push({ key, visible: Boolean((item as any).visible) });
+    const rawW = (item as any).width;
+    const width = typeof rawW === "number" && isFinite(rawW) && rawW > 0 ? rawW : undefined;
+    result.push({ key, visible: Boolean((item as any).visible), width });
   }
   for (const c of COLUMNS) {
     if (!seen.has(c.key)) result.push({ key: c.key, visible: false });
   }
   return result;
+}
+
+/** Larghezze effettive (in %) per le colonne visibili date le width esplicite + i pesi.
+ *  Le colonne con width fissa sono rispettate; le altre si dividono lo spazio residuo
+ *  in proporzione ai loro weight. Se la somma esplicita supera 100, tutto viene scalato. */
+export function computeEffectiveWidths(
+  visibleCols: ViewColumnState[],
+): Record<string, number> {
+  const out: Record<string, number> = {};
+  let explicitSum = 0;
+  const implicitKeys: ColumnKey[] = [];
+  let implicitWeightSum = 0;
+  for (const c of visibleCols) {
+    if (typeof c.width === "number" && c.width > 0) {
+      out[c.key] = c.width;
+      explicitSum += c.width;
+    } else {
+      implicitKeys.push(c.key);
+      implicitWeightSum += COLUMNS_MAP[c.key]?.weight ?? 3;
+    }
+  }
+  const remaining = Math.max(0, 100 - explicitSum);
+  if (implicitKeys.length > 0 && remaining > 0) {
+    for (const k of implicitKeys) {
+      const w = COLUMNS_MAP[k]?.weight ?? 3;
+      out[k] = (w / (implicitWeightSum || 1)) * remaining;
+    }
+  } else if (implicitKeys.length > 0) {
+    // nessuno spazio residuo: dai comunque una fetta minima (verrà clampata dopo)
+    for (const k of implicitKeys) out[k] = 0.1;
+  }
+  // Normalizza a 100 esatto (evita drift da somma esplicita > 100 o arrotondamenti)
+  const total = Object.values(out).reduce((s, v) => s + v, 0);
+  if (total > 0 && Math.abs(total - 100) > 0.001) {
+    const k = 100 / total;
+    for (const key of Object.keys(out)) out[key] = out[key] * k;
+  }
+  return out;
 }
