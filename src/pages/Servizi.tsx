@@ -321,8 +321,36 @@ export default function Servizi() {
     } else {
       setAccessoriMap({});
     }
+
+    // Carica stato passaggi di rete (side A) per riga
+    if (ids.length) {
+      const { data: nets } = await supabase
+        .from("servizi_network")
+        .select("servizio_a_id, stato, org_b_id")
+        .in("servizio_a_id", ids);
+      const orgIds = Array.from(new Set((nets ?? []).map((r: any) => r.org_b_id).filter(Boolean)));
+      let orgNames: Record<string, string> = {};
+      if (orgIds.length) {
+        const { data: orgs } = await supabase.rpc("network_visible_orgs" as any);
+        (orgs ?? []).forEach((o: any) => { orgNames[o.id] = o.name; });
+      }
+      const nMap: Record<string, { stato: string; partnerName: string | null }> = {};
+      (nets ?? []).forEach((r: any) => {
+        // Se ci sono più passaggi (rifiutati e rilanciati), tieni il più recente/attivo
+        const prev = nMap[r.servizio_a_id];
+        const priority: Record<string, number> = { accettato: 4, inviato: 3, completato: 2, rifiutato: 1, annullato: 0 };
+        if (!prev || (priority[r.stato] ?? 0) > (priority[prev.stato] ?? 0)) {
+          nMap[r.servizio_a_id] = { stato: r.stato, partnerName: orgNames[r.org_b_id] || null };
+        }
+      });
+      setNetworkMap(nMap);
+    } else {
+      setNetworkMap({});
+    }
+
     setLoading(false);
   };
+
 
   useEffect(() => {
     if (user) {
