@@ -131,6 +131,24 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "La password deve avere almeno 6 caratteri", code: "weak_password" }, 400);
     }
 
+    // Fingerprint HMAC della password: se fornita, garantisci unicità tra tutti gli account cliente/utenza.
+    let passwordFingerprint: string | null = null;
+    if (password) {
+      passwordFingerprint = await computePasswordFingerprint(password);
+      const { data: existingFp } = await admin
+        .from("password_fingerprints")
+        .select("owner_type, owner_id")
+        .eq("fingerprint", passwordFingerprint)
+        .maybeSingle();
+      if (existingFp && !(existingFp.owner_type === "client" && clientId && existingFp.owner_id === clientId)) {
+        return jsonResponse({
+          error: "Password già in uso da un altro account, scegline una diversa.",
+          code: "password_in_use",
+        }, 409);
+      }
+    }
+
+
     let existingClient: { id: string; org_id: string; auth_user_id: string | null; email: string | null } | null = null;
     if (clientId) {
       const { data, error } = await admin
