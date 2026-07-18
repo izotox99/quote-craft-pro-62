@@ -264,6 +264,10 @@ export default function Servizi() {
     if (filterAutista !== "all") query = query.eq("autista_id", filterAutista);
     if (filterFornitore !== "all") query = query.eq("fornitore_cs_id", filterFornitore);
     if (filterCodice) query = query.ilike("codice", `%${filterCodice}%`);
+    if (globalSearch.trim()) {
+      const q = globalSearch.trim().replace(/,/g, " ");
+      query = query.or(`contatto.ilike.%${q}%,codice.ilike.%${q}%,luogo_inizio.ilike.%${q}%,luogo_fine.ilike.%${q}%`);
+    }
 
     const { data } = await query;
     const nextServizi = (data ?? []) as unknown as Servizio[];
