@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { format, parse } from "date-fns";
 import { it } from "date-fns/locale";
+import { AccessoriEditor, type AccessorioRow, saveServizioAccessori } from "@/components/servizi/AccessoriEditor";
 
 const ALLEGATO_ACCEPT = "image/*,.pdf,.doc,.docx,.xls,.xlsx";
 const ALLEGATO_MAX_MB = 10;
