@@ -89,7 +89,7 @@ export function useServiziViste(userId: string | undefined) {
   // scelto qualcos'altro in questa sessione, la applichiamo.
   useEffect(() => {
     if (!loaded) return;
-    const stored = typeof window !== "undefined" ? localStorage.getItem(LS_ACTIVE_KEY) : null;
+    const stored = readStoredActiveId();
     if (stored) return;
     const def = personal.find((v) => v.predefinita);
     if (def) setActiveId(def.id);
