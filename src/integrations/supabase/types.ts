@@ -326,6 +326,7 @@ export type Database = {
       }
       clients: {
         Row: {
+          attivo: boolean
           auth_user_id: string | null
           cap: string | null
           citta: string | null
@@ -359,6 +360,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attivo?: boolean
           auth_user_id?: string | null
           cap?: string | null
           citta?: string | null
@@ -392,6 +394,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attivo?: boolean
           auth_user_id?: string | null
           cap?: string | null
           citta?: string | null

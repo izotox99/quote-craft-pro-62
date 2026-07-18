@@ -1,0 +1,1 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS attivo boolean NOT NULL DEFAULT true;
