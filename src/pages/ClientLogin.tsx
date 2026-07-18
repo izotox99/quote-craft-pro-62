@@ -76,16 +76,16 @@ export default function ClientLogin() {
         return;
       }
 
-      if (!utenzaResp?.synthetic_email) {
+      if (!utenzaResp?.access_token || !utenzaResp?.refresh_token) {
         toast.error(utenzaResp?.error || "Credenziali non valide");
         return;
       }
 
-      const { error: signErr } = await supabase.auth.signInWithPassword({
-        email: utenzaResp.synthetic_email,
-        password: utenzaResp.auth_password,
+      const { error: setErr } = await supabase.auth.setSession({
+        access_token: utenzaResp.access_token,
+        refresh_token: utenzaResp.refresh_token,
       });
-      if (signErr) {
+      if (setErr) {
         toast.error("Errore di accesso. Riprova più tardi.");
         return;
       }

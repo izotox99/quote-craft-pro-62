@@ -6,6 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const RATE_LIMIT_WINDOW_MIN = 15;
+const RATE_LIMIT_MAX_ATTEMPTS = 5;
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -15,6 +18,12 @@ function jsonResponse(body: unknown, status = 200) {
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function getClientIp(req: Request): string | null {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || null;
 }
 
 Deno.serve(async (req) => {
@@ -59,12 +68,52 @@ Deno.serve(async (req) => {
   }
 
   const admin = createClient(supabaseUrl, serviceKey);
+  const ip = getClientIp(req);
+  const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MIN * 60_000).toISOString();
+
+  const recordAttempt = async (success: boolean) => {
+    const { error } = await admin.from("login_attempts").insert({
+      email,
+      ip_address: ip,
+      success,
+    });
+    if (error) console.error("[utenza-login] log attempt error:", error.message);
+  };
 
   try {
-    // Find utenza by email (case-insensitive)
+    // ---- Rate limiting ----
+    const { count: emailFails } = await admin
+      .from("login_attempts")
+      .select("id", { count: "exact", head: true })
+      .eq("email", email)
+      .eq("success", false)
+      .gte("attempted_at", windowStart);
+
+    let ipFails = 0;
+    if (ip) {
+      const { count } = await admin
+        .from("login_attempts")
+        .select("id", { count: "exact", head: true })
+        .eq("ip_address", ip)
+        .eq("success", false)
+        .gte("attempted_at", windowStart);
+      ipFails = count ?? 0;
+    }
+
+    if ((emailFails ?? 0) >= RATE_LIMIT_MAX_ATTEMPTS || ipFails >= RATE_LIMIT_MAX_ATTEMPTS) {
+      return jsonResponse(
+        {
+          error: `Troppi tentativi di accesso. Riprova tra ${RATE_LIMIT_WINDOW_MIN} minuti.`,
+          code: "rate_limited",
+        },
+        429
+      );
+    }
+
+    // ---- Lookup utenza ----
     const { data: utenza, error: utenzaErr } = await admin
       .from("client_utenze")
-      .select("id, email, password, password_hash, attivo, auth_user_id, parent_client_id")
+      .select("id, email, password_hash, attivo, auth_user_id, parent_client_id")
       .ilike("email", email)
       .maybeSingle();
 
@@ -74,68 +123,53 @@ Deno.serve(async (req) => {
     }
 
     if (!utenza) {
+      await recordAttempt(false);
       return jsonResponse({ error: "Email o password non corretti", code: "invalid_credentials" }, 401);
     }
 
     if (!utenza.attivo) {
+      // Not a credential failure — don't count against rate limit
       return jsonResponse(
         { error: "La tua utenza è stata disattivata. Contatta l'amministratore.", code: "account_disabled" },
         403
       );
     }
 
-    // 1) Prefer hash verification
-    let passwordOk = false;
-    if (utenza.password_hash) {
-      const { data: verifyResult, error: verifyErr } = await admin.rpc("verify_utenza_password", {
-        _utenza_id: utenza.id,
-        _password: password,
-      });
-      if (verifyErr) {
-        console.error("[utenza-login] verify_utenza_password error:", verifyErr.message);
-        return jsonResponse(
-          { error: "Errore durante la verifica delle credenziali", code: "verify_error" },
-          500
-        );
-      }
-      passwordOk = !!verifyResult;
-    }
-
-    // 2) Legacy fallback: plaintext (for utenze created before the hash migration)
-    if (!passwordOk && utenza.password && utenza.password === password) {
-      passwordOk = true;
-      // Upgrade: store hash so next login uses it
-      const { data: newHash, error: hashErr } = await admin.rpc("hash_utenza_password", {
-        _password: password,
-      });
-      if (!hashErr && newHash) {
-        await admin
-          .from("client_utenze")
-          .update({ password_hash: newHash as string })
-          .eq("id", utenza.id);
-      }
-    }
-
-    if (!passwordOk) {
+    // ---- Verify password (bcrypt hash only) ----
+    if (!utenza.password_hash) {
+      console.error("[utenza-login] utenza senza password_hash:", utenza.id);
+      await recordAttempt(false);
       return jsonResponse({ error: "Email o password non corretti", code: "invalid_credentials" }, 401);
     }
 
-    // Deterministic auth password derived from utenza id + current credential hash,
-    // compressed to a fixed length (Supabase auth caps passwords at 72 chars).
-    const seed = `utz_${utenza.id}_${utenza.password_hash ?? utenza.password ?? ""}`;
-    const seedBytes = new TextEncoder().encode(seed);
-    const digest = await crypto.subtle.digest("SHA-256", seedBytes);
-    const authPassword = Array.from(new Uint8Array(digest))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join(""); // 64 hex chars, well under the 72-char limit
-    const syntheticEmail = `utenza+${utenza.id}@portal.local`;
+    const { data: verifyResult, error: verifyErr } = await admin.rpc("verify_utenza_password", {
+      _utenza_id: utenza.id,
+      _password: password,
+    });
+    if (verifyErr) {
+      console.error("[utenza-login] verify_utenza_password error:", verifyErr.message);
+      return jsonResponse({ error: "Errore durante la verifica delle credenziali", code: "verify_error" }, 500);
+    }
+    if (!verifyResult) {
+      await recordAttempt(false);
+      return jsonResponse({ error: "Email o password non corretti", code: "invalid_credentials" }, 401);
+    }
 
+    // ---- Ensure auth.users entry (created once, password never overwritten) ----
+    const syntheticEmail = `utenza+${utenza.id}@portal.local`;
     let authUserId = utenza.auth_user_id as string | null;
 
     if (!authUserId) {
+      // Long random password — never sent to client, never reused.
+      const randBytes = new Uint8Array(32);
+      crypto.getRandomValues(randBytes);
+      const permanentPassword = Array.from(randBytes)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email: syntheticEmail,
-        password: authPassword,
+        password: permanentPassword,
         email_confirm: true,
         user_metadata: { utenza_id: utenza.id, real_email: utenza.email, account_type: "client" },
       });
@@ -154,22 +188,40 @@ Deno.serve(async (req) => {
         .update({ auth_user_id: authUserId })
         .eq("id", utenza.id);
       if (linkErr) console.error("[utenza-login] link auth_user_id error:", linkErr.message);
-    } else {
-      const { error: pwErr } = await admin.auth.admin.updateUserById(authUserId, {
-        password: authPassword,
-      });
-      if (pwErr) {
-        console.error("[utenza-login] updateUserById error:", pwErr.message);
-        return jsonResponse(
-          { error: "Impossibile aggiornare le credenziali di accesso. Riprova più tardi.", code: "auth_update_failed" },
-          500
-        );
-      }
     }
 
+    // ---- Mint a session via magic link → verifyOtp ----
+    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email: syntheticEmail,
+    });
+
+    if (linkErr || !linkData?.properties?.hashed_token) {
+      console.error("[utenza-login] generateLink error:", linkErr?.message);
+      return jsonResponse(
+        { error: "Impossibile generare la sessione. Riprova più tardi.", code: "session_generate_failed" },
+        500
+      );
+    }
+
+    const { data: verified, error: otpErr } = await admin.auth.verifyOtp({
+      type: "magiclink",
+      token_hash: linkData.properties.hashed_token,
+    });
+
+    if (otpErr || !verified?.session) {
+      console.error("[utenza-login] verifyOtp error:", otpErr?.message);
+      return jsonResponse(
+        { error: "Impossibile aprire la sessione. Riprova più tardi.", code: "session_verify_failed" },
+        500
+      );
+    }
+
+    await recordAttempt(true);
+
     return jsonResponse({
-      synthetic_email: syntheticEmail,
-      auth_password: authPassword,
+      access_token: verified.session.access_token,
+      refresh_token: verified.session.refresh_token,
       utenza_id: utenza.id,
     });
   } catch (err) {
