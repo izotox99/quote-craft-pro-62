@@ -175,6 +175,7 @@ export default function ListaServizi() {
     accessori: "",
     note: "",
   });
+  const [editAccessori, setEditAccessori] = useState<AccessorioRow[]>([]);
 
   const loadServizi = async () => {
     if (!user) return;
