@@ -789,8 +789,8 @@ export default function Servizi() {
         {(() => {
           const visibleCols = viste.activeView.columns.filter((c) => c.visible);
           const totalWeight = visibleCols.reduce((sum, c) => sum + (COLUMNS_MAP[c.key]?.weight ?? 3), 0);
-          // Checkbox minima: recupera spazio utile per le colonne dati.
-          const CHECKBOX_PCT = 1.05;
+          // Checkbox quasi nulla: la tabella deve comportarsi come il foglio legacy.
+          const CHECKBOX_PCT = 0.85;
           const remaining = 100 - CHECKBOX_PCT;
           const colWidth = (key: ColumnKey) =>
             `${((COLUMNS_MAP[key]?.weight ?? 3) / (totalWeight || 1)) * remaining}%`;
@@ -928,16 +928,16 @@ export default function Servizi() {
           return (
             <div className="hidden md:block -mx-3 lg:-mx-4 overflow-hidden border-y bg-card">
               <TooltipProvider delayDuration={200}>
-                <table className="w-full table-fixed border-collapse text-[7px] leading-none xl:text-[8px]" style={{ tableLayout: "fixed", borderSpacing: 0 }}>
+                <table className="w-full table-fixed border-collapse text-[8.5px] font-semibold italic leading-[1.35] text-foreground xl:text-[9px]" style={{ tableLayout: "fixed", borderSpacing: 0 }}>
                       <colgroup>
                         <col style={{ width: `${CHECKBOX_PCT}%` }} />
                         {visibleCols.map((c) => (
                           <col key={c.key} style={{ width: colWidth(c.key) }} />
                         ))}
                       </colgroup>
-                      <thead className="bg-muted/40 border-b">
-                        <tr className="text-[6.5px] font-semibold text-muted-foreground xl:text-[7px]">
-                          <th className="px-0 py-px overflow-hidden">
+                      <thead className="border-b border-border bg-muted/70">
+                        <tr className="text-[8px] font-bold not-italic leading-[1.1] text-foreground xl:text-[8.5px]">
+                          <th className="border-r border-border px-0 py-1 overflow-hidden">
                             <Checkbox
                               className="h-2.5 w-2.5 rounded-[2px]"
                               checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
@@ -948,10 +948,10 @@ export default function Servizi() {
                           {visibleCols.map((c) => {
                             const def = COLUMNS_MAP[c.key];
                             return (
-                              <th key={c.key} className={`px-0 py-px overflow-hidden ${alignClass(c.key)}`}>
+                              <th key={c.key} className={`border-r border-border px-px py-1 overflow-hidden ${alignClass(c.key)}`}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className="cursor-help block truncate uppercase" title={def.label}>{def.short || def.label}</span>
+                                    <span className="cursor-help block whitespace-pre-line break-words" title={def.label}>{def.short || def.label}</span>
                                   </TooltipTrigger>
                                   <TooltipContent side="bottom" className="max-w-xs text-xs">
                                     <p><span className="font-semibold">{def.label}</span> — {def.description}</p>
@@ -973,7 +973,7 @@ export default function Servizi() {
                             const modificato = !!s.modificato_da_cliente;
                             const isSelected = selectedServiziIds.includes(s.id);
                             const networkInfo = networkMap[s.id];
-                            const cellCls = "px-0 py-px align-top overflow-hidden break-words min-w-0";
+                            const cellCls = "border-r border-border px-px py-1 align-middle overflow-hidden break-words min-w-0";
                             return (
                               <tr
                                 key={s.id}
@@ -986,9 +986,9 @@ export default function Servizi() {
                                       : "hover:bg-muted/40"
                                 } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
                               >
-                                <td className={cellCls} onClick={(e) => e.stopPropagation()}>
+                                <td className={`${cellCls} px-0`} onClick={(e) => e.stopPropagation()}>
                                   <Checkbox
-                                    className="h-3 w-3 rounded-[2px]"
+                                    className="h-2.5 w-2.5 rounded-[2px]"
                                     checked={isSelected}
                                     onCheckedChange={() => handleToggleServizioSelection(s.id)}
                                     aria-label="Seleziona servizio"
