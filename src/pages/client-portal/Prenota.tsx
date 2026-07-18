@@ -413,6 +413,7 @@ export default function Prenota() {
     await loadUltimoServizio(clientId, activeUtenzaId);
 
     setForm(empty);
+    setAccessoriRows([]);
     setAllegato(null);
     setLoading(false);
   };
