@@ -91,8 +91,9 @@ export const LEGACY_ORDER: ColumnKey[] = [
   "np", "nb", "tserv", "luogo_inizio", "itinerario",
   "luogo_fine", "info_autista", "accessori", "veicolo", "tp",
   "non_incassato", "incasso", "cs", "costo_cs", "autista",
-  "costo_autista", "costo_centro", "commissione", "codice", "foglio",
+  "costo_autista", "costo_centro", "commissione", "codice", "azioni", "foglio",
 ];
+
 
 /**
  * Restituisce lo stato colonne "Completa": tutte le 25 legacy visibili + network_stato
