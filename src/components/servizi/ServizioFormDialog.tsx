@@ -39,6 +39,7 @@ const TRANSFER_SOTTO = [
 
 const STATO_OPZIONI = [
   { value: "nuovo", label: "Nuovo" },
+  { value: "da_confermare", label: "Da confermare" },
   { value: "confermato", label: "Confermato" },
   { value: "in_corso", label: "In corso" },
   { value: "completato", label: "Completato" },
