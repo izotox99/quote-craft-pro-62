@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
-import { Bell, XCircle, Pencil, FilePlus, Check, Inbox } from "lucide-react";
+import { Bell, XCircle, Pencil, FilePlus, Check, Inbox, CalendarClock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,7 @@ const tipoIcon: Record<string, { icon: typeof Bell; className: string }> = {
   servizio_annullato: { icon: XCircle, className: "text-destructive" },
   servizio_modificato: { icon: Pencil, className: "text-amber-600 dark:text-amber-400" },
   servizio_creato: { icon: FilePlus, className: "text-emerald-600 dark:text-emerald-400" },
+  agenda_promemoria: { icon: CalendarClock, className: "text-blue-600 dark:text-blue-400" },
 };
 
 export function NotificheBell() {
@@ -63,7 +64,8 @@ export function NotificheBell() {
       setNotifiche(prev => prev.map(x => x.id === n.id ? { ...x, letta: true } : x));
     }
     setOpen(false);
-    navigate("/dashboard");
+    if (n.tipo === "agenda_promemoria") navigate("/agenda");
+    else navigate("/dashboard");
   };
 
   const segnaTutteLette = async () => {
