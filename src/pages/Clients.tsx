@@ -197,6 +197,7 @@ export default function Clients() {
                       <TableHead>Telefono</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Città</TableHead>
+                      <TableHead className="w-12">Tarif.</TableHead>
                       <TableHead className="w-20" />
                     </TableRow>
                   </TableHeader>
