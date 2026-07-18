@@ -117,6 +117,7 @@ export default function Prenota() {
       .from("servizi")
       .select("*")
       .eq("client_id", cId)
+      .eq("archiviato", false)
       .order("created_at", { ascending: false })
       .limit(1);
     if (uId) query = query.eq("utenza_id", uId);
