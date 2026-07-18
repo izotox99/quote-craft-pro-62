@@ -22,6 +22,47 @@ export type ViewRef = {
 const LS_VERSION = "v2";
 const LS_ACTIVE_KEY = `servizi_vista_attiva_id_${LS_VERSION}`;
 const LS_LEGACY_KEYS = ["servizi_vista_attiva_id"];
+const LS_WIDTHS_PREFIX = `servizi_col_widths_${LS_VERSION}:`;
+
+type WidthMap = Partial<Record<ColumnKey, number>>;
+
+function lsWidthsKey(viewId: string) { return `${LS_WIDTHS_PREFIX}${viewId}`; }
+
+export function readWidthsCache(viewId: string): WidthMap {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = localStorage.getItem(lsWidthsKey(viewId));
+    if (!raw) return {};
+    const obj = JSON.parse(raw);
+    if (!obj || typeof obj !== "object") return {};
+    const out: WidthMap = {};
+    for (const [k, v] of Object.entries(obj)) {
+      if (typeof v === "number" && isFinite(v) && v > 0) out[k as ColumnKey] = v;
+    }
+    return out;
+  } catch { return {}; }
+}
+
+function writeWidthsCache(viewId: string, widths: WidthMap) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(lsWidthsKey(viewId), JSON.stringify(widths)); } catch {}
+}
+
+function clearWidthsCache(viewId: string) {
+  if (typeof window === "undefined") return;
+  try { localStorage.removeItem(lsWidthsKey(viewId)); } catch {}
+}
+
+/** Applica una WidthMap allo stato colonne di una vista (senza mutare l'input). */
+export function applyWidthsToColumns(cols: ViewColumnState[], widths: WidthMap): ViewColumnState[] {
+  return cols.map((c) => {
+    const w = widths[c.key];
+    if (typeof w === "number" && w > 0) return { ...c, width: w };
+    // rimuove eventuale width residua se cache non la contiene
+    if (c.width != null && !(c.key in widths)) return { ...c, width: undefined };
+    return c;
+  });
+}
 
 /** Legge la vista attiva salvata, scartando valori di versioni precedenti. */
 function readStoredActiveId(): string | null {
