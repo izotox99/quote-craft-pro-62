@@ -585,6 +585,22 @@ export default function Servizi() {
     await loadServizi();
   };
 
+  const [confermaTuttiOpen, setConfermaTuttiOpen] = useState(false);
+  const idsDaConfermareVisibili = useMemo(
+    () => servizi.filter(s => s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id)).map(s => s.id),
+    [servizi],
+  );
+  const handleConfermaTutti = async () => {
+    const ids = idsDaConfermareVisibili;
+    if (ids.length === 0) { setConfermaTuttiOpen(false); return; }
+    const { error } = await supabase.from("servizi").update({ stato: "confermato" as any }).in("id", ids);
+    setConfermaTuttiOpen(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${ids.length} servizi confermati`);
+    await loadServizi();
+  };
+
+
 
 
   // Quick day filters for "Nuovi" services
