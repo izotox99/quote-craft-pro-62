@@ -53,13 +53,11 @@ function clearWidthsCache(viewId: string) {
   try { localStorage.removeItem(lsWidthsKey(viewId)); } catch {}
 }
 
-/** Applica una WidthMap allo stato colonne di una vista (senza mutare l'input). */
+/** Sovrappone la WidthMap allo stato colonne (LS ha priorità sul valore DB per reattività). */
 export function applyWidthsToColumns(cols: ViewColumnState[], widths: WidthMap): ViewColumnState[] {
   return cols.map((c) => {
     const w = widths[c.key];
     if (typeof w === "number" && w > 0) return { ...c, width: w };
-    // rimuove eventuale width residua se cache non la contiene
-    if (c.width != null && !(c.key in widths)) return { ...c, width: undefined };
     return c;
   });
 }
