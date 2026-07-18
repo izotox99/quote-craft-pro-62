@@ -790,7 +790,7 @@ export default function Servizi() {
           const visibleCols = viste.activeView.columns.filter((c) => c.visible);
           const totalWeight = visibleCols.reduce((sum, c) => sum + (COLUMNS_MAP[c.key]?.weight ?? 3), 0);
           // Checkbox quasi nulla: la tabella deve comportarsi come il foglio legacy.
-          const CHECKBOX_PCT = 0.65;
+          const CHECKBOX_PCT = 0;
           const remaining = 100 - CHECKBOX_PCT;
           const colWidth = (key: ColumnKey) =>
             `${((COLUMNS_MAP[key]?.weight ?? 3) / (totalWeight || 1)) * remaining}%`;
@@ -930,32 +930,33 @@ export default function Servizi() {
               <TooltipProvider delayDuration={200}>
                 <table className="w-full table-fixed border-collapse text-[8px] font-semibold italic leading-[1.15] text-foreground xl:text-[8.5px]" style={{ borderSpacing: 0 }}>
                       <colgroup>
-                        <col style={{ width: `${CHECKBOX_PCT}%` }} />
                         {visibleCols.map((c) => <col key={c.key} style={{ width: colWidth(c.key) }} />)}
                       </colgroup>
                       <thead className="border-b border-border bg-muted/70">
                         <tr className="text-[7.5px] font-bold not-italic leading-[1.05] text-foreground xl:text-[8px]">
-                          <th className="border-r border-border px-0 py-0.5 overflow-hidden">
-                            <Checkbox
-                              className="h-2 w-2 rounded-[2px]"
-                              checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
-                              onCheckedChange={handleToggleAllVisible}
-                              aria-label="Seleziona tutti i servizi visibili"
-                            />
-                          </th>
                           {visibleCols.map((c, idx) => {
                             const def = COLUMNS_MAP[c.key];
                             const edgePad = idx === 0 ? "pl-[3px] pr-0" : idx === visibleCols.length - 1 ? "pl-0 pr-[3px]" : "px-0";
                             return (
                               <th key={c.key} className={`border-r border-border ${edgePad} py-0.5 overflow-hidden ${alignClass(c.key)}`}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="cursor-help block whitespace-pre-line break-words px-0" title={def.label}>{def.short || def.label}</span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="bottom" className="max-w-xs text-xs">
-                                    <p><span className="font-semibold">{def.label}</span> — {def.description}</p>
-                                  </TooltipContent>
-                                </Tooltip>
+                                <div className="flex items-center gap-1">
+                                  {idx === 0 && (
+                                    <Checkbox
+                                      className="h-2 w-2 rounded-[2px] shrink-0"
+                                      checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
+                                      onCheckedChange={handleToggleAllVisible}
+                                      aria-label="Seleziona tutti i servizi visibili"
+                                    />
+                                  )}
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="cursor-help block whitespace-pre-line break-normal px-0" title={def.label}>{def.short || def.label}</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" className="max-w-xs text-xs">
+                                      <p><span className="font-semibold">{def.label}</span> — {def.description}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
                               </th>
                             );
                           })}
@@ -963,16 +964,15 @@ export default function Servizi() {
                       </thead>
                       <tbody>
                         {loading ? (
-                          <tr><td colSpan={visibleCols.length + 1} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</td></tr>
+                          <tr><td colSpan={visibleCols.length} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</td></tr>
                         ) : servizi.length === 0 ? (
-                          <tr><td colSpan={visibleCols.length + 1} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</td></tr>
+                          <tr><td colSpan={visibleCols.length} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</td></tr>
                         ) : (
                           servizi.map(s => {
                             const senzaAutista = !s.autista_id && !s.autista_esterno_id;
                             const modificato = !!s.modificato_da_cliente;
                             const isSelected = selectedServiziIds.includes(s.id);
                             const networkInfo = networkMap[s.id];
-                            const cellCls = "border-r border-border px-0 py-0.5 align-middle overflow-hidden break-words min-w-0";
                             return (
                               <tr
                                 key={s.id}
@@ -985,14 +985,6 @@ export default function Servizi() {
                                       : "hover:bg-muted/40"
                                 } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
                               >
-                                <td className={`${cellCls} px-0`} onClick={(e) => e.stopPropagation()}>
-                                  <Checkbox
-                                    className="h-2.5 w-2.5 rounded-[2px]"
-                                    checked={isSelected}
-                                    onCheckedChange={() => handleToggleServizioSelection(s.id)}
-                                    aria-label="Seleziona servizio"
-                                  />
-                                </td>
                                 {visibleCols.map((c, idx) => {
                                   const isInteractive = INTERACTIVE_COLS.includes(c.key);
                                   const isFirst = idx === 0;
@@ -1001,11 +993,17 @@ export default function Servizi() {
                                   return (
                                     <td
                                       key={c.key}
-                                      className={`border-r border-border ${edgePad} py-0.5 align-middle overflow-hidden break-words min-w-0 ${alignClass(c.key)} [&>*]:max-w-full`}
+                                      className={`border-r border-border ${edgePad} py-0.5 align-middle overflow-hidden break-normal whitespace-normal min-w-0 ${alignClass(c.key)} [&>*]:max-w-full`}
                                       onClick={isInteractive ? (e) => e.stopPropagation() : undefined}
                                     >
-                                      {isFirst && (modificato || networkInfo) && (
+                                      {isFirst && (
                                         <div className="flex items-center gap-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
+                                          <Checkbox
+                                            className="h-2.5 w-2.5 rounded-[2px] shrink-0"
+                                            checked={isSelected}
+                                            onCheckedChange={() => handleToggleServizioSelection(s.id)}
+                                            aria-label="Seleziona servizio"
+                                          />
                                           {modificato && <ModificheClientePopover servizioId={s.id} />}
                                           {networkInfo && (
                                             <Tooltip>
