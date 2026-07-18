@@ -964,16 +964,15 @@ export default function Servizi() {
                       </thead>
                       <tbody>
                         {loading ? (
-                          <tr><td colSpan={visibleCols.length + 1} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</td></tr>
+                          <tr><td colSpan={visibleCols.length} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</td></tr>
                         ) : servizi.length === 0 ? (
-                          <tr><td colSpan={visibleCols.length + 1} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</td></tr>
+                          <tr><td colSpan={visibleCols.length} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</td></tr>
                         ) : (
                           servizi.map(s => {
                             const senzaAutista = !s.autista_id && !s.autista_esterno_id;
                             const modificato = !!s.modificato_da_cliente;
                             const isSelected = selectedServiziIds.includes(s.id);
                             const networkInfo = networkMap[s.id];
-                            const cellCls = "border-r border-border px-0 py-0.5 align-middle overflow-hidden break-words min-w-0";
                             return (
                               <tr
                                 key={s.id}
@@ -986,14 +985,6 @@ export default function Servizi() {
                                       : "hover:bg-muted/40"
                                 } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
                               >
-                                <td className={`${cellCls} px-0`} onClick={(e) => e.stopPropagation()}>
-                                  <Checkbox
-                                    className="h-2.5 w-2.5 rounded-[2px]"
-                                    checked={isSelected}
-                                    onCheckedChange={() => handleToggleServizioSelection(s.id)}
-                                    aria-label="Seleziona servizio"
-                                  />
-                                </td>
                                 {visibleCols.map((c, idx) => {
                                   const isInteractive = INTERACTIVE_COLS.includes(c.key);
                                   const isFirst = idx === 0;
@@ -1002,11 +993,17 @@ export default function Servizi() {
                                   return (
                                     <td
                                       key={c.key}
-                                      className={`border-r border-border ${edgePad} py-0.5 align-middle overflow-hidden break-words min-w-0 ${alignClass(c.key)} [&>*]:max-w-full`}
+                                      className={`border-r border-border ${edgePad} py-0.5 align-middle overflow-hidden break-normal whitespace-normal min-w-0 ${alignClass(c.key)} [&>*]:max-w-full`}
                                       onClick={isInteractive ? (e) => e.stopPropagation() : undefined}
                                     >
-                                      {isFirst && (modificato || networkInfo) && (
+                                      {isFirst && (
                                         <div className="flex items-center gap-1 mb-0.5" onClick={(e) => e.stopPropagation()}>
+                                          <Checkbox
+                                            className="h-2.5 w-2.5 rounded-[2px] shrink-0"
+                                            checked={isSelected}
+                                            onCheckedChange={() => handleToggleServizioSelection(s.id)}
+                                            aria-label="Seleziona servizio"
+                                          />
                                           {modificato && <ModificheClientePopover servizioId={s.id} />}
                                           {networkInfo && (
                                             <Tooltip>
