@@ -17,6 +17,8 @@ import {
   CITTA_OPZIONI,
   DISPOSIZIONE_OPZIONI,
 } from "@/lib/booking-shared";
+import { AccessoriEditor, type AccessorioRow, loadServizioAccessori, saveServizioAccessori } from "./AccessoriEditor";
+
 
 const TRANSFER_OPZIONI = [
   { value: "Transfer interno città", label: "Transfer interno città" },
@@ -171,17 +173,25 @@ export function ServizioFormDialog({
   const [f, setF] = useState<any>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [telefonoDTouched, setTelefonoDTouched] = useState(false);
+  const [accessoriRows, setAccessoriRows] = useState<AccessorioRow[]>([]);
 
   useEffect(() => {
     if (!open) return;
     if (mode === "edit" && initialData) {
       setF({ ...emptyForm(), ...initialData, stato: initialData.stato || "nuovo" });
       setTelefonoDTouched(true);
+      if (initialData.id) {
+        loadServizioAccessori(initialData.id).then(setAccessoriRows);
+      } else {
+        setAccessoriRows([]);
+      }
     } else {
       setF({ ...emptyForm(), stato: "nuovo" });
       setTelefonoDTouched(false);
+      setAccessoriRows([]);
     }
   }, [open, mode, initialData]);
+
 
   const set = (patch: any) => setF((prev: any) => ({ ...prev, ...patch }));
 
@@ -269,11 +279,19 @@ export function ServizioFormDialog({
 
     setSaving(true);
     let error;
+    let servizioId: string | undefined = initialData?.id;
     if (mode === "edit" && initialData?.id) {
       ({ error } = await supabase.from("servizi").update(payload).eq("id", initialData.id));
     } else {
       payload.created_by = userId;
-      ({ error } = await supabase.from("servizi").insert(payload as any));
+      const res = await supabase.from("servizi").insert(payload as any).select("id").single();
+      error = res.error;
+      servizioId = (res.data as any)?.id;
+    }
+    if (!error && servizioId) {
+      try { await saveServizioAccessori(servizioId, accessoriRows); } catch (e: any) {
+        console.error("[accessori] save error", e);
+      }
     }
     setSaving(false);
     if (error) { toast.error(error.message); return; }
@@ -281,6 +299,7 @@ export function ServizioFormDialog({
     onOpenChange(false);
     onSaved();
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -541,6 +560,13 @@ export function ServizioFormDialog({
                 </div>
               </>
             )}
+          </section>
+
+          <section className="bg-muted/40 rounded-md p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accessori</p>
+            </div>
+            <AccessoriEditor value={accessoriRows} onChange={setAccessoriRows} />
           </section>
 
           <section className="bg-muted/40 rounded-md p-3">

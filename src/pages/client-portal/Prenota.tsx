@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { format, parse } from "date-fns";
 import { it } from "date-fns/locale";
+import { AccessoriEditor, type AccessorioRow, saveServizioAccessori } from "@/components/servizi/AccessoriEditor";
 
 const ALLEGATO_ACCEPT = "image/*,.pdf,.doc,.docx,.xls,.xlsx";
 const ALLEGATO_MAX_MB = 10;
@@ -100,6 +101,7 @@ export default function Prenota() {
   };
 
   const [form, setForm] = useState(empty);
+  const [accessoriRows, setAccessoriRows] = useState<AccessorioRow[]>([]);
   const [allegato, setAllegato] = useState<File | null>(null);
   const [activeUtenzaId, setActiveUtenzaId] = useState<string | null>(null);
 
@@ -386,6 +388,10 @@ export default function Prenota() {
 
     await upsertPasseggero();
 
+    // Salva accessori (righe strutturate)
+    try { await saveServizioAccessori(inserted.id, accessoriRows); } catch (e) { console.error(e); }
+
+
     if (allegato) {
       const safeName = allegato.name.replace(/[^a-zA-Z0-9._-]/g, "_");
       const path = `${orgId}/${inserted.id}/${Date.now()}_${safeName}`;
@@ -407,6 +413,7 @@ export default function Prenota() {
     await loadUltimoServizio(clientId, activeUtenzaId);
 
     setForm(empty);
+    setAccessoriRows([]);
     setAllegato(null);
     setLoading(false);
   };
@@ -589,7 +596,7 @@ export default function Prenota() {
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs font-medium text-muted-foreground">Accessori (opzionale)</Label>
-                <Input value={form.accessori} onChange={(e) => set("accessori", e.target.value)} placeholder="es. seggiolino, WiFi..." className="rounded-lg h-10" />
+                <AccessoriEditor value={accessoriRows} onChange={setAccessoriRows} />
               </div>
             </CardContent>
           </Card>

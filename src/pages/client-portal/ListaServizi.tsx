@@ -31,6 +31,7 @@ import {
   tipologiaToDB,
   transferTipoForDB,
 } from "@/lib/booking-shared";
+import { AccessoriEditor, type AccessorioRow, loadServizioAccessori } from "@/components/servizi/AccessoriEditor";
 
 type Servizio = {
   id: string;
@@ -174,6 +175,7 @@ export default function ListaServizi() {
     accessori: "",
     note: "",
   });
+  const [editAccessori, setEditAccessori] = useState<AccessorioRow[]>([]);
 
   const loadServizi = async () => {
     if (!user) return;
@@ -288,6 +290,7 @@ export default function ListaServizi() {
       accessori: s.accessori ?? "",
       note: s.note ?? "",
     });
+    loadServizioAccessori(s.id).then(setEditAccessori);
     setDetailOpen(false);
     setEditOpen(true);
   };
@@ -324,11 +327,16 @@ export default function ListaServizi() {
     if (error) {
       console.error("[handleSaveEdit] RPC error:", error);
       toast.error(`Errore: ${error.message}`);
-    } else {
-      toast.success("Servizio aggiornato");
-      setEditOpen(false);
-      loadServizi();
+      return;
     }
+    // Persisti accessori (righe strutturate)
+    try {
+      const { saveServizioAccessori } = await import("@/components/servizi/AccessoriEditor");
+      await saveServizioAccessori(selected.id, editAccessori);
+    } catch (e) { console.error(e); }
+    toast.success("Servizio aggiornato");
+    setEditOpen(false);
+    loadServizi();
   };
 
   const handleCancel = async (s: Servizio) => {
@@ -959,7 +967,7 @@ export default function ListaServizi() {
                   </div>
                   <div className="space-y-1.5 col-span-2">
                     <Label className="text-xs text-muted-foreground">Accessori</Label>
-                    <Input value={editForm.accessori} onChange={(e) => setEditForm(p => ({ ...p, accessori: e.target.value }))} className="rounded-lg h-10" />
+                    <AccessoriEditor value={editAccessori} onChange={setEditAccessori} />
                   </div>
                   <div className="space-y-1.5 col-span-2">
                     <Label className="text-xs text-muted-foreground">Note</Label>

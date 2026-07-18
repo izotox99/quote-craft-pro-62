@@ -200,6 +200,7 @@ export default function Servizi() {
   const { user, role, organization } = useAuth();
   const isAdmin = role === "admin";
   const [servizi, setServizi] = useState<Servizio[]>([]);
+  const [accessoriMap, setAccessoriMap] = useState<Record<string, string>>({});
   const [clients, setClients] = useState<Client[]>([]);
   const [autisti, setAutisti] = useState<Autista[]>([]);
   const [veicoli, setVeicoli] = useState<Veicolo[]>([]);
@@ -273,6 +274,24 @@ export default function Servizi() {
     const nextServizi = (data ?? []) as unknown as Servizio[];
     setServizi(nextServizi);
     setSelectedServiziIds(prev => prev.filter(id => nextServizi.some(servizio => servizio.id === id)));
+
+    // Carica riepilogo accessori
+    const ids = nextServizi.map(s => s.id);
+    if (ids.length) {
+      const { data: acc } = await supabase
+        .from("servizi_accessori")
+        .select("servizio_id, quantita, accessori_catalogo(nome)")
+        .in("servizio_id", ids);
+      const map: Record<string, string[]> = {};
+      (acc ?? []).forEach((r: any) => {
+        const nome = r.accessori_catalogo?.nome;
+        if (!nome) return;
+        (map[r.servizio_id] ||= []).push(`${r.quantita}× ${nome}`);
+      });
+      setAccessoriMap(Object.fromEntries(Object.entries(map).map(([k, v]) => [k, v.join(", ")])));
+    } else {
+      setAccessoriMap({});
+    }
     setLoading(false);
   };
 
@@ -817,7 +836,7 @@ export default function Servizi() {
                           <td className={cellCls}>{s.itinerario || "—"}</td>
                           <td className={cellCls}>{s.luogo_fine || "—"}</td>
                           <td className={cellCls}>{s.info_autista || "—"}</td>
-                          <td className={cellCls}>{s.accessori || "—"}</td>
+                          <td className={cellCls}>{accessoriMap[s.id] || s.accessori || "—"}</td>
                           <td className={cellCls}>{s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—")}</td>
                           <td className={cellCls}>{s.tipo_pagamento || "—"}</td>
                           <td className={`${cellCls} text-right tabular-nums`}>{s.non_incassato != null ? s.non_incassato : "—"}</td>
