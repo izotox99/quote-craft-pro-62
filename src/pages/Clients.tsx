@@ -59,7 +59,7 @@ export default function Clients() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("clients").select("*").order("company", { nullsFirst: false }).order("name");
+    const { data } = await supabase.from("clients").select("*").is("network_org_id", null).order("company", { nullsFirst: false }).order("name");
     const list = (data ?? []) as Client[];
     setClients(list);
 
