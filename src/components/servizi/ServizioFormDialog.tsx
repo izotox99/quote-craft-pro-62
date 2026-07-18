@@ -173,17 +173,25 @@ export function ServizioFormDialog({
   const [f, setF] = useState<any>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [telefonoDTouched, setTelefonoDTouched] = useState(false);
+  const [accessoriRows, setAccessoriRows] = useState<AccessorioRow[]>([]);
 
   useEffect(() => {
     if (!open) return;
     if (mode === "edit" && initialData) {
       setF({ ...emptyForm(), ...initialData, stato: initialData.stato || "nuovo" });
       setTelefonoDTouched(true);
+      if (initialData.id) {
+        loadServizioAccessori(initialData.id).then(setAccessoriRows);
+      } else {
+        setAccessoriRows([]);
+      }
     } else {
       setF({ ...emptyForm(), stato: "nuovo" });
       setTelefonoDTouched(false);
+      setAccessoriRows([]);
     }
   }, [open, mode, initialData]);
+
 
   const set = (patch: any) => setF((prev: any) => ({ ...prev, ...patch }));
 
