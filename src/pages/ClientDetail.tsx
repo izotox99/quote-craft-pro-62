@@ -18,7 +18,7 @@ const statusColors: Record<string, string> = {
   annullato: "bg-red-100 text-red-800",
 };
 
-type Client = { id: string; name: string; email: string | null; company: string | null; phone: string | null; notes: string | null; created_at: string; };
+type Client = { id: string; name: string; email: string | null; company: string | null; phone: string | null; notes: string | null; created_at: string; org_id: string; tariffario_url: string | null; tariffario_nome: string | null; };
 type Servizio = { id: string; data_servizio: string; citta: string | null; luogo_inizio: string | null; luogo_fine: string | null; stato: string; incasso: number | null; };
 
 export default function ClientDetail() {
