@@ -926,11 +926,11 @@ export default function Servizi() {
           const INTERACTIVE_COLS: ColumnKey[] = ["autista", "foglio"];
 
           return (
-            <div className="hidden md:block relative left-1/2 -translate-x-1/2 w-screen">
+            <div className="hidden md:block w-[100vw] ml-[calc(50%-50vw)] overflow-hidden">
               <Card className="rounded-none border-x-0">
                 <CardContent className="p-0">
                   <TooltipProvider delayDuration={200}>
-                    <table className="w-full table-fixed text-[11px] leading-tight">
+                    <table className="w-full table-fixed text-[11px] leading-tight" style={{ tableLayout: "fixed" }}>
                       <colgroup>
                         <col style={{ width: `${CHECKBOX_PCT}%` }} />
                         {visibleCols.map((c) => (
@@ -938,8 +938,8 @@ export default function Servizi() {
                         ))}
                       </colgroup>
                       <thead className="bg-muted/40 border-b">
-                        <tr className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
-                          <th className="px-1 py-1.5">
+                        <tr className="text-[10px] font-semibold text-muted-foreground">
+                          <th className="px-1 py-1.5 overflow-hidden">
                             <Checkbox
                               checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
                               onCheckedChange={handleToggleAllVisible}
@@ -949,10 +949,10 @@ export default function Servizi() {
                           {visibleCols.map((c) => {
                             const def = COLUMNS_MAP[c.key];
                             return (
-                              <th key={c.key} className={`px-1 py-1.5 ${alignClass(c.key)}`}>
+                              <th key={c.key} className={`px-1 py-1.5 overflow-hidden ${alignClass(c.key)}`}>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className="cursor-help">{def.short || def.label}</span>
+                                    <span className="cursor-help block truncate uppercase tracking-tight" title={def.label}>{def.short || def.label}</span>
                                   </TooltipTrigger>
                                   <TooltipContent side="bottom" className="max-w-xs text-xs">
                                     <p><span className="font-semibold">{def.label}</span> — {def.description}</p>
