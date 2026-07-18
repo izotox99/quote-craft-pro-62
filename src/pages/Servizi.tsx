@@ -22,7 +22,7 @@ import { NetworkDispatchDialog } from "@/components/servizi/NetworkDispatchDialo
 import { ViewSelector } from "@/components/servizi/ViewSelector";
 import { ColumnCustomizer } from "@/components/servizi/ColumnCustomizer";
 import { useServiziViste } from "@/hooks/use-servizi-viste";
-import { COLUMNS_MAP, type ColumnKey, type ViewColumnState } from "@/lib/servizi-columns";
+import { COLUMNS_MAP, computeEffectiveWidths, type ColumnKey, type ViewColumnState } from "@/lib/servizi-columns";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { format, addDays } from "date-fns";
 import { it as itLocale } from "date-fns/locale";
