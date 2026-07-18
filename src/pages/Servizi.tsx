@@ -1287,8 +1287,21 @@ export default function Servizi() {
                                               </TooltipContent>
                                             </Tooltip>
                                           )}
+                                          {modificato && networkInfo && (networkInfo.stato === "inviato" || networkInfo.stato === "accettato") && (
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <span className="inline-flex items-center gap-0.5 rounded-sm px-1 py-0 text-[9px] font-semibold bg-amber-200 text-amber-900 dark:bg-amber-900 dark:text-amber-100">
+                                                  <AlertTriangle className="h-2.5 w-2.5" />!
+                                                </span>
+                                              </TooltipTrigger>
+                                              <TooltipContent side="right" className="text-xs max-w-[240px]">
+                                                Servizio passato al network e modificato dal cliente: verifica col partner. Le modifiche non sono state sincronizzate automaticamente.
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          )}
                                         </div>
                                       )}
+
                                       {renderCell(c.key, s)}
                                     </td>
                                   );
