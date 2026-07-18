@@ -926,11 +926,9 @@ export default function Servizi() {
           const INTERACTIVE_COLS: ColumnKey[] = ["autista", "foglio"];
 
           return (
-            <div className="hidden md:block w-[100vw] ml-[calc(50%-50vw)] overflow-hidden">
-              <Card className="rounded-none border-x-0">
-                <CardContent className="p-0">
-                  <TooltipProvider delayDuration={200}>
-                    <table className="w-full table-fixed text-[11px] leading-tight" style={{ tableLayout: "fixed" }}>
+            <div className="hidden md:block w-[100vw] ml-[calc(50%-50vw)] overflow-hidden border-y bg-card">
+              <TooltipProvider delayDuration={200}>
+                <table className="w-full table-fixed text-[10.5px] leading-tight" style={{ tableLayout: "fixed" }}>
                       <colgroup>
                         <col style={{ width: `${CHECKBOX_PCT}%` }} />
                         {visibleCols.map((c) => (
