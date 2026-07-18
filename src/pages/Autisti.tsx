@@ -214,7 +214,7 @@ export default function Autisti() {
                     <TableCell className="text-right tabular-nums">{a.prezzo_ora_straord?.toFixed(2) ?? "0.00"}</TableCell>
                     <TableCell>{a.cellulare ?? a.telefono ?? "—"}</TableCell>
                     <TableCell className="lowercase">{a.email ?? "—"}</TableCell>
-                    <TableCell className="font-mono text-xs">{a.password ?? "—"}</TableCell>
+                    
                     <TableCell>
                       <div className="flex justify-center gap-1">
                         <Button variant="ghost" size="icon" title="Spese / Scadenze" onClick={() => openSpese(a)}>
