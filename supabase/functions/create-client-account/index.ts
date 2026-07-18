@@ -45,6 +45,7 @@ const writableClientFields = [
   "telefono_urg3",
   "telefono_urg3_nota",
   "fax",
+  "nota_tariffario",
 ] as const;
 
 function normalizeClientPayload(input: Record<string, unknown>) {
