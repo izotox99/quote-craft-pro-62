@@ -572,6 +572,20 @@ export default function Servizi() {
     await loadServizi();
   };
 
+  const handleBulkConfirm = async () => {
+    const ids = servizi
+      .filter(s => selectedServiziIds.includes(s.id) && s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id))
+      .map(s => s.id);
+    if (ids.length === 0) { toast.info("Nessun servizio da confermare tra i selezionati"); return; }
+    const { error } = await supabase.from("servizi").update({ stato: "confermato" as any }).in("id", ids);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`${ids.length} servizi confermati`);
+    setSelectedServiziIds([]);
+    await loadServizi();
+  };
+
+
+
   // Quick day filters for "Nuovi" services
   const [quickDay, setQuickDay] = useState<string | null>(null);
   const quickDayOptions = useMemo(() => {
@@ -851,6 +865,27 @@ export default function Servizi() {
           </div>
         )}
 
+        {(() => {
+          const selectedDaConfermare = servizi.filter(s => selectedServiziIds.includes(s.id) && s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id)).length;
+          if (selectedDaConfermare === 0) return null;
+          return (
+            <div className="flex items-center gap-2 rounded-lg border border-orange-300 bg-orange-50 dark:bg-orange-950/30 dark:border-orange-900 px-3 py-2">
+              <CheckCircle2 className="h-4 w-4 text-orange-700 dark:text-orange-300" />
+              <span className="text-xs font-medium text-orange-900 dark:text-orange-100">
+                {selectedDaConfermare} da confermare tra i selezionati
+              </span>
+              <Button
+                size="sm"
+                className="ml-auto h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white gap-1.5"
+                onClick={handleBulkConfirm}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Conferma selezionati ({selectedDaConfermare})
+              </Button>
+            </div>
+          );
+        })()}
+
         {/* MOBILE: card list */}
         <div className="space-y-2 md:hidden">
           {loading ? (
@@ -979,6 +1014,23 @@ export default function Servizi() {
                     </div>
                   );
                 }
+                const isDaConf = s.stato === "da_confermare" && hasLocal;
+                if (isDaConf) {
+                  return (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleConfirmServizio(s.id); }}
+                      title="Conferma servizio"
+                      className="inline-flex w-full min-w-0 max-w-full flex-col items-center text-center gap-0 overflow-hidden rounded-sm px-0.5 py-0.5 leading-[1.05] bg-orange-500 text-white hover:bg-orange-600 font-semibold"
+                    >
+                      <span className="flex items-center gap-0.5 font-semibold">
+                        <CheckCircle2 className="h-2.5 w-2.5" />
+                        <span className="truncate">Conferma</span>
+                      </span>
+                      {driverLabel && <span className="truncate text-white/90 text-[7.5px] font-normal">{driverLabel}</span>}
+                    </button>
+                  );
+                }
                 return (
                   <AssignDriverPopover
                     currentInternoId={s.autista_id}
@@ -1015,17 +1067,6 @@ export default function Servizi() {
               case "codice": return <span className="block truncate text-center font-mono text-[8px]">{s.codice || "—"}</span>;
               case "foglio": return (
                 <div className="flex items-center justify-center gap-0.5">
-                  {s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id) && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-4 w-4 text-orange-700 hover:text-orange-900 hover:bg-orange-100 dark:text-orange-300 dark:hover:bg-orange-900/40"
-                      title="Conferma servizio"
-                      onClick={(e) => { e.stopPropagation(); handleConfirmServizio(s.id); }}
-                    >
-                      <CheckCircle2 className="h-3 w-3" />
-                    </Button>
-                  )}
                   <Button
                     size="icon"
                     variant="ghost"

@@ -521,6 +521,16 @@ export function ServizioFormDialog({
                     {STATO_OPZIONI.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                {mode === "edit" && f.stato === "da_confermare" && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="mt-2 w-full h-8 text-xs bg-orange-600 hover:bg-orange-700 text-white gap-1.5"
+                    onClick={() => set({ stato: "confermato" })}
+                  >
+                    ✓ Conferma servizio
+                  </Button>
+                )}
                 {mode === "create" && (
                   <p className="text-[10px] text-muted-foreground mt-1">Alla creazione lo stato è sempre "Nuovo".</p>
                 )}
