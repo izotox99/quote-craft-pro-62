@@ -134,7 +134,7 @@ export function servizioToBookingForm(s: {
   prezzo: number | null;
   note: string | null;
 }): BookingFormState {
-  const { splitLuogo } = require("@/lib/booking-shared");
+  // splitLuogo imported from booking-shared
   const inizio = splitLuogo(s.luogo_inizio);
   const fine = splitLuogo(s.luogo_fine);
   let transfer_tipo = "";
