@@ -45,6 +45,8 @@ export default function Clients() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
+  const [deactivatePrompt, setDeactivatePrompt] = useState<{ client: Client; count: number } | null>(null);
 
   const load = async () => {
     const { data } = await supabase.from("clients").select("*").order("name");
