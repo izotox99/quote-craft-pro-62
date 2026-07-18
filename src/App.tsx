@@ -28,6 +28,7 @@ import { AllertMezzi, BilancioVettura, ManutenzioneStraordinaria, DettagliCarbur
 import Autisti from "./pages/Autisti";
 import AutistiCollaboratori from "./pages/AutistiCollaboratori";
 import FornitoriCS from "./pages/FornitoriCS";
+import Network from "./pages/Network";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/autisti" element={<ProtectedRoute><Autisti /></ProtectedRoute>} />
             <Route path="/autisti/collaboratori" element={<ProtectedRoute><AutistiCollaboratori /></ProtectedRoute>} />
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
+            <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
             {/* Client portal */}
