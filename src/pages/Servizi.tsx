@@ -200,6 +200,7 @@ export default function Servizi() {
   const { user, role, organization } = useAuth();
   const isAdmin = role === "admin";
   const [servizi, setServizi] = useState<Servizio[]>([]);
+  const [accessoriMap, setAccessoriMap] = useState<Record<string, string>>({});
   const [clients, setClients] = useState<Client[]>([]);
   const [autisti, setAutisti] = useState<Autista[]>([]);
   const [veicoli, setVeicoli] = useState<Veicolo[]>([]);
