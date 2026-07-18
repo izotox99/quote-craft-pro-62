@@ -80,6 +80,7 @@ const App = () => (
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
             <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
 
             {/* Client portal */}
             <Route path="/client-login" element={<ClientLogin />} />
