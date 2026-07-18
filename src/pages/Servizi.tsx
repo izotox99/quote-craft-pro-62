@@ -119,7 +119,8 @@ function buildTServ(s: Servizio): string {
 }
 
 export default function Servizi() {
-  const { user } = useAuth();
+  const { user, role, organization } = useAuth();
+  const isAdmin = role === "admin";
   const [servizi, setServizi] = useState<Servizio[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [autisti, setAutisti] = useState<Autista[]>([]);
