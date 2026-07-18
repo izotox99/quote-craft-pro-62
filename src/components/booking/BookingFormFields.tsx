@@ -36,6 +36,7 @@ import {
   CITTA_OPZIONI,
   detectLuogoSpeciale,
   LuogoField,
+  splitLuogo,
 } from "@/lib/booking-shared";
 import type { AccessorioRow } from "@/components/servizi/AccessoriEditor";
 
