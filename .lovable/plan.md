@@ -1,53 +1,22 @@
-## Diagnosi (verificata)
+## Obiettivo
+Ridurre lo spazio interno tra le colonne della tabella Servizi (`/dashboard`) così che tutte le 25 voci restino leggibili anche a viewport strette (826px attuali dello screenshot, dove alcune colonne di destra come `Com €`, `Cod.`, `Fog.` risultano tagliate/troncate).
 
-Nel file `src/components/DashboardLayout.tsx`, riga 382, il `<main>` è così:
+## Modifiche
 
-```
-<main className="mx-auto max-w-7xl px-4 py-8 lg:px-8 overflow-x-clip">
-```
+### `src/pages/Servizi.tsx`
+- Header `<th>`: `px-1 py-1.5` → `px-0.5 py-1` (dimezza il padding orizzontale).
+- Celle `<td>` (`cellCls`): `px-1 py-1` → `px-0.5 py-1`.
+- Tabella: `text-[10.5px]` → `text-[10px]` per allineare corpo e header e recuperare ~5% larghezza.
+- Header font: resta `text-[10px]`, aggiungo `tracking-tight` per evitare wrap su label brevi.
+- Checkbox `<th>`/`<td>`: `px-1` → `px-0.5` così la prima colonna non ruba spazio.
 
-Questo produce **tre problemi contemporanei** che spiegano quello che vedi nello screenshot:
+### `src/lib/servizi-columns.ts`
+Ribilancio pesi delle colonne per dare più larghezza a quelle che nello screenshot risultano compresse/tagliate e ridurre quelle sovradimensionate:
+- `citta` 3 → 2, `data` 4 → 3, `np` 2 → 1, `nb` 2 → 1, `tp` 3 → 2, `foglio` 2 → 1.
+- `societa` 6 → 5, `luogo_inizio`/`itinerario`/`luogo_fine` 7 → 6.
+- Le colonne economiche di destra (`non_incassato`, `incasso`, `costo_cs`, `costo_autista`, `costo_centro`, `commissione`, `codice`) restano a 3 così i valori numerici e la label `Com €`/`Cod.` non vengono più troncati.
 
-1. **`max-w-7xl` (1280px) + `mx-auto`**: la colonna di contenuto è limitata a 1280px e centrata. La pagina Servizi non può mai essere più larga di così, indipendentemente dal viewport.
-2. **`overflow-x-clip` sul main**: annulla il trucco full-bleed `w-[100vw] ml-[calc(50%-50vw)]` usato nella tabella. La parte di tabella che sporge fuori dai 1280px viene **letteralmente ritagliata**. È per questo che nello screenshot la prima intestazione è "SOCIETÀ": **Città e Data sono lì, ma tagliate a sinistra dal clip**; specularmente Com€, Codice, Foglio sono tagliate a destra.
-3. **`py-8`**: 32px di padding verticale sopra e sotto — spreco di spazio verticale che ho appena chiesto di ridurre e che il layout globale sta reintroducendo.
+Nessuna modifica a logica dati, RLS, o layout esterno alla tabella.
 
-Confermato leggendo `src/lib/servizi-columns.ts`: la vista `Completa` ha effettivamente `citta` e `data` come prime due colonne — non è un problema di configurazione delle viste, è puramente il layout.
-
-## Fix definitivo
-
-### 1. `src/components/DashboardLayout.tsx` — main non-costrittivo
-
-Sostituire il `<main>` (riga 382) con:
-
-```
-<main className="w-full px-3 py-3 lg:px-4">
-  {children}
-</main>
-```
-
-- Rimosso `mx-auto max-w-7xl` → la pagina usa tutta la larghezza del viewport.
-- Rimosso `overflow-x-clip` dal main (rimane comunque sull'outer div riga 79, che continua a proteggere la pagina dallo scroll orizzontale).
-- `py-8` → `py-3`, `px-4/lg:px-8` → `px-3/lg:px-4` (padding minimo che punteremo poi da Servizi).
-
-### 2. `src/pages/Servizi.tsx` — full-bleed reale
-
-Sostituire nel wrapper della tabella desktop (riga 929) `w-[100vw] ml-[calc(50%-50vw)]` con un negative-margin che compensa esattamente il padding orizzontale di `<main>`:
-
-```
-<div className="hidden md:block -mx-3 lg:-mx-4 overflow-hidden border-y bg-card">
-```
-
-Così la tabella tocca davvero i bordi laterali del viewport senza dipendere da calcoli con `50vw` che vengono spezzati da `overflow-x-clip`.
-
-### 3. Verifica finale (obbligatoria prima di dichiarare chiuso)
-
-Aprire il preview a 1280px, 1440px e 1512px (MacBook 14") e:
-- Contare le `<th>` renderizzate: devono essere 26 (checkbox + 25 dati).
-- Prima intestazione visibile = **CITTÀ**, ultima = **FOG.** (Foglio).
-- Nessuno scroll orizzontale a livello di pagina (`document.scrollWidth === innerWidth`).
-- La tabella tocca `x=0` e `x=innerWidth`.
-
-## Impatto collaterale
-
-Rimuovendo `max-w-7xl` da `<main>` **tutte** le pagine sotto `DashboardLayout` (Clienti, Veicoli, Autisti, Fornitori, Network, Settings…) diventano full-width. La maggior parte usa già `<Card>` interni che mantengono la propria struttura, quindi il rendering resta corretto; cambia solo che i contenuti non sono più limitati a 1280px e usano lo spazio reale disponibile. Se preferisci mantenere le altre pagine centrate a 1280px e liberare solo la dashboard, dimmelo e sposto la logica di larghezza dentro le singole pagine invece che sul layout globale.
+## Verifica
+Playwright headless a 826px, 1280px, 1440px: confermare che tutte le 26 `<th>` sono renderizzate, `scrollWidth === clientWidth` (nessun scroll orizzontale), e che le label `Com€`, `Cod.`, `Fog.` non sono clippate (bounding box interamente dentro il viewport).
