@@ -836,7 +836,7 @@ export default function Servizi() {
                           <td className={cellCls}>{s.itinerario || "—"}</td>
                           <td className={cellCls}>{s.luogo_fine || "—"}</td>
                           <td className={cellCls}>{s.info_autista || "—"}</td>
-                          <td className={cellCls}>{s.accessori || "—"}</td>
+                          <td className={cellCls}>{accessoriMap[s.id] || s.accessori || "—"}</td>
                           <td className={cellCls}>{s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—")}</td>
                           <td className={cellCls}>{s.tipo_pagamento || "—"}</td>
                           <td className={`${cellCls} text-right tabular-nums`}>{s.non_incassato != null ? s.non_incassato : "—"}</td>
