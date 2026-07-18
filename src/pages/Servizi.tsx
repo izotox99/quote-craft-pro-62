@@ -897,12 +897,8 @@ export default function Servizi() {
         {/* DESKTOP/TABLET: tabella dinamica basata sulla vista attiva — full-bleed senza scroll orizzontale */}
         {(() => {
           const visibleCols = viste.activeView.columns.filter((c) => c.visible);
-          const totalWeight = visibleCols.reduce((sum, c) => sum + (COLUMNS_MAP[c.key]?.weight ?? 3), 0);
-          // Checkbox quasi nulla: la tabella deve comportarsi come il foglio legacy.
-          const CHECKBOX_PCT = 0;
-          const remaining = 100 - CHECKBOX_PCT;
-          const colWidth = (key: ColumnKey) =>
-            `${((COLUMNS_MAP[key]?.weight ?? 3) / (totalWeight || 1)) * remaining}%`;
+          const widthMap = computeEffectiveWidths(visibleCols);
+          const colWidth = (key: ColumnKey) => `${widthMap[key] ?? 0}%`;
 
           const alignClass = (key: ColumnKey) => {
             const a = COLUMNS_MAP[key]?.align;
