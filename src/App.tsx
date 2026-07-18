@@ -28,6 +28,7 @@ import { AllertMezzi, BilancioVettura, ManutenzioneStraordinaria, DettagliCarbur
 import Autisti from "./pages/Autisti";
 import AutistiCollaboratori from "./pages/AutistiCollaboratori";
 import FornitoriCS from "./pages/FornitoriCS";
+import Network from "./pages/Network";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
