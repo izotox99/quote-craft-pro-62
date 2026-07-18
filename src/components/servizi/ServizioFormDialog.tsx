@@ -279,11 +279,19 @@ export function ServizioFormDialog({
 
     setSaving(true);
     let error;
+    let servizioId: string | undefined = initialData?.id;
     if (mode === "edit" && initialData?.id) {
       ({ error } = await supabase.from("servizi").update(payload).eq("id", initialData.id));
     } else {
       payload.created_by = userId;
-      ({ error } = await supabase.from("servizi").insert(payload as any));
+      const res = await supabase.from("servizi").insert(payload as any).select("id").single();
+      error = res.error;
+      servizioId = (res.data as any)?.id;
+    }
+    if (!error && servizioId) {
+      try { await saveServizioAccessori(servizioId, accessoriRows); } catch (e: any) {
+        console.error("[accessori] save error", e);
+      }
     }
     setSaving(false);
     if (error) { toast.error(error.message); return; }
@@ -291,6 +299,7 @@ export function ServizioFormDialog({
     onOpenChange(false);
     onSaved();
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
