@@ -203,7 +203,7 @@ export default function Network() {
               <TableBody>
                 {inviatiFromMe.map(r => (
                   <TableRow key={r.id}>
-                    <TableCell>{r.invited_by_email || r.org_b_name}</TableCell>
+                    <TableCell>Invito inviato a <span className="font-medium">{r.org_b_name || r.invited_by_email || "—"}</span></TableCell>
                     <TableCell className="font-mono text-xs">
                       <div className="flex items-center gap-2">
                         <span className="truncate max-w-[240px]">{r.invite_code}</span>
