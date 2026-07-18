@@ -44,6 +44,104 @@ export type Database = {
         }
         Relationships: []
       }
+      agenda_eventi: {
+        Row: {
+          categoria: Database["public"]["Enums"]["agenda_categoria"]
+          completato: boolean
+          created_at: string
+          created_by: string
+          data_fine: string | null
+          data_inizio: string
+          descrizione: string | null
+          id: string
+          org_id: string
+          promemoria_minuti: number[]
+          servizio_id: string | null
+          titolo: string
+          tutto_il_giorno: boolean
+          updated_at: string
+          visibilita: Database["public"]["Enums"]["agenda_visibilita"]
+        }
+        Insert: {
+          categoria?: Database["public"]["Enums"]["agenda_categoria"]
+          completato?: boolean
+          created_at?: string
+          created_by: string
+          data_fine?: string | null
+          data_inizio: string
+          descrizione?: string | null
+          id?: string
+          org_id: string
+          promemoria_minuti?: number[]
+          servizio_id?: string | null
+          titolo: string
+          tutto_il_giorno?: boolean
+          updated_at?: string
+          visibilita?: Database["public"]["Enums"]["agenda_visibilita"]
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["agenda_categoria"]
+          completato?: boolean
+          created_at?: string
+          created_by?: string
+          data_fine?: string | null
+          data_inizio?: string
+          descrizione?: string | null
+          id?: string
+          org_id?: string
+          promemoria_minuti?: number[]
+          servizio_id?: string | null
+          titolo?: string
+          tutto_il_giorno?: boolean
+          updated_at?: string
+          visibilita?: Database["public"]["Enums"]["agenda_visibilita"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_eventi_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_eventi_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agenda_promemoria_inviati: {
+        Row: {
+          evento_id: string
+          id: string
+          inviato_at: string
+          promemoria_minuti: number
+        }
+        Insert: {
+          evento_id: string
+          id?: string
+          inviato_at?: string
+          promemoria_minuti: number
+        }
+        Update: {
+          evento_id?: string
+          id?: string
+          inviato_at?: string
+          promemoria_minuti?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_promemoria_inviati_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_eventi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1981,6 +2079,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      agenda_process_promemoria: { Args: never; Returns: undefined }
       cleanup_servizi_annullati: { Args: never; Returns: undefined }
       client_portal_update_servizio: {
         Args: {
@@ -2242,6 +2341,8 @@ export type Database = {
       }
     }
     Enums: {
+      agenda_categoria: "appuntamento" | "scadenza" | "nota" | "altro"
+      agenda_visibilita: "personale" | "organizzazione"
       app_role: "admin" | "manager" | "agent"
       network_dispatch_stato:
         | "inviato"
@@ -2397,6 +2498,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      agenda_categoria: ["appuntamento", "scadenza", "nota", "altro"],
+      agenda_visibilita: ["personale", "organizzazione"],
       app_role: ["admin", "manager", "agent"],
       network_dispatch_stato: [
         "inviato",
