@@ -939,14 +939,24 @@ export default function Servizi() {
                             const edgePad = idx === 0 ? "pl-[3px] pr-0" : idx === visibleCols.length - 1 ? "pl-0 pr-[3px]" : "px-0";
                             return (
                               <th key={c.key} className={`border-r border-border ${edgePad} py-0.5 overflow-hidden ${alignClass(c.key)}`}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="cursor-help block whitespace-pre-line break-words px-0" title={def.label}>{def.short || def.label}</span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="bottom" className="max-w-xs text-xs">
-                                    <p><span className="font-semibold">{def.label}</span> — {def.description}</p>
-                                  </TooltipContent>
-                                </Tooltip>
+                                <div className="flex items-center gap-1">
+                                  {idx === 0 && (
+                                    <Checkbox
+                                      className="h-2 w-2 rounded-[2px] shrink-0"
+                                      checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
+                                      onCheckedChange={handleToggleAllVisible}
+                                      aria-label="Seleziona tutti i servizi visibili"
+                                    />
+                                  )}
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="cursor-help block whitespace-pre-line break-normal px-0" title={def.label}>{def.short || def.label}</span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="bottom" className="max-w-xs text-xs">
+                                      <p><span className="font-semibold">{def.label}</span> — {def.description}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </div>
                               </th>
                             );
                           })}
