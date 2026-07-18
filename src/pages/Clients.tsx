@@ -25,6 +25,7 @@ type Client = {
   telefono_urg2: string | null; telefono_urg2_nota: string | null;
   telefono_urg3: string | null; telefono_urg3_nota: string | null;
   fax: string | null; password_cliente: string | null; auth_user_id: string | null;
+  org_id: string; tariffario_url: string | null; tariffario_nome: string | null;
 };
 
 const emptyForm = {
