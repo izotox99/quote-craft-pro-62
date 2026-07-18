@@ -892,15 +892,27 @@ export default function Servizi() {
           </CardContent>
         </Card>
 
-        {/* Notifica modifiche cliente */}
-        {servizi.some(s => s.modificato_da_cliente) && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-900">
+        {/* Notifica modifiche cliente — click per filtrare */}
+        {modificatiCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setFilterOnlyModified(v => !v)}
+            className={`flex w-full items-center gap-2 px-3 py-2 rounded-lg border text-left transition-colors ${
+              filterOnlyModified
+                ? "bg-amber-100 border-amber-400 dark:bg-amber-900/50 dark:border-amber-700"
+                : "bg-amber-50 border-amber-200 dark:bg-amber-950/30 dark:border-amber-900 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+            }`}
+          >
             <Bell className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
-            <span className="text-xs font-medium text-amber-900 dark:text-amber-200">
-              {servizi.filter(s => s.modificato_da_cliente).length} servizi modificati dal cliente — da rivedere
+            <span className="text-xs font-medium text-amber-900 dark:text-amber-200 flex-1">
+              {modificatiCount} servizi modificati dal cliente — da rivedere
             </span>
-          </div>
+            <span className="text-[10px] text-amber-800 dark:text-amber-300">
+              {filterOnlyModified ? "Mostra tutti" : "Filtra"}
+            </span>
+          </button>
         )}
+
 
         {selectedVisibleCount > 0 && (
           <div className="hidden md:block">
