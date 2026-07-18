@@ -517,12 +517,12 @@ export default function Servizi() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4 overflow-x-clip">
+      <div className="space-y-2 overflow-x-clip">
         {/* Header row */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">Servizi</h1>
-            <p className="text-sm text-muted-foreground">{nuoviCount} nuovi · {servizi.length} totali</p>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-baseline gap-2">
+            <h1 className="font-display text-base font-semibold text-foreground">Servizi</h1>
+            <p className="text-xs text-muted-foreground">{nuoviCount} nuovi · {servizi.length} totali</p>
           </div>
           <div className="flex gap-2 items-center w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
@@ -560,7 +560,7 @@ export default function Servizi() {
 
         {/* Quick day chips + collapsible filters */}
         <Card>
-          <CardContent className="py-4 space-y-3">
+          <CardContent className="py-2 px-3 space-y-2">
             {/* Day chips row */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Nuovi:</span>
@@ -569,7 +569,7 @@ export default function Servizi() {
                   key={opt.key}
                   onClick={() => handleQuickDay(opt.key)}
                   className={`
-                    inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all
+                    inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all
                     ${quickDay === opt.key
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "bg-muted/60 text-muted-foreground hover:bg-muted"
@@ -926,11 +926,9 @@ export default function Servizi() {
           const INTERACTIVE_COLS: ColumnKey[] = ["autista", "foglio"];
 
           return (
-            <div className="hidden md:block w-[100vw] ml-[calc(50%-50vw)] overflow-hidden">
-              <Card className="rounded-none border-x-0">
-                <CardContent className="p-0">
-                  <TooltipProvider delayDuration={200}>
-                    <table className="w-full table-fixed text-[11px] leading-tight" style={{ tableLayout: "fixed" }}>
+            <div className="hidden md:block w-[100vw] ml-[calc(50%-50vw)] overflow-hidden border-y bg-card">
+              <TooltipProvider delayDuration={200}>
+                <table className="w-full table-fixed text-[10.5px] leading-tight" style={{ tableLayout: "fixed" }}>
                       <colgroup>
                         <col style={{ width: `${CHECKBOX_PCT}%` }} />
                         {visibleCols.map((c) => (
@@ -1029,11 +1027,9 @@ export default function Servizi() {
                             );
                           })
                         )}
-                      </tbody>
-                    </table>
-                  </TooltipProvider>
-                </CardContent>
-              </Card>
+                  </tbody>
+                </table>
+              </TooltipProvider>
             </div>
           );
         })()}
