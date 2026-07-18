@@ -1,68 +1,97 @@
+# Piano: Documentazione tecnica completa del gestionale NCC
+
 ## Obiettivo
 
-Rendere strutturalmente impossibili i disallineamenti tra le schede cliente/utenza e le credenziali reali in `auth.users`, oltre a chiudere alcuni rischi correlati che oggi possono mordere in futuro (password in chiaro, account orfani, email "rubate" da account NCC, ecc.).
+Produrre un unico documento Markdown (`/mnt/documents/gestionale-ncc-documentazione.md`) che descriva in modo esaustivo il gestionale, pensato per essere dato in pasto a Claude come contesto di progetto. Nessuna modifica al codice: solo lettura + scrittura del file.
 
-## Cosa NON cambia
+## Cosa conterrà il documento
 
-- Le utenze (`client_utenze`) non hanno problemi di disallineamento: l'edge function `utenza-login` ricalcola la password sintetica a ogni accesso usando `password_hash`. Le lascio così.
-- Le RLS attuali su `clients`, `client_utenze`, `servizi`, `proposals` restano invariate.
+### 1. Panoramica generale
+- Scopo del gestionale (NCC multi-tenant, portale cliente separato)
+- Stack tecnico: React 18 + Vite + TS, Tailwind, shadcn/ui, React Router, TanStack Query, Supabase (Lovable Cloud), Edge Functions Deno
+- Lingua UI: italiano
+- Design system: Plus Jakarta Sans / DM Sans, mobile-first, stile Notion minimale
 
-## Interventi
+### 2. Architettura
+- Multi-tenant per `org_id`; ogni NCC = una `organization`
+- Separazione netta account NCC vs account cliente vs utenze cliente
+- Ruoli: `admin`, `manager`, `agent` in `user_roles`
+- Trigger `handle_new_user` → crea org + profile + ruolo admin al signup NCC
+- Trigger `enforce_*_org_id` → forza `org_id` in insert su tabelle sensibili
+- Funzioni `SECURITY DEFINER`: `has_role`, `is_client_user`, `get_user_org_id`, `get_client_org_id`, `get_active_utenza_id`, `hash_*_password`, `verify_*_password`
 
-### 1. Hardening dell'edge function `create-client-account`
+### 3. Autenticazione e accesso
+- `/login` NCC (email/password + Google OAuth)
+- `/signup`, `/forgot-password`, `/reset-password`
+- `/client-login` clienti + utenze (edge function `utenza-login` per utenze)
+- `ProtectedRoute` (NCC) e `ProtectedClientRoute` (portale)
+- Flusso GDPR obbligatorio al primo accesso cliente
+- Regole di isolamento: un account cliente non può entrare in dashboard NCC e viceversa
 
-Aggiungo validazioni che oggi mancano e che potrebbero generare nuovi casi tipo "Prova 1":
+### 4. Moduli funzionali (dashboard NCC)
+Per ognuno: pagine, tabelle DB usate, azioni CRUD, RLS principali, edge function collegate.
 
-- **Email già usata da un account NCC** (presente in `profiles` o `user_roles`) → errore esplicito, niente collegamento.
-- **Email già usata da un'altra utenza** (`client_utenze.auth_user_id` con quella mail sintetica? no, controllo per email reale via metadata) → errore esplicito.
-- **Email già assegnata a un altro `clients`** (anche in altra org) → errore esplicito.
-- Risposte con `code` strutturato (`email_taken_ncc`, `email_taken_client`, `client_not_found`, ecc.) per messaggi UI puliti.
+- **Servizi** (`/dashboard`): lista, filtri stato, assegnazione autista/mezzo/fornitore, flag `modificato_da_cliente`, notifiche, popover modifiche, scroll orizzontale ottimizzato macOS
+- **Clienti** (`/clients` + sotto-pagine Tariffari, Valutazione, Accessori, Rappresentante, Note, In attesa, Preventivi, `/clients/:id`): creazione via edge function `create-client-account`, sync credenziali, eliminazione via `delete-client-account`, utenze figlie (`client_utenze`) con tipo singolo/gruppo
+- **Mezzi** (`/veicoli` + dropdown: Allert, Bilancio, Manutenzione straord., Carburante, AdBlue, Aggiungi AdBlue, dettaglio `/veicoli/:id`): tabella con voucher, disattivazione, foto, sezioni Documenti/Gasolio/Manutenzione ord/straord/Spese, VoucherDialog giornaliero PDF
+- **Autisti** (`/autisti`, `/autisti/collaboratori`): interni + esterni, spese
+- **Fornitori CS** (`/fornitori`)
+- **Impostazioni** (`/settings`): dati azienda, P.IVA, sede legale, branding
 
-### 2. Eliminazione cliente "pulita"
+### 5. Portale cliente (`/client-portal`)
+- Lista servizi con stato, modifiche via RPC `client_portal_update_servizio`
+- Prenota: form unica pagina con Quando/Dove/Servizio/Passeggero/Pagamento, tipologie (Transfer interno, regionale, Tour), disposizione oraria opzionale sui transfer, rubrica passeggeri con combobox
+- Utenze: gestione sub-account
+- Tariffario, Fatture
 
-Oggi `delete from clients` lascia l'utente orfano in `auth.users`. Se poi si ricrea un cliente con la stessa email, il vecchio auth user viene riciclato con eventuale password obsoleta.
+### 6. Schema database (tabelle principali)
+Elenco delle 25+ tabelle con scopo, colonne chiave e RLS in sintesi:
+`organizations, profiles, user_roles, clients, client_utenze, servizi, servizi_modifiche, autisti, autisti_esterni, autisti_spese, veicoli, veicoli_documenti, veicoli_gasolio, veicoli_manutenzione_ord, veicoli_manutenzione_straord, veicoli_spese, fornitori_cs, departments, notifiche, passeggeri_rubrica, proposals, proposal_versions, proposal_events, line_items, templates, audit_logs`.
 
-- Nuova edge function `delete-client-account`:
-  - Verifica che il chiamante sia admin/manager dell'org del cliente.
-  - Recupera `auth_user_id`, elimina il record `clients`, poi cancella l'utente in `auth.users` solo se non è collegato ad altre risorse.
-- `Clients.tsx`: il bottone elimina chiama questa function invece del `delete` diretto.
+### 7. Edge Functions
+- `create-client-account`: upsert credenziali, validazioni email cross-org
+- `delete-client-account`: elimina cliente + auth user
+- `utenza-login`: login con password sintetica ricalcolata da hash
+- `ai-content`: rifinitura contenuti via Lovable AI Gateway
+- `verify-hibp-protection`, `verify-share-password`
 
-### 3. Stop alla password in chiaro nel DB
+### 8. Sicurezza
+- RLS su tutte le tabelle pubbliche, GRANT espliciti
+- SECURITY DEFINER per check ruoli/org (no ricorsione)
+- Password hash con `pgcrypto` (bcrypt) per utenze e share
+- No password in chiaro nel DB (`clients.password_cliente` deprecata)
+- Rate limiting e JWT su edge function critiche
 
-`clients.password_cliente` oggi memorizza la password in chiaro. È un problema di sicurezza e una fonte di confusione (la fonte di verità deve essere `auth.users`).
+### 9. Trigger e logica automatica servizi
+- `servizi_state_sync`: assegnazione autista → `confermato`; modifica da cliente → `nuovo` + flag
+- `log_servizi_client_changes`: diff campi in `servizi_modifiche`
+- `notify_servizio_client_change`: inserimento in `notifiche`
+- `cleanup_servizi_annullati`: purge dopo 7gg annullati, 30gg notifiche
 
-- Migration: la colonna viene **svuotata e marcata come deprecata** (commento SQL); in alternativa, se preferisci, possiamo droparla. Per non rompere niente la lascio in DB ma smetto di scriverci la password reale.
-- `Clients.tsx`:
-  - Campo "Password" diventa "Imposta/Cambia password" e in modifica si presenta vuoto con placeholder `••••••••`.
-  - Se vuoto in modifica → password invariata. Se compilato → sync via edge function.
-  - In creazione resta obbligatoria.
-  - Non si scrive più la password in chiaro su `password_cliente` (resta `null`).
+### 10. Convenzioni UI/UX
+- Componenti shadcn, layout `DashboardLayout` + `ClientPortalLayout`
+- Notifiche via `NotificheBell`, tooltip modifiche via `ModificheClientePopover`
+- Assegnazione autista via `AssignDriverPopover`
+- Hook `use-horizontal-wheel` per scroll trackpad
 
-### 4. Self-healing nel login cliente
+### 11. Routing completo
+Tabella di tutte le route con guardia, componente, scopo.
 
-`ClientLogin.tsx`:
+### 12. Storage buckets
+`logos`, `tariffari-autisti`, `servizi-allegati`, `veicoli-foto` (public), `veicoli-documenti`.
 
-- Se `signInWithPassword` fallisce ma esiste in `clients` un record con quell'email **senza** `auth_user_id`, mostrare: "Account non ancora attivato — chiedi al tuo NCC di completare la configurazione".
-- Aggiungere link "Hai dimenticato la password?" che usa `resetPasswordForEmail` (verifica preventiva: l'email deve appartenere a un cliente o utenza, altrimenti errore generico per non leakare).
+### 13. Note operative per Claude
+Regole d'oro del progetto (dalle memorie): italiano sempre, UX minimale, isolamento per org, non toccare `client.ts`/`types.ts`, RLS + GRANT ovunque.
 
-### 5. Allineamento "una sola via" dei cambi credenziali
+## Come procederò (in build mode)
 
-Documentare e blindare a livello codice:
+1. Leggere i file chiave che non sono ancora in contesto per non inventare dettagli: `Servizi.tsx`, `Clients.tsx`, `Veicoli.tsx`, `VeicoloDettaglio.tsx`, `client-portal/*`, `Settings.tsx`, `DashboardLayout.tsx`, tutte le edge function, `types.ts` (per schema tabelle), pagine autisti/fornitori.
+2. Interrogare il DB per policies/columns effettive delle tabelle principali via `supabase--read_query`.
+3. Scrivere il documento finale in `/mnt/documents/gestionale-ncc-documentazione.md` (Markdown strutturato con TOC, ~40-60 pagine).
+4. Esporre il file con `<presentation-artifact>` per download immediato.
 
-- L'unico modo lecito per cambiare email/password di un cliente è la edge function `create-client-account` (ora di fatto un upsert).
-- L'unico modo per eliminarlo è `delete-client-account`.
-- Tutte le altre scritture su `clients` non toccano credenziali.
+Nessuna modifica al codice sorgente, nessuna migration. Solo lettura + generazione documento.
 
-### 6. Verifica finale
+## Domanda prima di procedere
 
-- Esegui linter Supabase.
-- Test manuale dei 4 flussi: crea cliente, modifica email, modifica password, elimina cliente. Per ognuno: login dal portale cliente con le ultime credenziali → deve funzionare; login con le credenziali vecchie → deve fallire.
-
-## Dettagli tecnici
-
-- File modificati: `supabase/functions/create-client-account/index.ts`, nuovo `supabase/functions/delete-client-account/index.ts`, `src/pages/Clients.tsx`, `src/pages/ClientLogin.tsx`.
-- Migration leggera (commenti su colonna deprecata, nessun drop distruttivo). Se preferisci dropparla del tutto, lo facciamo in una seconda migration dopo che ti sei accertato che nessuno legga più quella colonna.
-- Nessuna modifica RLS, nessun cambio per utenze e servizi.
-- Scope volutamente fuori dal piano: tutta la parte Mezzi/voucher e qualunque modifica UI non legata a credenziali cliente.
-
-Confermami se ti va bene così — soprattutto la parte "non scrivere più la password in chiaro nel DB e svuotare i valori esistenti": è il cambiamento più importante per non avere più sorprese.
+Vuoi il documento **in italiano** (coerente col resto del progetto) o **in inglese** (a volte Claude ragiona meglio su documentazione tecnica in inglese)? Se non rispondi, procedo in italiano.
