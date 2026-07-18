@@ -108,15 +108,22 @@ export function makeCompletaState(): ViewColumnState[] {
 
 /** Costruisce uno stato colonne coerente: preserva l'ordine passato, nasconde le mancanti. */
 function buildState(visibleOrdered: ColumnKey[]): ViewColumnState[] {
-  const visibleSet = new Set(visibleOrdered);
+  // Le colonne "pinned" (es. Azioni) vengono sempre incluse come visibili in coda
+  // se non già presenti nell'elenco richiesto.
+  const withPinned: ColumnKey[] = [...visibleOrdered];
+  for (const key of PINNED_COLUMNS) {
+    if (!withPinned.includes(key)) withPinned.push(key);
+  }
+  const visibleSet = new Set(withPinned);
   const trailing = COLUMNS
     .map((c) => c.key)
     .filter((k) => !visibleSet.has(k));
   return [
-    ...visibleOrdered.map((k) => ({ key: k, visible: true })),
+    ...withPinned.map((k) => ({ key: k, visible: true })),
     ...trailing.map((k) => ({ key: k, visible: false })),
   ];
 }
+
 
 export type SystemView = {
   id: string;
