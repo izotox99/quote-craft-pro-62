@@ -790,7 +790,7 @@ export default function Servizi() {
           const visibleCols = viste.activeView.columns.filter((c) => c.visible);
           const totalWeight = visibleCols.reduce((sum, c) => sum + (COLUMNS_MAP[c.key]?.weight ?? 3), 0);
           // Checkbox quasi nulla: la tabella deve comportarsi come il foglio legacy.
-          const CHECKBOX_PCT = 0.65;
+          const CHECKBOX_PCT = 0;
           const remaining = 100 - CHECKBOX_PCT;
           const colWidth = (key: ColumnKey) =>
             `${((COLUMNS_MAP[key]?.weight ?? 3) / (totalWeight || 1)) * remaining}%`;
