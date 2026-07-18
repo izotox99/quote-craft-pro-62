@@ -290,6 +290,7 @@ export default function ListaServizi() {
       accessori: s.accessori ?? "",
       note: s.note ?? "",
     });
+    loadServizioAccessori(s.id).then(setEditAccessori);
     setDetailOpen(false);
     setEditOpen(true);
   };
