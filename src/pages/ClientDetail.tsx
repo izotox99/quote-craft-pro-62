@@ -31,7 +31,7 @@ export default function ClientDetail() {
     if (!id) return;
     Promise.all([
       supabase.from("clients").select("*").eq("id", id).single(),
-      supabase.from("servizi").select("id, data_servizio, citta, luogo_inizio, luogo_fine, stato, incasso").eq("client_id", id).order("data_servizio", { ascending: false }),
+      supabase.from("servizi").select("id, data_servizio, citta, luogo_inizio, luogo_fine, stato, incasso").eq("client_id", id).eq("archiviato", false).order("data_servizio", { ascending: false }),
     ]).then(([cRes, sRes]) => {
       setClient(cRes.data as Client | null);
       setServizi((sRes.data ?? []) as Servizio[]);

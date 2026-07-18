@@ -39,8 +39,8 @@ export function VoucherDialog({
 
       const [{ data: org }, { data: serviziOggi }, { data: serviziDomani }, { data: lastKm }] = await Promise.all([
         supabase.from("organizations").select("name, p_iva, sede_legale, address").maybeSingle(),
-        supabase.from("servizi").select("autista_id, autisti(nome, cognome)").eq("data_servizio", fmt(today)).eq("veicolo_id", veicolo.id).limit(1).maybeSingle(),
-        supabase.from("servizi").select("autista_id, autisti(nome, cognome)").eq("data_servizio", fmt(tomorrow)).eq("veicolo_id", veicolo.id).limit(1).maybeSingle(),
+        supabase.from("servizi").select("autista_id, autisti(nome, cognome)").eq("data_servizio", fmt(today)).eq("veicolo_id", veicolo.id).eq("archiviato", false).limit(1).maybeSingle(),
+        supabase.from("servizi").select("autista_id, autisti(nome, cognome)").eq("data_servizio", fmt(tomorrow)).eq("veicolo_id", veicolo.id).eq("archiviato", false).limit(1).maybeSingle(),
         supabase.from("veicoli_gasolio").select("km").eq("veicolo_id", veicolo.id).order("data", { ascending: false }).limit(1).maybeSingle(),
       ]);
 

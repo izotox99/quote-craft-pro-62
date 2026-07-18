@@ -215,6 +215,7 @@ export default function ListaServizi() {
       .from("servizi")
       .select("*")
       .eq("client_id", clientIdResolved)
+      .eq("archiviato", false)
       .order("data_servizio", { ascending: false });
 
     if (dateFrom) query = query.gte("data_servizio", dateFrom);

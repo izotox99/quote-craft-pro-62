@@ -139,6 +139,7 @@ export default function Servizi() {
   const [filterAutista, setFilterAutista] = useState("all");
   const [filterFornitore, setFilterFornitore] = useState("all");
   const [filterCodice, setFilterCodice] = useState("");
+  const [filterArchiviati, setFilterArchiviati] = useState(false);
 
   // New service form
   const [form, setForm] = useState({
@@ -206,6 +207,10 @@ export default function Servizi() {
       .gte("data_servizio", filterDal)
       .lte("data_servizio", filterAl)
       .order("data_servizio", { ascending: true });
+
+    // Archiviati: mostra solo i servizi archiviati (sola lettura), altrimenti li nasconde
+    if (filterArchiviati) query = query.eq("archiviato", true);
+    else query = query.eq("archiviato", false);
 
     if (filterStato === "all") query = query.neq("stato", "annullato");
     else query = query.eq("stato", filterStato as any);
@@ -706,6 +711,15 @@ export default function Servizi() {
                     <X className="h-3 w-3" /> Reset
                   </Button>
                 )}
+                <Button
+                  variant={filterArchiviati ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 text-xs gap-1.5"
+                  onClick={() => { setFilterArchiviati(v => !v); setTimeout(() => loadServizi(), 0); }}
+                  title="Mostra i servizi archiviati (sola lettura)"
+                >
+                  {filterArchiviati ? "Nascondi archiviati" : "Archiviati"}
+                </Button>
                 <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
                   <CollapsibleTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
