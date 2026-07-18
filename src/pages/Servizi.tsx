@@ -28,8 +28,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, AlertTriangle, Bell } from "lucide-react";
-import { useHorizontalWheel } from "@/hooks/use-horizontal-wheel";
+import { PlusCircle, Search, SlidersHorizontal, ChevronDown, ChevronRight, X, MapPin, Phone, Users, Car, Route, CreditCard, Info, Luggage, AlertTriangle, Bell, Printer } from "lucide-react";
 import { ModificheClientePopover } from "@/components/ModificheClientePopover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format, addDays } from "date-fns";
@@ -59,6 +58,8 @@ type Servizio = {
   tipo_pagamento: string | null;
   prezzo: number | null;
   centro_costo: string | null;
+  costo_centro: number | null;
+  non_incassato: number | null;
   codice: string | null;
   foglio: string | null;
   incasso: number | null;
@@ -68,13 +69,15 @@ type Servizio = {
   note: string | null;
   autista_id: string | null;
   autista_esterno_id: string | null;
+  veicolo_id: string | null;
+  fornitore_cs_id: string | null;
   modificato_da_cliente: boolean | null;
   modificato_at: string | null;
   clients: { name: string; company: string | null } | null;
-  autisti: { nome: string; cognome: string } | null;
-  autisti_esterni: { nome: string } | null;
+  autisti: { nome: string; cognome: string; cellulare: string | null } | null;
+  autisti_esterni: { nome: string; cellulare: string | null; targa: string | null } | null;
   veicoli: { targa: string; tipo_macchina: string | null } | null;
-  fornitori_cs: { nome: string } | null;
+  fornitori_cs: { nome: string; telefono: string | null } | null;
 };
 
 type Client = { id: string; name: string; company: string | null };
@@ -115,8 +118,100 @@ function buildTServ(s: Servizio): string {
   return parts.join(" · ") || "—";
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+}
+
+function printFoglioServizio(s: Servizio, org: { name: string; logo_url: string | null; address: string | null; phone: string | null; website: string | null } | null) {
+  const row = (label: string, value: string | number | null | undefined) => {
+    if (value === null || value === undefined || value === "") return "";
+    return `<tr><td class="lbl">${escapeHtml(label)}</td><td>${escapeHtml(String(value))}</td></tr>`;
+  };
+  const driverLabel = s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : (s.autisti_esterni?.nome || "");
+  const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || "";
+  const targa = s.autisti_esterni?.targa || s.veicoli?.targa || "";
+  const veicolo = s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "");
+  const dataStr = format(new Date(s.data_servizio), "dd/MM/yyyy");
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Foglio Servizio ${escapeHtml(s.codice || s.id.slice(0, 8))}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, "Helvetica Neue", Arial, sans-serif; color: #111; margin: 32px; }
+    header { display: flex; align-items: center; gap: 16px; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 20px; }
+    header img { max-height: 60px; }
+    header .org { flex: 1; }
+    header .org h1 { margin: 0; font-size: 20px; }
+    header .org p { margin: 2px 0; font-size: 11px; color: #555; }
+    header .meta { text-align: right; font-size: 11px; }
+    h2 { font-size: 14px; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+    table.data { width: 100%; border-collapse: collapse; font-size: 12px; }
+    table.data td { padding: 4px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
+    table.data td.lbl { color: #666; width: 30%; font-weight: 500; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    footer { margin-top: 40px; font-size: 10px; color: #888; text-align: center; }
+    @media print { body { margin: 12mm; } }
+  </style></head><body>
+  <header>
+    ${org?.logo_url ? `<img src="${escapeHtml(org.logo_url)}" alt="logo" />` : ""}
+    <div class="org">
+      <h1>${escapeHtml(org?.name || "")}</h1>
+      ${org?.address ? `<p>${escapeHtml(org.address)}</p>` : ""}
+      ${org?.phone ? `<p>Tel: ${escapeHtml(org.phone)}</p>` : ""}
+      ${org?.website ? `<p>${escapeHtml(org.website)}</p>` : ""}
+    </div>
+    <div class="meta">
+      <div><strong>Foglio di servizio</strong></div>
+      <div>Codice: ${escapeHtml(s.codice || "—")}</div>
+      <div>${dataStr}${s.ora_inizio ? " · " + escapeHtml(s.ora_inizio) : ""}</div>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div>
+      <h2>Cliente</h2>
+      <table class="data">
+        ${row("Società", s.clients?.company || s.clients?.name)}
+        ${row("Contatto", s.contatto)}
+        ${row("Telefono", s.telefono_contatto)}
+        ${row("Passeggeri", s.n_passeggeri)}
+        ${row("Bagagli", s.n_bagagli)}
+      </table>
+      <h2>Servizio</h2>
+      <table class="data">
+        ${row("Città", s.citta)}
+        ${row("Tipo", buildTServ(s))}
+        ${row("Luogo inizio", s.luogo_inizio)}
+        ${row("Itinerario", s.itinerario)}
+        ${row("Luogo fine", s.luogo_fine)}
+        ${row("Accessori", s.accessori)}
+      </table>
+    </div>
+    <div>
+      <h2>Veicolo & Autista</h2>
+      <table class="data">
+        ${row("Veicolo", veicolo)}
+        ${row("Targa", targa)}
+        ${row("Autista", driverLabel)}
+        ${row("Telefono autista", driverTel)}
+        ${row("Info autista", s.info_autista)}
+      </table>
+      <h2>Note</h2>
+      <table class="data">
+        ${row("Note", s.note)}
+      </table>
+    </div>
+  </div>
+
+  <footer>Documento generato il ${format(new Date(), "dd/MM/yyyy HH:mm")}</footer>
+  <script>window.onload = () => window.print();</script>
+  </body></html>`;
+  const w = window.open("", "_blank", "width=900,height=1200");
+  if (w) { w.document.write(html); w.document.close(); }
+}
+
+
 export default function Servizi() {
-  const { user } = useAuth();
+  const { user, role, organization } = useAuth();
+  const isAdmin = role === "admin";
   const [servizi, setServizi] = useState<Servizio[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [autisti, setAutisti] = useState<Autista[]>([]);
@@ -126,7 +221,7 @@ export default function Servizi() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
   const [selectedServiziIds, setSelectedServiziIds] = useState<string[]>([]);
-  const tableScrollRef = useHorizontalWheel<HTMLDivElement>();
+  
 
   // Filters
   const [filterDal, setFilterDal] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"));
@@ -174,6 +269,9 @@ export default function Servizi() {
     costo_cs: 0,
     costo_autista: 0,
     costo_commissione: 0,
+    non_incassato: 0,
+    costo_centro: 0,
+    centro_costo: "",
     note: "",
   });
 
@@ -203,7 +301,7 @@ export default function Servizi() {
     setLoading(true);
     let query = supabase
       .from("servizi")
-      .select("*, clients(name, company), autisti(nome, cognome), autisti_esterni(nome), veicoli(targa, tipo_macchina), fornitori_cs(nome)")
+      .select("*, clients(name, company), autisti(nome, cognome, cellulare), autisti_esterni(nome, cellulare, targa), veicoli(targa, tipo_macchina), fornitori_cs(nome, telefono)")
       .gte("data_servizio", filterDal)
       .lte("data_servizio", filterAl)
       .order("data_servizio", { ascending: true });
@@ -287,9 +385,12 @@ export default function Servizi() {
       codice: form.codice || null,
       foglio: form.foglio || null,
       incasso: form.incasso,
+      non_incassato: form.non_incassato || null,
       costo_cs: form.costo_cs,
       costo_autista: form.costo_autista,
       costo_commissione: form.costo_commissione,
+      costo_centro: form.costo_centro || null,
+      centro_costo: form.centro_costo || null,
       note: form.note || null,
       created_by: user?.id,
     };
@@ -438,7 +539,7 @@ export default function Servizi() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-4">
+      <div className="space-y-4 overflow-x-clip">
         {/* Header row */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -648,22 +749,42 @@ export default function Servizi() {
                   <Label>Foglio</Label>
                   <Input value={form.foglio} onChange={e => setForm({ ...form, foglio: e.target.value })} />
                 </div>
-                <div className="space-y-1">
-                  <Label>Incasso €</Label>
-                  <Input type="number" step="0.01" value={form.incasso} onChange={e => setForm({ ...form, incasso: +e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Costo CS €</Label>
-                  <Input type="number" step="0.01" value={form.costo_cs} onChange={e => setForm({ ...form, costo_cs: +e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Costo Autista €</Label>
-                  <Input type="number" step="0.01" value={form.costo_autista} onChange={e => setForm({ ...form, costo_autista: +e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Costo Commissione €</Label>
-                  <Input type="number" step="0.01" value={form.costo_commissione} onChange={e => setForm({ ...form, costo_commissione: +e.target.value })} />
-                </div>
+                {isAdmin && (
+                  <>
+                    <div className="space-y-1 sm:col-span-2">
+                      <Separator className="my-1" />
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sezione economica (solo admin)</p>
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Incasso € (Inc)</Label>
+                      <Input type="number" step="0.01" value={form.incasso} onChange={e => setForm({ ...form, incasso: +e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Non incassato € (No Inc)</Label>
+                      <Input type="number" step="0.01" value={form.non_incassato} onChange={e => setForm({ ...form, non_incassato: +e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Costo CS €</Label>
+                      <Input type="number" step="0.01" value={form.costo_cs} onChange={e => setForm({ ...form, costo_cs: +e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Costo Autista € (Aut €)</Label>
+                      <Input type="number" step="0.01" value={form.costo_autista} onChange={e => setForm({ ...form, costo_autista: +e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Centro di costo (etichetta)</Label>
+                      <Input value={form.centro_costo} onChange={e => setForm({ ...form, centro_costo: e.target.value })} placeholder="es. Marketing" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Costo centro € (C.C €)</Label>
+                      <Input type="number" step="0.01" value={form.costo_centro} onChange={e => setForm({ ...form, costo_centro: +e.target.value })} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Commissione € (Com €)</Label>
+                      <Input type="number" step="0.01" value={form.costo_commissione} onChange={e => setForm({ ...form, costo_commissione: +e.target.value })} />
+                    </div>
+                  </>
+                )}
                 <div className="space-y-1 sm:col-span-2">
                   <Label>Note</Label>
                   <Textarea value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} />
@@ -903,51 +1024,80 @@ export default function Servizi() {
           )}
         </div>
 
-        {/* DESKTOP/TABLET: schema completo */}
-        <Card className="hidden md:block">
-          <CardContent className="p-0">
-            <div ref={tableScrollRef} className="h-scroll">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead className="h-9 w-10 px-2">
+        {/* DESKTOP/TABLET: schema completo — full-bleed, 25 colonne senza scroll orizzontale */}
+        <div className="hidden md:block relative left-1/2 -translate-x-1/2 w-screen">
+          <Card className="rounded-none border-x-0">
+            <CardContent className="p-0">
+              <table className="w-full table-fixed text-[11px] leading-tight">
+                <colgroup>
+                  <col style={{ width: "2%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "4%" }} />
+                  <col style={{ width: "6%" }} />
+                  <col style={{ width: "4%" }} />
+                  <col style={{ width: "5%" }} />
+                  <col style={{ width: "2%" }} />
+                  <col style={{ width: "2%" }} />
+                  <col style={{ width: "5%" }} />
+                  <col style={{ width: "7%" }} />
+                  <col style={{ width: "7%" }} />
+                  <col style={{ width: "7%" }} />
+                  <col style={{ width: "5%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "4%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "4%" }} />
+                  <col style={{ width: "2%" }} />
+                  <col style={{ width: "5%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "3%" }} />
+                  <col style={{ width: "2%" }} />
+                </colgroup>
+                <thead className="bg-muted/40 border-b">
+                  <tr className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">
+                    <th className="px-1 py-1.5">
                       <Checkbox
                         checked={servizi.length > 0 && selectedVisibleCount === servizi.length ? true : selectedVisibleCount > 0 ? "indeterminate" : false}
                         onCheckedChange={handleToggleAllVisible}
                         aria-label="Seleziona tutti i servizi visibili"
                       />
-                    </TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Città</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Data</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Società</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Contatti</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Telefono</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-center">N.P</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-center">N.B</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">T.Serv</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Luogo inizio</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Itinerario</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Luogo fine</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Info autista</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Accessori</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Veicolo</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">T.P</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">Inc €</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">CS</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">CS €</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Aut</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">Aut €</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">C.C</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide text-right">Com €</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Codice</TableHead>
-                    <TableHead className="h-9 text-[11px] uppercase tracking-wide">Foglio</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+                    </th>
+                    <th className="px-1 py-1.5 text-left" title="Città">Città</th>
+                    <th className="px-1 py-1.5 text-left" title="Data servizio">Data</th>
+                    <th className="px-1 py-1.5 text-left" title="Società cliente">Società</th>
+                    <th className="px-1 py-1.5 text-left" title="Contatti (referente/passeggero)">Contatti</th>
+                    <th className="px-1 py-1.5 text-left" title="Telefono">Telefono</th>
+                    <th className="px-1 py-1.5 text-center" title="Numero passeggeri">N.P</th>
+                    <th className="px-1 py-1.5 text-center" title="Numero bagagli">N.B</th>
+                    <th className="px-1 py-1.5 text-left" title="Tipo servizio">T.Serv</th>
+                    <th className="px-1 py-1.5 text-left" title="Luogo inizio">Luogo inizio</th>
+                    <th className="px-1 py-1.5 text-left" title="Itinerario">Itinerario</th>
+                    <th className="px-1 py-1.5 text-left" title="Luogo fine">Luogo fine</th>
+                    <th className="px-1 py-1.5 text-left" title="Info autista">Info autista</th>
+                    <th className="px-1 py-1.5 text-left" title="Accessori">Access.</th>
+                    <th className="px-1 py-1.5 text-left" title="Veicolo">Veicolo</th>
+                    <th className="px-1 py-1.5 text-left" title="Tipo pagamento">T.P</th>
+                    <th className="px-1 py-1.5 text-right" title="Non incassato €">No Inc €</th>
+                    <th className="px-1 py-1.5 text-right" title="Incassato €">Inc €</th>
+                    <th className="px-1 py-1.5 text-left" title="Fornitore Corriere Speciale (nome + telefono)">CS</th>
+                    <th className="px-1 py-1.5 text-right" title="Costo CS €">CS €</th>
+                    <th className="px-1 py-1.5 text-left" title="Autista (nome + telefono + targa)">Aut</th>
+                    <th className="px-1 py-1.5 text-right" title="Costo autista €">Aut €</th>
+                    <th className="px-1 py-1.5 text-right" title="Costo centro di costo €">C.C €</th>
+                    <th className="px-1 py-1.5 text-right" title="Commissione €">Com €</th>
+                    <th className="px-1 py-1.5 text-left" title="Codice">Codice</th>
+                    <th className="px-1 py-1.5 text-center" title="Stampa foglio di servizio">Foglio</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {loading ? (
-                    <TableRow><TableCell colSpan={25} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</TableCell></TableRow>
+                    <tr><td colSpan={26} className="text-center py-12 text-muted-foreground text-sm">Caricamento…</td></tr>
                   ) : servizi.length === 0 ? (
-                    <TableRow><TableCell colSpan={25} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</TableCell></TableRow>
+                    <tr><td colSpan={26} className="text-center py-12 text-muted-foreground text-sm">Nessun servizio trovato</td></tr>
                   ) : (
                     servizi.map(s => {
                       const senzaAutista = !s.autista_id && !s.autista_esterno_id;
@@ -956,56 +1106,67 @@ export default function Servizi() {
                       const driverLabel = s.autisti
                         ? `${s.autisti.nome} ${s.autisti.cognome}`
                         : s.autisti_esterni?.nome || null;
+                      const driverTel = s.autisti?.cellulare || s.autisti_esterni?.cellulare || null;
+                      const driverTarga = s.autisti_esterni?.targa || s.veicoli?.targa || null;
+                      const csNome = s.fornitori_cs?.nome || null;
+                      const csTel = s.fornitori_cs?.telefono || null;
+                      const cellCls = "px-1 py-1 align-top break-words";
                       return (
-                        <TableRow
+                        <tr
                           key={s.id}
                           onClick={() => setDetailServizio(s)}
-                          className={`text-xs cursor-pointer ${
+                          className={`border-b cursor-pointer transition-colors ${
                             isSelected
                               ? "bg-primary/5 hover:bg-primary/10"
                               : senzaAutista
                                 ? "bg-red-50/60 hover:bg-red-50 dark:bg-red-950/20 dark:hover:bg-red-950/30"
-                                : ""
+                                : "hover:bg-muted/40"
                           } ${modificato ? "border-l-4 border-l-amber-500" : ""}`}
                         >
-                          <TableCell className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
+                          <td className={cellCls} onClick={(e) => e.stopPropagation()}>
                             <Checkbox
                               checked={isSelected}
                               onCheckedChange={() => handleToggleServizioSelection(s.id)}
                               aria-label="Seleziona servizio"
                             />
-                          </TableCell>
-                          <TableCell className="py-2 font-medium">{s.citta || "—"}</TableCell>
-                          <TableCell className="py-2 whitespace-nowrap">
-                            <div className="flex items-center gap-1.5">
-                              {modificato && (
-                                <ModificheClientePopover servizioId={s.id} />
-                              )}
+                          </td>
+                          <td className={`${cellCls} font-medium`}>{s.citta || "—"}</td>
+                          <td className={cellCls}>
+                            <div className="flex items-start gap-1">
+                              {modificato && <ModificheClientePopover servizioId={s.id} />}
                               <div>
-                                <div className={senzaAutista ? "text-red-700 dark:text-red-400 font-semibold" : ""}>
-                                  {format(new Date(s.data_servizio), "dd/MM/yyyy")}
+                                <div className={senzaAutista ? "text-red-700 dark:text-red-400 font-semibold" : "font-medium"}>
+                                  {format(new Date(s.data_servizio), "dd/MM/yy")}
                                 </div>
                                 {s.ora_inizio && <div className="text-muted-foreground">{s.ora_inizio}</div>}
                               </div>
                             </div>
-                          </TableCell>
-                          <TableCell className="py-2 font-semibold italic">{s.clients?.company || s.clients?.name || "—"}</TableCell>
-                          <TableCell className="py-2">{s.contatto || "—"}</TableCell>
-                          <TableCell className="py-2 whitespace-nowrap">{s.telefono_contatto || "—"}</TableCell>
-                          <TableCell className="py-2 text-center">{s.n_passeggeri ?? 0}</TableCell>
-                          <TableCell className="py-2 text-center">{s.n_bagagli ?? 0}</TableCell>
-                          <TableCell className="py-2">{buildTServ(s)}</TableCell>
-                          <TableCell className="py-2 max-w-[200px] truncate" title={s.luogo_inizio || ""}>{s.luogo_inizio || "—"}</TableCell>
-                          <TableCell className="py-2 max-w-[200px] truncate" title={s.itinerario || ""}>{s.itinerario || "—"}</TableCell>
-                          <TableCell className="py-2 max-w-[200px] truncate" title={s.luogo_fine || ""}>{s.luogo_fine || "—"}</TableCell>
-                          <TableCell className="py-2 max-w-[180px] truncate" title={s.info_autista || ""}>{s.info_autista || "—"}</TableCell>
-                          <TableCell className="py-2">{s.accessori || "—"}</TableCell>
-                          <TableCell className="py-2">{s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—")}</TableCell>
-                          <TableCell className="py-2">{s.tipo_pagamento || "—"}</TableCell>
-                          <TableCell className="py-2 text-right tabular-nums">{s.incasso ?? 0}</TableCell>
-                          <TableCell className="py-2">{s.fornitori_cs?.nome || "—"}</TableCell>
-                          <TableCell className="py-2 text-right tabular-nums">{s.costo_cs ?? 0}</TableCell>
-                          <TableCell className="py-2" onClick={(e) => e.stopPropagation()}>
+                          </td>
+                          <td className={`${cellCls} font-semibold italic`}>{s.clients?.company || s.clients?.name || "—"}</td>
+                          <td className={cellCls}>{s.contatto || "—"}</td>
+                          <td className={cellCls}>{s.telefono_contatto || "—"}</td>
+                          <td className={`${cellCls} text-center`}>{s.n_passeggeri ?? 0}</td>
+                          <td className={`${cellCls} text-center`}>{s.n_bagagli ?? 0}</td>
+                          <td className={cellCls}>{buildTServ(s)}</td>
+                          <td className={cellCls}>{s.luogo_inizio || "—"}</td>
+                          <td className={cellCls}>{s.itinerario || "—"}</td>
+                          <td className={cellCls}>{s.luogo_fine || "—"}</td>
+                          <td className={cellCls}>{s.info_autista || "—"}</td>
+                          <td className={cellCls}>{s.accessori || "—"}</td>
+                          <td className={cellCls}>{s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—")}</td>
+                          <td className={cellCls}>{s.tipo_pagamento || "—"}</td>
+                          <td className={`${cellCls} text-right tabular-nums`}>{s.non_incassato != null ? s.non_incassato : "—"}</td>
+                          <td className={`${cellCls} text-right tabular-nums`}>{s.incasso ?? 0}</td>
+                          <td className={cellCls}>
+                            {csNome ? (
+                              <div className="flex flex-col leading-tight">
+                                <span className="font-medium">{csNome}</span>
+                                {csTel && <span className="text-muted-foreground text-[10px]">{csTel}</span>}
+                              </div>
+                            ) : "—"}
+                          </td>
+                          <td className={`${cellCls} text-right tabular-nums`}>{s.costo_cs ?? 0}</td>
+                          <td className={cellCls} onClick={(e) => e.stopPropagation()}>
                             <AssignDriverPopover
                               currentInternoId={s.autista_id}
                               currentEsternoId={s.autista_esterno_id}
@@ -1015,34 +1176,48 @@ export default function Servizi() {
                                 <button
                                   type="button"
                                   onClick={(e) => e.stopPropagation()}
-                                  className={`inline-flex max-w-[150px] items-center gap-1.5 rounded-md px-2 py-1 text-left transition-colors ${
-                                    driverLabel
-                                      ? "hover:bg-accent"
-                                      : "bg-destructive/10 text-destructive hover:bg-destructive/20"
+                                  className={`inline-flex w-full flex-col items-start gap-0 rounded-md px-1 py-0.5 text-left transition-colors leading-tight ${
+                                    driverLabel ? "hover:bg-accent" : "bg-destructive/10 text-destructive hover:bg-destructive/20"
                                   }`}
                                 >
-                                  <span className="truncate text-[11px] font-medium">{driverLabel || "Assegna"}</span>
-                                  {s.autisti_esterni && (
-                                    <Badge variant="outline" className="h-4 px-1 py-0 text-[9px]">EXT</Badge>
-                                  )}
+                                  <span className="flex items-center gap-1 font-medium">
+                                    <span className="break-words">{driverLabel || "Assegna"}</span>
+                                    {s.autisti_esterni && <Badge variant="outline" className="h-3.5 px-1 py-0 text-[9px]">EXT</Badge>}
+                                  </span>
+                                  {driverTel && <span className="text-muted-foreground text-[10px]">{driverTel}</span>}
+                                  {driverTarga && <span className="text-muted-foreground text-[10px] font-mono">{driverTarga}</span>}
                                 </button>
                               }
                             />
-                          </TableCell>
-                          <TableCell className="py-2 text-right tabular-nums">{s.costo_autista ?? 0}</TableCell>
-                          <TableCell className="py-2 text-right tabular-nums">{s.centro_costo || "—"}</TableCell>
-                          <TableCell className="py-2 text-right tabular-nums">{s.costo_commissione ?? 0}</TableCell>
-                          <TableCell className="py-2 font-mono text-[11px]">{s.codice || "—"}</TableCell>
-                          <TableCell className="py-2 font-mono text-[11px]">{s.foglio || "—"}</TableCell>
-                        </TableRow>
+                          </td>
+                          <td className={`${cellCls} text-right tabular-nums`}>{s.costo_autista ?? 0}</td>
+                          <td className={`${cellCls} text-right tabular-nums`}>
+                            {s.costo_centro != null ? s.costo_centro : "—"}
+                            {s.centro_costo && <div className="text-[9px] text-muted-foreground font-normal">{s.centro_costo}</div>}
+                          </td>
+                          <td className={`${cellCls} text-right tabular-nums`}>{s.costo_commissione ?? 0}</td>
+                          <td className={`${cellCls} font-mono text-[10px]`}>{s.codice || "—"}</td>
+                          <td className={`${cellCls} text-center`} onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-6 w-6"
+                              title="Stampa foglio di servizio"
+                              onClick={() => printFoglioServizio(s, organization)}
+                            >
+                              <Printer className="h-3.5 w-3.5" />
+                            </Button>
+                          </td>
+                        </tr>
                       );
                     })
                   )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
+
 
         {/* Legenda (solo desktop/tablet) */}
         <div className="hidden md:flex flex-wrap gap-4 text-xs text-muted-foreground">

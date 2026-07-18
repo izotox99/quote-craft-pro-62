@@ -968,6 +968,7 @@ export type Database = {
           codice: string | null
           contatto: string | null
           costo_autista: number | null
+          costo_centro: number | null
           costo_commissione: number | null
           costo_cs: number | null
           created_at: string
@@ -987,6 +988,7 @@ export type Database = {
           modificato_da_cliente: boolean
           n_bagagli: number | null
           n_passeggeri: number | null
+          non_incassato: number | null
           note: string | null
           ora_inizio: string | null
           org_id: string
@@ -1015,6 +1017,7 @@ export type Database = {
           codice?: string | null
           contatto?: string | null
           costo_autista?: number | null
+          costo_centro?: number | null
           costo_commissione?: number | null
           costo_cs?: number | null
           created_at?: string
@@ -1034,6 +1037,7 @@ export type Database = {
           modificato_da_cliente?: boolean
           n_bagagli?: number | null
           n_passeggeri?: number | null
+          non_incassato?: number | null
           note?: string | null
           ora_inizio?: string | null
           org_id?: string
@@ -1062,6 +1066,7 @@ export type Database = {
           codice?: string | null
           contatto?: string | null
           costo_autista?: number | null
+          costo_centro?: number | null
           costo_commissione?: number | null
           costo_cs?: number | null
           created_at?: string
@@ -1081,6 +1086,7 @@ export type Database = {
           modificato_da_cliente?: boolean
           n_bagagli?: number | null
           n_passeggeri?: number | null
+          non_incassato?: number | null
           note?: string | null
           ora_inizio?: string | null
           org_id?: string
@@ -1650,6 +1656,7 @@ export type Database = {
           codice: string | null
           contatto: string | null
           costo_autista: number | null
+          costo_centro: number | null
           costo_commissione: number | null
           costo_cs: number | null
           created_at: string
@@ -1669,6 +1676,7 @@ export type Database = {
           modificato_da_cliente: boolean
           n_bagagli: number | null
           n_passeggeri: number | null
+          non_incassato: number | null
           note: string | null
           ora_inizio: string | null
           org_id: string
