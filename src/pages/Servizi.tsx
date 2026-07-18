@@ -746,6 +746,17 @@ export default function Servizi() {
                     <X className="h-3 w-3" /> Reset
                   </Button>
                 )}
+                {idsDaConfermareVisibili.length > 0 && (
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs gap-1.5 bg-orange-600 hover:bg-orange-700 text-white"
+                    onClick={() => setConfermaTuttiOpen(true)}
+                    title="Conferma tutti i servizi da confermare nella vista corrente"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    Conferma tutti ({idsDaConfermareVisibili.length})
+                  </Button>
+                )}
                 <Button
                   variant={filterArchiviati ? "default" : "outline"}
                   size="sm"
