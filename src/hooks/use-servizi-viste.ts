@@ -18,16 +18,37 @@ export type ViewRef = {
   columns: ViewColumnState[];
 };
 
-const LS_ACTIVE_KEY = "servizi_vista_attiva_id";
+const LS_VERSION = "v2";
+const LS_ACTIVE_KEY = `servizi_vista_attiva_id_${LS_VERSION}`;
+const LS_LEGACY_KEYS = ["servizi_vista_attiva_id"];
+
+/** Legge la vista attiva salvata, scartando valori di versioni precedenti. */
+function readStoredActiveId(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    // Pulisci eventuali chiavi legacy (versioni precedenti dello schema viste).
+    for (const k of LS_LEGACY_KEYS) {
+      if (localStorage.getItem(k) !== null) localStorage.removeItem(k);
+    }
+    const raw = localStorage.getItem(LS_ACTIVE_KEY);
+    if (!raw) return null;
+    // Valori accettati: id di sistema noto ("sys:...") oppure UUID.
+    const isSystem = SYSTEM_VIEW_IDS.has(raw);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw);
+    if (!isSystem && !isUuid) {
+      localStorage.removeItem(LS_ACTIVE_KEY);
+      return null;
+    }
+    return raw;
+  } catch {
+    return null;
+  }
+}
 
 /** Carica le viste dell'utente + i preset di sistema, gestisce la selezione attiva. */
 export function useServiziViste(userId: string | undefined) {
   const [personal, setPersonal] = useState<ViewRef[]>([]);
-  const [activeId, setActiveId] = useState<string>(() =>
-    typeof window !== "undefined"
-      ? localStorage.getItem(LS_ACTIVE_KEY) || "sys:completa"
-      : "sys:completa",
-  );
+  const [activeId, setActiveId] = useState<string>(() => readStoredActiveId() || "sys:completa");
   const [loaded, setLoaded] = useState(false);
 
   const systemRefs: ViewRef[] = useMemo(
@@ -68,7 +89,7 @@ export function useServiziViste(userId: string | undefined) {
   // scelto qualcos'altro in questa sessione, la applichiamo.
   useEffect(() => {
     if (!loaded) return;
-    const stored = typeof window !== "undefined" ? localStorage.getItem(LS_ACTIVE_KEY) : null;
+    const stored = readStoredActiveId();
     if (stored) return;
     const def = personal.find((v) => v.predefinita);
     if (def) setActiveId(def.id);
