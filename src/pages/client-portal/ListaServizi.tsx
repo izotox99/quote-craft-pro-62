@@ -967,7 +967,7 @@ export default function ListaServizi() {
                   </div>
                   <div className="space-y-1.5 col-span-2">
                     <Label className="text-xs text-muted-foreground">Accessori</Label>
-                    <Input value={editForm.accessori} onChange={(e) => setEditForm(p => ({ ...p, accessori: e.target.value }))} className="rounded-lg h-10" />
+                    <AccessoriEditor value={editAccessori} onChange={setEditAccessori} />
                   </div>
                   <div className="space-y-1.5 col-span-2">
                     <Label className="text-xs text-muted-foreground">Note</Label>
