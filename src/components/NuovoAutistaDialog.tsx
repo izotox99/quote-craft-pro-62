@@ -227,6 +227,22 @@ export function NuovoAutistaDialog({
           id = data.id;
         }
 
+        // Account autista collaboratore esterno
+        if (id && (common.email.trim() || password)) {
+          const { data: fnData, error: fnErr } = await supabase.functions.invoke("create-autista-account", {
+            body: {
+              autista_id: id,
+              tipo: "esterno",
+              email: common.email.trim(),
+              password: password || undefined,
+            },
+          });
+          if (fnErr || (fnData as any)?.error) {
+            const msg = (fnData as any)?.error ?? fnErr?.message ?? "Errore creazione account autista";
+            throw new Error(msg);
+          }
+        }
+
         // Upload foglio (tariffario) se presente
         if (foglio && id) {
           const ext = foglio.name.split(".").pop() ?? "bin";
@@ -239,6 +255,7 @@ export function NuovoAutistaDialog({
             .update({ tariffario_url: path, tariffario_nome: foglio.name })
             .eq("id", id);
         }
+
       }
 
       toast.success(editing ? "Autista aggiornato" : "Autista inserito");
