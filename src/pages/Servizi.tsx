@@ -1276,7 +1276,7 @@ export default function Servizi() {
                         {visibleCols.map((c) => <col key={c.key} style={{ width: colWidth(c.key) }} />)}
                       </colgroup>
                       <thead className="border-b border-border bg-muted/70">
-                        <tr className="text-[7.5px] font-bold not-italic leading-[1.05] text-foreground xl:text-[8px]">
+                        <tr className="font-bold not-italic leading-[1.1] text-foreground">
                           {visibleCols.map((c, idx) => {
                             const def = COLUMNS_MAP[c.key];
                             const edgePad = idx === 0 ? "pl-[7px] pr-0" : idx === visibleCols.length - 1 ? "pl-0 pr-[7px]" : "px-0";
