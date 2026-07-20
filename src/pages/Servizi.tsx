@@ -41,6 +41,7 @@ const NETWORK_STATO_COLOR: Record<string, string> = {
   rifiutato: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
   annullato: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200",
   completato: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
+};
 
 const FONT_LEVELS = [9, 10, 11, 12, 14] as const;
 const FONT_DEFAULT_INDEX = 0; // 9px
