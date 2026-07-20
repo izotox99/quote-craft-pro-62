@@ -69,6 +69,8 @@ export function NuovoAutistaDialog({
   const [tipiMacchina, setTipiMacchina] = useState<string[]>([]);
   const [foglio, setFoglio] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [password, setPassword] = useState("");
+
 
   useEffect(() => {
     if (!open) return;
