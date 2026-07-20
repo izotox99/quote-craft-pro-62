@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Bell, Home, Calendar, Clock, Settings } from "lucide-react";
+import { Bell, Home, Calendar, Clock, Umbrella, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,7 @@ const NAV = [
   { to: "/autista", icon: Home, label: "Home", end: true },
   { to: "/autista/servizi/oggi", icon: Calendar, label: "Oggi" },
   { to: "/autista/presenza", icon: Clock, label: "Presenza" },
+  { to: "/autista/ferie", icon: Umbrella, label: "Ferie" },
   { to: "/autista/impostazioni", icon: Settings, label: "Opzioni" },
 ];
 
@@ -67,7 +68,7 @@ export function AutistaLayout({ children }: Props) {
       </main>
 
       <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-        <div className="mx-auto max-w-2xl grid grid-cols-4">
+        <div className="mx-auto max-w-2xl grid grid-cols-5">
           {NAV.map(({ to, icon: Icon, label, end }) => (
             <NavLink
               key={to}
