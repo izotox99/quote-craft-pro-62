@@ -129,7 +129,7 @@ export default function AutistaFerie() {
           </div>
         </div>
 
-        <div className="text-[11px] text-muted-foreground">Autisti attivi: {attivi} — copertura minima: {minCfg}</div>
+        <div className="text-[11px] text-muted-foreground">Flotta: {mezziTot} mezzi — massimo assenze/giorno: <strong>{maxAss}</strong></div>
 
         <div className="grid grid-cols-7 gap-0.5">
           {["L","M","M","G","V","S","D"].map((w,i) => (
@@ -139,9 +139,8 @@ export default function AutistaFerie() {
             const k = format(d, "yyyy-MM-dd");
             const items = byDay[k] ?? [];
             const approv = items.filter(x => x.stato === "approvata").length;
-            const disponibili = Math.max(attivi - approv, 0);
-            const pieno = disponibili <= minCfg;
-            const quasi = disponibili === minCfg + 1;
+            const pieno = maxAss > 0 && approv >= maxAss;
+            const quasi = maxAss > 0 && approv === maxAss - 1;
             const past = d < startOfMonth(new Date()) || d < new Date(new Date().setHours(0,0,0,0));
             const inMonth = isSameMonth(d, cursor);
             return (
@@ -152,15 +151,15 @@ export default function AutistaFerie() {
                   "min-h-[54px] rounded border p-1 text-left transition",
                   !inMonth && "opacity-40",
                   past && "bg-muted/40 text-muted-foreground",
-                  !past && !pieno && "bg-emerald-50 border-emerald-200",
+                  !past && !pieno && !quasi && "bg-emerald-50 border-emerald-200",
                   !past && !pieno && quasi && "bg-amber-50 border-amber-300",
                   !past && pieno && "bg-red-50 border-red-300",
                   isSameDay(d, new Date()) && "ring-2 ring-primary",
                 )}
               >
                 <div className="text-[11px] font-semibold">{format(d,"d")}</div>
-                <div className="text-[9px] leading-tight">{approv}/{attivi}</div>
-                {pieno && !past && <div className="text-[9px] font-semibold text-red-600">pieno</div>}
+                <div className="text-[9px] leading-tight">{approv} su {maxAss}</div>
+                {pieno && !past && <div className="text-[9px] font-semibold text-red-600">completo</div>}
               </button>
             );
           })}
