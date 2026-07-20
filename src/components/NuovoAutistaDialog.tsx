@@ -185,6 +185,7 @@ export function NuovoAutistaDialog({
           const { data: fnData, error: fnErr } = await supabase.functions.invoke("create-autista-account", {
             body: {
               autista_id: internoId,
+              tipo: "interno",
               email: common.email.trim(),
               password: password || undefined,
             },
