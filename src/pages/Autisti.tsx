@@ -191,6 +191,9 @@ export default function Autisti() {
             Lista autisti {showDisattivati ? "disattivati" : "interni"}
           </h1>
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => window.location.assign("/autisti/ore")}>
+              Ore e compensi
+            </Button>
             <Button variant="outline" onClick={() => setShowDisattivati(v => !v)}>
               {showDisattivati ? "Autisti attivi" : "Autisti disattivati"}
             </Button>
