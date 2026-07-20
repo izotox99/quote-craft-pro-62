@@ -25,12 +25,13 @@ export default function AutistaHome() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: a } = await supabase
-        .from("autisti")
-        .select("nome, cognome")
-        .eq("auth_user_id", user.id)
-        .maybeSingle();
-      if (a) setNome(`${a.nome ?? ""} ${a.cognome ?? ""}`.trim());
+      const { data: aInt } = await supabase.from("autisti").select("nome, cognome").eq("auth_user_id", user.id).maybeSingle();
+      if (aInt) {
+        setNome(`${aInt.nome ?? ""} ${aInt.cognome ?? ""}`.trim());
+      } else {
+        const { data: aExt } = await supabase.from("autisti_esterni").select("nome").eq("auth_user_id", user.id).maybeSingle();
+        if (aExt) setNome(aExt.nome ?? "");
+      }
 
       const load = async (date: string) => {
         const { count } = await supabase

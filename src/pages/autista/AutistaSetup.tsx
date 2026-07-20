@@ -31,7 +31,9 @@ function SetupInner() {
       if (!user) throw new Error("Sessione scaduta");
 
       const now = new Date().toISOString();
-      const { error } = await supabase.from("autisti")
+      const { data: aInt } = await supabase.from("autisti").select("id").eq("auth_user_id", user.id).maybeSingle();
+      const table = aInt ? "autisti" : "autisti_esterni";
+      const { error } = await supabase.from(table)
         .update({ password_cambiata_at: now, privacy_accettata_at: now })
         .eq("auth_user_id", user.id);
       if (error) throw error;
