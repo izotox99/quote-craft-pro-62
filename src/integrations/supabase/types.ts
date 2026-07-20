@@ -197,6 +197,9 @@ export type Database = {
           foto_url: string | null
           id: string
           mansione: string | null
+          max_ferie_mese: number | null
+          max_permessi_mese: number | null
+          max_riposi_mese: number | null
           nome: string
           note: string | null
           numero_ore_ord: number | null
@@ -228,6 +231,9 @@ export type Database = {
           foto_url?: string | null
           id?: string
           mansione?: string | null
+          max_ferie_mese?: number | null
+          max_permessi_mese?: number | null
+          max_riposi_mese?: number | null
           nome: string
           note?: string | null
           numero_ore_ord?: number | null
@@ -259,6 +265,9 @@ export type Database = {
           foto_url?: string | null
           id?: string
           mansione?: string | null
+          max_ferie_mese?: number | null
+          max_permessi_mese?: number | null
+          max_riposi_mese?: number | null
           nome?: string
           note?: string | null
           numero_ore_ord?: number | null
@@ -277,6 +286,75 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      autisti_assenze: {
+        Row: {
+          autista_id: string
+          created_at: string
+          data_fine: string
+          data_inizio: string
+          deciso_at: string | null
+          deciso_da: string | null
+          id: string
+          motivazione: string | null
+          note_ufficio: string | null
+          org_id: string
+          origine: string
+          richiesta_da: string | null
+          stato: Database["public"]["Enums"]["assenza_stato"]
+          tipo: Database["public"]["Enums"]["assenza_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          autista_id: string
+          created_at?: string
+          data_fine: string
+          data_inizio: string
+          deciso_at?: string | null
+          deciso_da?: string | null
+          id?: string
+          motivazione?: string | null
+          note_ufficio?: string | null
+          org_id: string
+          origine?: string
+          richiesta_da?: string | null
+          stato?: Database["public"]["Enums"]["assenza_stato"]
+          tipo: Database["public"]["Enums"]["assenza_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          autista_id?: string
+          created_at?: string
+          data_fine?: string
+          data_inizio?: string
+          deciso_at?: string | null
+          deciso_da?: string | null
+          id?: string
+          motivazione?: string | null
+          note_ufficio?: string | null
+          org_id?: string
+          origine?: string
+          richiesta_da?: string | null
+          stato?: Database["public"]["Enums"]["assenza_stato"]
+          tipo?: Database["public"]["Enums"]["assenza_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autisti_assenze_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_assenze_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       autisti_esterni: {
         Row: {
@@ -838,6 +916,44 @@ export type Database = {
           },
         ]
       }
+      config_assenze: {
+        Row: {
+          created_at: string
+          max_ferie_mese: number
+          max_permessi_mese: number
+          max_riposi_mese: number
+          min_autisti_disponibili_giorno: number
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          max_ferie_mese?: number
+          max_permessi_mese?: number
+          max_riposi_mese?: number
+          min_autisti_disponibili_giorno?: number
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          max_ferie_mese?: number
+          max_permessi_mese?: number
+          max_riposi_mese?: number
+          min_autisti_disponibili_giorno?: number
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "config_assenze_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboard_viste: {
         Row: {
           colonne: Json
@@ -1085,6 +1201,7 @@ export type Database = {
       }
       notifiche: {
         Row: {
+          autista_id: string | null
           client_id: string | null
           created_at: string
           id: string
@@ -1097,6 +1214,7 @@ export type Database = {
           utenza_id: string | null
         }
         Insert: {
+          autista_id?: string | null
           client_id?: string | null
           created_at?: string
           id?: string
@@ -1109,6 +1227,7 @@ export type Database = {
           utenza_id?: string | null
         }
         Update: {
+          autista_id?: string | null
           client_id?: string | null
           created_at?: string
           id?: string
@@ -2569,6 +2688,85 @@ export type Database = {
     }
     Functions: {
       agenda_process_promemoria: { Args: never; Returns: undefined }
+      annulla_assenza: {
+        Args: { _id: string }
+        Returns: {
+          autista_id: string
+          created_at: string
+          data_fine: string
+          data_inizio: string
+          deciso_at: string | null
+          deciso_da: string | null
+          id: string
+          motivazione: string | null
+          note_ufficio: string | null
+          org_id: string
+          origine: string
+          richiesta_da: string | null
+          stato: Database["public"]["Enums"]["assenza_stato"]
+          tipo: Database["public"]["Enums"]["assenza_tipo"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "autisti_assenze"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      approva_assenza: {
+        Args: { _id: string; _note?: string }
+        Returns: {
+          autista_id: string
+          created_at: string
+          data_fine: string
+          data_inizio: string
+          deciso_at: string | null
+          deciso_da: string | null
+          id: string
+          motivazione: string | null
+          note_ufficio: string | null
+          org_id: string
+          origine: string
+          richiesta_da: string | null
+          stato: Database["public"]["Enums"]["assenza_stato"]
+          tipo: Database["public"]["Enums"]["assenza_tipo"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "autisti_assenze"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      assenze_calendario_mese: {
+        Args: { _anno: number; _mese: number }
+        Returns: {
+          autista_nome: string
+          giorno: string
+          stato: Database["public"]["Enums"]["assenza_stato"]
+          tipo: Database["public"]["Enums"]["assenza_tipo"]
+        }[]
+      }
+      assenze_conteggia_mese: {
+        Args: {
+          _anno: number
+          _autista_id: string
+          _exclude_id?: string
+          _mese: number
+          _tipo: Database["public"]["Enums"]["assenza_tipo"]
+        }
+        Returns: number
+      }
+      assenze_copertura_giorno: {
+        Args: { _giorno: string; _org: string }
+        Returns: Json
+      }
+      assenze_get_effective_limits: {
+        Args: { _autista_id: string }
+        Returns: Json
+      }
       autista_update_servizio: {
         Args: {
           _action: string
@@ -2787,6 +2985,39 @@ export type Database = {
       }
       hash_share_password: { Args: { _password: string }; Returns: string }
       hash_utenza_password: { Args: { _password: string }; Returns: string }
+      inserisci_assenza_ufficio: {
+        Args: {
+          _autista_id: string
+          _data_fine: string
+          _data_inizio: string
+          _force?: boolean
+          _note?: string
+          _tipo: Database["public"]["Enums"]["assenza_tipo"]
+        }
+        Returns: {
+          autista_id: string
+          created_at: string
+          data_fine: string
+          data_inizio: string
+          deciso_at: string | null
+          deciso_da: string | null
+          id: string
+          motivazione: string | null
+          note_ufficio: string | null
+          org_id: string
+          origine: string
+          richiesta_da: string | null
+          stato: Database["public"]["Enums"]["assenza_stato"]
+          tipo: Database["public"]["Enums"]["assenza_tipo"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "autisti_assenze"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       is_autista_user: { Args: { _user_id: string }; Returns: boolean }
       is_client_user: { Args: { _user_id: string }; Returns: boolean }
       network_dispatch_servizio: {
@@ -2994,6 +3225,63 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      richiedi_assenza: {
+        Args: {
+          _data_fine: string
+          _data_inizio: string
+          _motivazione?: string
+          _tipo: Database["public"]["Enums"]["assenza_tipo"]
+        }
+        Returns: {
+          autista_id: string
+          created_at: string
+          data_fine: string
+          data_inizio: string
+          deciso_at: string | null
+          deciso_da: string | null
+          id: string
+          motivazione: string | null
+          note_ufficio: string | null
+          org_id: string
+          origine: string
+          richiesta_da: string | null
+          stato: Database["public"]["Enums"]["assenza_stato"]
+          tipo: Database["public"]["Enums"]["assenza_tipo"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "autisti_assenze"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      rifiuta_assenza: {
+        Args: { _id: string; _note?: string }
+        Returns: {
+          autista_id: string
+          created_at: string
+          data_fine: string
+          data_inizio: string
+          deciso_at: string | null
+          deciso_da: string | null
+          id: string
+          motivazione: string | null
+          note_ufficio: string | null
+          org_id: string
+          origine: string
+          richiesta_da: string | null
+          stato: Database["public"]["Enums"]["assenza_stato"]
+          tipo: Database["public"]["Enums"]["assenza_tipo"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "autisti_assenze"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       verify_share_password: {
         Args: { _password: string; _share_id: string }
         Returns: boolean
@@ -3007,6 +3295,8 @@ export type Database = {
       agenda_categoria: "appuntamento" | "scadenza" | "nota" | "altro"
       agenda_visibilita: "personale" | "organizzazione"
       app_role: "admin" | "manager" | "agent"
+      assenza_stato: "richiesta" | "approvata" | "rifiutata" | "annullata"
+      assenza_tipo: "ferie" | "riposo" | "permesso" | "malattia"
       network_dispatch_stato:
         | "inviato"
         | "accettato"
@@ -3170,6 +3460,8 @@ export const Constants = {
       agenda_categoria: ["appuntamento", "scadenza", "nota", "altro"],
       agenda_visibilita: ["personale", "organizzazione"],
       app_role: ["admin", "manager", "agent"],
+      assenza_stato: ["richiesta", "approvata", "rifiutata", "annullata"],
+      assenza_tipo: ["ferie", "riposo", "permesso", "malattia"],
       network_dispatch_stato: [
         "inviato",
         "accettato",

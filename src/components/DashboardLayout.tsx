@@ -39,6 +39,8 @@ const autistiSubItems = [
   { to: "/autisti/nuova-nota", icon: FilePlus, label: "Nuova nota autista" },
   { to: "/autisti/note", icon: StickyNote, label: "Note autisti" },
   { to: "/autisti/mensile", icon: CalendarDays, label: "Mensile autisti interni" },
+  { to: "/autisti/ore", icon: Clock, label: "Ore autisti" },
+  { to: "/autisti/assenze", icon: Calendar, label: "Ferie e assenze" },
 ];
 
 const mezziSubItems = [

@@ -33,6 +33,7 @@ import FornitoriCS from "./pages/FornitoriCS";
 import Network from "./pages/Network";
 import Settings from "./pages/Settings";
 import Agenda from "./pages/Agenda";
+import AutistiAssenze from "./pages/AutistiAssenze";
 import NotFound from "./pages/NotFound";
 
 // Client portal
@@ -54,6 +55,7 @@ import AutistaPlaceholder from "./pages/autista/AutistaPlaceholder";
 import AutistaPresenza from "./pages/autista/AutistaPresenza";
 import AutistaOre from "./pages/autista/AutistaOre";
 import AutistaLista from "./pages/autista/AutistaLista";
+import AutistaFerie from "./pages/autista/AutistaFerie";
 import AutistiOre from "./pages/AutistiOre";
 
 
@@ -93,6 +95,7 @@ const App = () => (
             <Route path="/autisti" element={<ProtectedRoute><Autisti /></ProtectedRoute>} />
             <Route path="/autisti/collaboratori" element={<ProtectedRoute><AutistiCollaboratori /></ProtectedRoute>} />
             <Route path="/autisti/ore" element={<ProtectedRoute><AutistiOre /></ProtectedRoute>} />
+            <Route path="/autisti/assenze" element={<ProtectedRoute><AutistiAssenze /></ProtectedRoute>} />
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
             <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -122,7 +125,7 @@ const App = () => (
             <Route path="/autista/comunicazioni" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Comunicazioni" /></ProtectedAutistaRoute>} />
             <Route path="/autista/carta" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Carta di Credito" /></ProtectedAutistaRoute>} />
             <Route path="/autista/carburante" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Carburante" /></ProtectedAutistaRoute>} />
-            <Route path="/autista/ferie" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Ferie e Riposo" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/ferie" element={<ProtectedAutistaRoute><AutistaFerie /></ProtectedAutistaRoute>} />
 
 
 
