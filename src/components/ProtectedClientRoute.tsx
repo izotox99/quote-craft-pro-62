@@ -12,6 +12,20 @@ export function ProtectedClientRoute({ children }: { children: React.ReactNode }
   useEffect(() => {
     const check = async () => {
       if (!user || (role && organization)) { setChecking(false); return; }
+
+      // Un autista non può entrare nel portale cliente
+      const { data: autista } = await supabase
+        .from("autisti")
+        .select("id")
+        .eq("auth_user_id", user.id)
+        .eq("attivo", true)
+        .maybeSingle();
+      if (autista) {
+        setIsClient(false);
+        setChecking(false);
+        return;
+      }
+
       const { data: client } = await supabase
         .from("clients")
         .select("id, gdpr_accepted_at")
@@ -37,6 +51,7 @@ export function ProtectedClientRoute({ children }: { children: React.ReactNode }
     };
     if (!loading) check();
   }, [user, loading, role, organization]);
+
 
   if (loading || checking) {
     return (
