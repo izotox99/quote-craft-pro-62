@@ -51,6 +51,10 @@ import AutistaHome from "./pages/autista/AutistaHome";
 import AutistaServizi from "./pages/autista/AutistaServizi";
 import AutistaServizioDetail from "./pages/autista/AutistaServizioDetail";
 import AutistaPlaceholder from "./pages/autista/AutistaPlaceholder";
+import AutistaPresenza from "./pages/autista/AutistaPresenza";
+import AutistaOre from "./pages/autista/AutistaOre";
+import AutistaLista from "./pages/autista/AutistaLista";
+import AutistiOre from "./pages/AutistiOre";
 
 
 const queryClient = new QueryClient();
@@ -88,6 +92,7 @@ const App = () => (
             <Route path="/veicoli/:id" element={<ProtectedRoute><VeicoloDettaglio /></ProtectedRoute>} />
             <Route path="/autisti" element={<ProtectedRoute><Autisti /></ProtectedRoute>} />
             <Route path="/autisti/collaboratori" element={<ProtectedRoute><AutistiCollaboratori /></ProtectedRoute>} />
+            <Route path="/autisti/ore" element={<ProtectedRoute><AutistiOre /></ProtectedRoute>} />
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
             <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -108,7 +113,9 @@ const App = () => (
             <Route path="/autista" element={<ProtectedAutistaRoute><AutistaHome /></ProtectedAutistaRoute>} />
             <Route path="/autista/servizi/:giorno" element={<ProtectedAutistaRoute><AutistaServizi /></ProtectedAutistaRoute>} />
             <Route path="/autista/servizi/dett/:id" element={<ProtectedAutistaRoute><AutistaServizioDetail /></ProtectedAutistaRoute>} />
-            <Route path="/autista/presenza" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Presenza" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/presenza" element={<ProtectedAutistaRoute><AutistaPresenza /></ProtectedAutistaRoute>} />
+            <Route path="/autista/ore" element={<ProtectedAutistaRoute><AutistaOre /></ProtectedAutistaRoute>} />
+            <Route path="/autista/lista" element={<ProtectedAutistaRoute><AutistaLista /></ProtectedAutistaRoute>} />
             <Route path="/autista/impostazioni" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Impostazioni" /></ProtectedAutistaRoute>} />
             <Route path="/autista/notifiche" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Notifiche" /></ProtectedAutistaRoute>} />
             <Route path="/autista/veicolo" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Veicolo" /></ProtectedAutistaRoute>} />
@@ -116,7 +123,7 @@ const App = () => (
             <Route path="/autista/carta" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Carta di Credito" /></ProtectedAutistaRoute>} />
             <Route path="/autista/carburante" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Carburante" /></ProtectedAutistaRoute>} />
             <Route path="/autista/ferie" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Ferie e Riposo" /></ProtectedAutistaRoute>} />
-            <Route path="/autista/lista" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Lista" /></ProtectedAutistaRoute>} />
+
 
 
             <Route path="*" element={<NotFound />} />

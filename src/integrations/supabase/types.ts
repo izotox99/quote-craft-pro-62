@@ -380,6 +380,223 @@ export type Database = {
         }
         Relationships: []
       }
+      autisti_ore: {
+        Row: {
+          autista_id: string
+          buono_pasto: boolean
+          corretta_at: string | null
+          corretta_da: string | null
+          created_at: string
+          data: string
+          id: string
+          note: string | null
+          ore_notturne: number
+          ore_ordinarie: number
+          ore_straordinarie: number
+          org_id: string
+          servizio_id: string | null
+          tipologia_partenza:
+            | Database["public"]["Enums"]["tipologia_partenza"]
+            | null
+          trasferta_tipo: Database["public"]["Enums"]["trasferta_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          autista_id: string
+          buono_pasto?: boolean
+          corretta_at?: string | null
+          corretta_da?: string | null
+          created_at?: string
+          data: string
+          id?: string
+          note?: string | null
+          ore_notturne?: number
+          ore_ordinarie?: number
+          ore_straordinarie?: number
+          org_id: string
+          servizio_id?: string | null
+          tipologia_partenza?:
+            | Database["public"]["Enums"]["tipologia_partenza"]
+            | null
+          trasferta_tipo?: Database["public"]["Enums"]["trasferta_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          autista_id?: string
+          buono_pasto?: boolean
+          corretta_at?: string | null
+          corretta_da?: string | null
+          created_at?: string
+          data?: string
+          id?: string
+          note?: string | null
+          ore_notturne?: number
+          ore_ordinarie?: number
+          ore_straordinarie?: number
+          org_id?: string
+          servizio_id?: string | null
+          tipologia_partenza?:
+            | Database["public"]["Enums"]["tipologia_partenza"]
+            | null
+          trasferta_tipo?: Database["public"]["Enums"]["trasferta_tipo"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autisti_ore_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_ore_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_ore_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi_autista_view"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      autisti_ore_modifiche: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          ore_id: string
+          org_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          ore_id: string
+          org_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          ore_id?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autisti_ore_modifiche_ore_id_fkey"
+            columns: ["ore_id"]
+            isOneToOne: false
+            referencedRelation: "autisti_ore"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      autisti_presenze: {
+        Row: {
+          autista_id: string
+          corretta_at: string | null
+          corretta_da: string | null
+          created_at: string
+          data: string
+          fine_at: string | null
+          id: string
+          inizio_at: string
+          note: string | null
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          autista_id: string
+          corretta_at?: string | null
+          corretta_da?: string | null
+          created_at?: string
+          data: string
+          fine_at?: string | null
+          id?: string
+          inizio_at: string
+          note?: string | null
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          autista_id?: string
+          corretta_at?: string | null
+          corretta_da?: string | null
+          created_at?: string
+          data?: string
+          fine_at?: string | null
+          id?: string
+          inizio_at?: string
+          note?: string | null
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autisti_presenze_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      autisti_presenze_modifiche: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          org_id: string
+          presenza_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          org_id: string
+          presenza_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          org_id?: string
+          presenza_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autisti_presenze_modifiche_presenza_id_fkey"
+            columns: ["presenza_id"]
+            isOneToOne: false
+            referencedRelation: "autisti_presenze"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       autisti_spese: {
         Row: {
           autista_id: string
@@ -2439,6 +2656,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      calcola_compenso_autista: {
+        Args: { _autista_id: string; _from: string; _to: string }
+        Returns: Json
+      }
       cleanup_servizi_annullati: { Args: never; Returns: undefined }
       client_portal_update_servizio: {
         Args: {
@@ -2702,6 +2923,77 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      presenza_apri_turno: {
+        Args: { _note?: string }
+        Returns: {
+          autista_id: string
+          corretta_at: string | null
+          corretta_da: string | null
+          created_at: string
+          data: string
+          fine_at: string | null
+          id: string
+          inizio_at: string
+          note: string | null
+          org_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "autisti_presenze"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      presenza_chiudi_turno: {
+        Args: { _note?: string }
+        Returns: {
+          autista_id: string
+          corretta_at: string | null
+          corretta_da: string | null
+          created_at: string
+          data: string
+          fine_at: string | null
+          id: string
+          inizio_at: string
+          note: string | null
+          org_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "autisti_presenze"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      presenza_correggi_oggi: {
+        Args: {
+          _fine_at?: string
+          _inizio_at?: string
+          _note?: string
+          _presenza_id: string
+        }
+        Returns: {
+          autista_id: string
+          corretta_at: string | null
+          corretta_da: string | null
+          created_at: string
+          data: string
+          fine_at: string | null
+          id: string
+          inizio_at: string
+          note: string | null
+          org_id: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "autisti_presenze"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       verify_share_password: {
         Args: { _password: string; _share_id: string }
         Returns: boolean
@@ -2741,6 +3033,12 @@ export type Database = {
         | "development"
         | "marketing"
         | "general"
+      tipologia_partenza:
+        | "altro_luogo"
+        | "aeroporto"
+        | "civitavecchia"
+        | "stazione"
+      trasferta_tipo: "nessuna" | "trasferta" | "trasferta_2"
       utenza_tipo: "singolo" | "gruppo"
     }
     CompositeTypes: {
@@ -2902,6 +3200,13 @@ export const Constants = {
         "marketing",
         "general",
       ],
+      tipologia_partenza: [
+        "altro_luogo",
+        "aeroporto",
+        "civitavecchia",
+        "stazione",
+      ],
+      trasferta_tipo: ["nessuna", "trasferta", "trasferta_2"],
       utenza_tipo: ["singolo", "gruppo"],
     },
   },
