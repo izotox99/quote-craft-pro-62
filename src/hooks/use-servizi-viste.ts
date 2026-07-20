@@ -281,6 +281,20 @@ export function useServiziViste(userId: string | undefined) {
     if (!error) await reload();
   }, [personal, reload]);
 
+  /** Aggiorna il livello di font della vista: LS immediato + DB debounced (solo viste personali). */
+  const setFontLevel = useCallback((viewId: string, level: number) => {
+    writeFontLevelCache(viewId, level);
+    setFontById((prev) => ({ ...prev, [viewId]: level }));
+    if (SYSTEM_VIEW_IDS.has(viewId)) return;
+    if (dbFontDebounce.current[viewId]) clearTimeout(dbFontDebounce.current[viewId]);
+    dbFontDebounce.current[viewId] = setTimeout(async () => {
+      const { error } = await supabase
+        .from("dashboard_viste")
+        .update({ font_level: level } as any)
+        .eq("id", viewId);
+      if (!error) await reload();
+    }, 400);
+  }, [reload]);
 
   return {
     viste,
@@ -290,6 +304,7 @@ export function useServiziViste(userId: string | undefined) {
     updateViewColumns,
     updateColumnWidths,
     resetColumnWidths,
+    setFontLevel,
     renameView,
     deleteView,
     setAsDefault,
