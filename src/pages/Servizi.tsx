@@ -1271,7 +1271,7 @@ export default function Servizi() {
           return (
             <div className="hidden md:block -mx-3 lg:-mx-4 overflow-x-hidden border-y bg-card">
               <TooltipProvider delayDuration={200}>
-                <table ref={tableRef} className="w-full table-fixed border-collapse text-[8px] font-semibold italic leading-[1.15] text-foreground xl:text-[8.5px]" style={{ borderSpacing: 0 }}>
+                <table ref={tableRef} className="servizi-table-scaled w-full table-fixed border-collapse font-semibold italic leading-[1.2] text-foreground" style={{ borderSpacing: 0, fontSize: `${fontLevelPx}px` }}>
                       <colgroup>
                         {visibleCols.map((c) => <col key={c.key} style={{ width: colWidth(c.key) }} />)}
                       </colgroup>
