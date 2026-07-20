@@ -227,7 +227,7 @@ export default function AutistiAssenze() {
             <div className="space-y-1"><Label>Nota ufficio</Label><Textarea value={manualNote} onChange={e=>setManualNote(e.target.value)} rows={2}/></div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={manualForce} onChange={e=>setManualForce(e.target.checked)}/>
-              Forza copertura minima (sotto la soglia)
+              Forza inserimento (oltre il massimo assenze/giorno)
             </label>
           </div>
           <DialogFooter>
@@ -242,10 +242,12 @@ export default function AutistiAssenze() {
 
 function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: (d: Date)=>void; orgId?: string }) {
   const [days, setDays] = useState<Record<string, any>>({});
-  const [minCfg, setMinCfg] = useState<number>(1);
-  const [attivi, setAttivi] = useState<number>(0);
+  const [mezziTot, setMezziTot] = useState<number>(1);
+  const [mezziReq, setMezziReq] = useState<number>(1);
   const [detail, setDetail] = useState<{ giorno: Date; items: any[] } | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  const maxAss = Math.max(mezziTot - mezziReq, 0);
 
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 });
@@ -259,12 +261,10 @@ function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: 
   useEffect(() => {
     if (!orgId) return;
     (async () => {
-      const [{ data: cfg }, { count }] = await Promise.all([
-        supabase.from("config_assenze" as any).select("min_autisti_disponibili_giorno").eq("org_id", orgId).maybeSingle(),
-        supabase.from("autisti").select("id", { count: "exact", head: true }).eq("org_id", orgId).eq("attivo", true),
-      ]);
-      setMinCfg((cfg as any)?.min_autisti_disponibili_giorno ?? 1);
-      setAttivi(count ?? 0);
+      const { data: cfg } = await supabase.from("config_assenze" as any)
+        .select("mezzi_totali,mezzi_richiesti_giorno").eq("org_id", orgId).maybeSingle();
+      setMezziTot((cfg as any)?.mezzi_totali ?? 1);
+      setMezziReq((cfg as any)?.mezzi_richiesti_giorno ?? 1);
 
       const { data: assenze } = await supabase.from("autisti_assenze" as any)
         .select("data_inizio,data_fine,autista_id,stato,tipo,autisti(nome,cognome)")
@@ -307,7 +307,9 @@ function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: 
           <Button size="icon" variant="outline" onClick={() => setCursor(addMonths(cursor,1))}><ChevronRight className="h-4 w-4"/></Button>
         </div>
       </div>
-      <div className="text-xs text-muted-foreground">Autisti attivi: {attivi} — min copertura: {minCfg}</div>
+      <div className="text-xs text-muted-foreground">
+        Flotta: {mezziTot} mezzi — richiesti operativi/giorno: {mezziReq} — massimo assenze/giorno: <strong>{maxAss}</strong>
+      </div>
       <div className="grid grid-cols-7 gap-1">
         {["Lun","Mar","Mer","Gio","Ven","Sab","Dom"].map(w => (
           <div key={w} className="text-[11px] text-muted-foreground text-center font-semibold py-1">{w}</div>
@@ -316,9 +318,8 @@ function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: 
           const k = format(d, "yyyy-MM-dd");
           const info = days[k] ?? { assenti: new Set() };
           const nAss = (info.assenti as Set<string>)?.size ?? 0;
-          const disponibili = Math.max(attivi - nAss, 0);
-          const pieno = disponibili <= minCfg;
-          const quasi = disponibili === minCfg + 1;
+          const pieno = nAss >= maxAss && maxAss > 0;
+          const quasi = nAss === maxAss - 1 && maxAss > 0;
           const inMonth = isSameMonth(d, cursor);
           return (
             <button
@@ -333,8 +334,8 @@ function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: 
               )}
             >
               <div className="text-xs font-semibold">{format(d, "d")}</div>
-              <div className="text-[10px] text-muted-foreground">assenti {nAss}/{attivi}</div>
-              {pieno && <div className="text-[10px] font-semibold text-red-600">al limite</div>}
+              <div className="text-[10px] text-muted-foreground">{nAss} su {maxAss} occupati</div>
+              {pieno && <div className="text-[10px] font-semibold text-red-600">completo</div>}
             </button>
           );
         })}
@@ -363,8 +364,8 @@ function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: 
 }
 
 function ConfigPanel({ orgId, autisti, onSaved }: { orgId?: string; autisti: Autista[]; onSaved: () => void }) {
-  const [cfg, setCfg] = useState<{ max_ferie_mese: number; max_riposi_mese: number; max_permessi_mese: number; min_autisti_disponibili_giorno: number }>({
-    max_ferie_mese: 4, max_riposi_mese: 4, max_permessi_mese: 2, min_autisti_disponibili_giorno: 1,
+  const [cfg, setCfg] = useState<{ max_ferie_mese: number; max_riposi_mese: number; max_permessi_mese: number; mezzi_totali: number; mezzi_richiesti_giorno: number }>({
+    max_ferie_mese: 4, max_riposi_mese: 4, max_permessi_mese: 2, mezzi_totali: 1, mezzi_richiesti_giorno: 1,
   });
   const [overrides, setOverrides] = useState<Record<string, { max_ferie_mese: number | null; max_riposi_mese: number | null; max_permessi_mese: number | null }>>({});
 
@@ -376,7 +377,8 @@ function ConfigPanel({ orgId, autisti, onSaved }: { orgId?: string; autisti: Aut
         max_ferie_mese: (data as any).max_ferie_mese,
         max_riposi_mese: (data as any).max_riposi_mese,
         max_permessi_mese: (data as any).max_permessi_mese,
-        min_autisti_disponibili_giorno: (data as any).min_autisti_disponibili_giorno,
+        mezzi_totali: (data as any).mezzi_totali ?? 1,
+        mezzi_richiesti_giorno: (data as any).mezzi_richiesti_giorno ?? 1,
       });
       const { data: aRows } = await supabase.from("autisti")
         .select("id,max_ferie_mese,max_riposi_mese,max_permessi_mese")
@@ -391,6 +393,9 @@ function ConfigPanel({ orgId, autisti, onSaved }: { orgId?: string; autisti: Aut
 
   const saveConfig = async () => {
     if (!orgId) return;
+    if (cfg.mezzi_richiesti_giorno > cfg.mezzi_totali) {
+      return toast.error("I mezzi richiesti operativi non possono superare i mezzi totali");
+    }
     const { error } = await supabase.from("config_assenze" as any).upsert({ org_id: orgId, ...cfg }, { onConflict: "org_id" });
     if (error) return toast.error(error.message);
     toast.success("Configurazione salvata");
@@ -406,18 +411,33 @@ function ConfigPanel({ orgId, autisti, onSaved }: { orgId?: string; autisti: Aut
     toast.success("Limiti autista aggiornati");
   };
 
+  const maxAssenzeGiorno = Math.max(cfg.mezzi_totali - cfg.mezzi_richiesti_giorno, 0);
+
   return (
     <div className="space-y-4">
       <Card>
+        <CardHeader><CardTitle className="text-base">Flotta e copertura giornaliera</CardTitle></CardHeader>
+        <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="space-y-1"><Label>Mezzi totali</Label><Input type="number" min={0} value={cfg.mezzi_totali} onChange={e => setCfg({ ...cfg, mezzi_totali: +e.target.value })}/></div>
+          <div className="space-y-1"><Label>Mezzi operativi richiesti/giorno</Label><Input type="number" min={0} value={cfg.mezzi_richiesti_giorno} onChange={e => setCfg({ ...cfg, mezzi_richiesti_giorno: +e.target.value })}/></div>
+          <div className="space-y-1"><Label>Massimo assenze/giorno (derivato)</Label><Input type="number" value={maxAssenzeGiorno} readOnly className="bg-muted"/></div>
+          <div className="col-span-full text-xs text-muted-foreground">
+            Con questi valori puoi concedere al massimo <strong>{maxAssenzeGiorno}</strong> assenze al giorno.
+            Se cambi i mezzi, il limite si ricalcola in automatico senza toccare le assenze già approvate.
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader><CardTitle className="text-base">Limiti di default per organizzazione</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <div className="space-y-1"><Label>Max ferie / mese</Label><Input type="number" min={0} value={cfg.max_ferie_mese} onChange={e => setCfg({ ...cfg, max_ferie_mese: +e.target.value })}/></div>
           <div className="space-y-1"><Label>Max riposi / mese</Label><Input type="number" min={0} value={cfg.max_riposi_mese} onChange={e => setCfg({ ...cfg, max_riposi_mese: +e.target.value })}/></div>
           <div className="space-y-1"><Label>Max permessi / mese</Label><Input type="number" min={0} value={cfg.max_permessi_mese} onChange={e => setCfg({ ...cfg, max_permessi_mese: +e.target.value })}/></div>
-          <div className="space-y-1"><Label>Copertura minima autisti/giorno</Label><Input type="number" min={0} value={cfg.min_autisti_disponibili_giorno} onChange={e => setCfg({ ...cfg, min_autisti_disponibili_giorno: +e.target.value })}/></div>
           <div className="col-span-full"><Button size="sm" onClick={saveConfig}>Salva configurazione</Button></div>
         </CardContent>
       </Card>
+
 
       <Card>
         <CardHeader><CardTitle className="text-base">Sovrascritture per singolo autista</CardTitle></CardHeader>
