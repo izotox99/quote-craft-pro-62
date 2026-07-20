@@ -157,7 +157,9 @@ export function useServiziViste(userId: string | undefined) {
 
   // Cache reattiva delle larghezze per-vista (localStorage-first).
   const [widthsById, setWidthsById] = useState<Record<string, WidthMap>>({});
+  const [fontById, setFontById] = useState<Record<string, number>>({});
   const dbDebounce = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const dbFontDebounce = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const activeView: ViewRef = useMemo(() => {
     const found = viste.find((v) => v.id === activeId);
@@ -167,9 +169,14 @@ export function useServiziViste(userId: string | undefined) {
     if (cache === undefined) {
       cache = readWidthsCache(base.id);
     }
-    if (Object.keys(cache).length === 0) return base;
-    return { ...base, columns: applyWidthsToColumns(base.columns, cache) };
-  }, [viste, activeId, systemRefs, widthsById]);
+    // Merge font level: state → LS → DB
+    let fl: number | null | undefined = fontById[base.id];
+    if (fl === undefined) fl = readFontLevelCache(base.id);
+    if (fl == null) fl = base.fontLevel ?? null;
+    const merged: ViewRef = { ...base, fontLevel: fl };
+    if (Object.keys(cache).length > 0) merged.columns = applyWidthsToColumns(base.columns, cache);
+    return merged;
+  }, [viste, activeId, systemRefs, widthsById, fontById]);
 
   const selectView = useCallback((id: string) => {
     setActiveId(id);
