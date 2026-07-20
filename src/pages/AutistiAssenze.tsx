@@ -227,7 +227,7 @@ export default function AutistiAssenze() {
             <div className="space-y-1"><Label>Nota ufficio</Label><Textarea value={manualNote} onChange={e=>setManualNote(e.target.value)} rows={2}/></div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={manualForce} onChange={e=>setManualForce(e.target.checked)}/>
-              Forza copertura minima (sotto la soglia)
+              Forza inserimento (oltre il massimo assenze/giorno)
             </label>
           </div>
           <DialogFooter>
