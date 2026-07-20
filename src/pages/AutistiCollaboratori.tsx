@@ -200,7 +200,8 @@ export default function AutistiCollaboratori() {
                   <TableHead>Targa</TableHead>
                   <TableHead>Level</TableHead>
                   <TableHead className="text-center">Tariffario</TableHead>
-                  <TableHead className="text-center w-28">Azioni</TableHead>
+                  <TableHead className="text-center w-16">App</TableHead>
+                  <TableHead className="text-center w-40">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -260,11 +261,25 @@ export default function AutistiCollaboratori() {
                         )}
                       </div>
                     </TableCell>
+                    <TableCell className="text-center">
+                      {a.auth_user_id ? (
+                        <span title="Accesso app autista attivo" className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[10px] font-semibold">
+                          <KeyRound className="h-3 w-3" /> ON
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex justify-center gap-1">
                         <Button variant="ghost" size="icon" title="Modifica" onClick={() => openModifica(a)}>
                           <Pencil className="h-4 w-4 text-blue-600" />
                         </Button>
+                        {a.auth_user_id && (
+                          <Button variant="ghost" size="icon" title="Revoca accesso app" onClick={() => setRevokeId(a.id)}>
+                            <ShieldOff className="h-4 w-4 text-orange-600" />
+                          </Button>
+                        )}
                         {showDisattivati ? (
                           <Button variant="ghost" size="sm" onClick={() => riattiva(a.id)}>Riattiva</Button>
                         ) : (
@@ -309,6 +324,21 @@ export default function AutistiCollaboratori() {
           <AlertDialogFooter>
             <AlertDialogCancel>Annulla</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete}>Disattiva</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!revokeId} onOpenChange={(o) => !o && setRevokeId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revocare l'accesso all'app?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Il collaboratore non potrà più accedere all'app autisti. L'anagrafica resta invariata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRevoke}>Revoca</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
