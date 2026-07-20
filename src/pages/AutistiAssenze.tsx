@@ -242,10 +242,12 @@ export default function AutistiAssenze() {
 
 function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: (d: Date)=>void; orgId?: string }) {
   const [days, setDays] = useState<Record<string, any>>({});
-  const [minCfg, setMinCfg] = useState<number>(1);
-  const [attivi, setAttivi] = useState<number>(0);
+  const [mezziTot, setMezziTot] = useState<number>(1);
+  const [mezziReq, setMezziReq] = useState<number>(1);
   const [detail, setDetail] = useState<{ giorno: Date; items: any[] } | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+
+  const maxAss = Math.max(mezziTot - mezziReq, 0);
 
   const start = startOfWeek(startOfMonth(cursor), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(cursor), { weekStartsOn: 1 });
@@ -259,12 +261,10 @@ function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: 
   useEffect(() => {
     if (!orgId) return;
     (async () => {
-      const [{ data: cfg }, { count }] = await Promise.all([
-        supabase.from("config_assenze" as any).select("min_autisti_disponibili_giorno").eq("org_id", orgId).maybeSingle(),
-        supabase.from("autisti").select("id", { count: "exact", head: true }).eq("org_id", orgId).eq("attivo", true),
-      ]);
-      setMinCfg((cfg as any)?.min_autisti_disponibili_giorno ?? 1);
-      setAttivi(count ?? 0);
+      const { data: cfg } = await supabase.from("config_assenze" as any)
+        .select("mezzi_totali,mezzi_richiesti_giorno").eq("org_id", orgId).maybeSingle();
+      setMezziTot((cfg as any)?.mezzi_totali ?? 1);
+      setMezziReq((cfg as any)?.mezzi_richiesti_giorno ?? 1);
 
       const { data: assenze } = await supabase.from("autisti_assenze" as any)
         .select("data_inizio,data_fine,autista_id,stato,tipo,autisti(nome,cognome)")
@@ -307,7 +307,9 @@ function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: 
           <Button size="icon" variant="outline" onClick={() => setCursor(addMonths(cursor,1))}><ChevronRight className="h-4 w-4"/></Button>
         </div>
       </div>
-      <div className="text-xs text-muted-foreground">Autisti attivi: {attivi} — min copertura: {minCfg}</div>
+      <div className="text-xs text-muted-foreground">
+        Flotta: {mezziTot} mezzi — richiesti operativi/giorno: {mezziReq} — massimo assenze/giorno: <strong>{maxAss}</strong>
+      </div>
       <div className="grid grid-cols-7 gap-1">
         {["Lun","Mar","Mer","Gio","Ven","Sab","Dom"].map(w => (
           <div key={w} className="text-[11px] text-muted-foreground text-center font-semibold py-1">{w}</div>
@@ -316,9 +318,8 @@ function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: 
           const k = format(d, "yyyy-MM-dd");
           const info = days[k] ?? { assenti: new Set() };
           const nAss = (info.assenti as Set<string>)?.size ?? 0;
-          const disponibili = Math.max(attivi - nAss, 0);
-          const pieno = disponibili <= minCfg;
-          const quasi = disponibili === minCfg + 1;
+          const pieno = nAss >= maxAss && maxAss > 0;
+          const quasi = nAss === maxAss - 1 && maxAss > 0;
           const inMonth = isSameMonth(d, cursor);
           return (
             <button
@@ -333,8 +334,8 @@ function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: 
               )}
             >
               <div className="text-xs font-semibold">{format(d, "d")}</div>
-              <div className="text-[10px] text-muted-foreground">assenti {nAss}/{attivi}</div>
-              {pieno && <div className="text-[10px] font-semibold text-red-600">al limite</div>}
+              <div className="text-[10px] text-muted-foreground">{nAss} su {maxAss} occupati</div>
+              {pieno && <div className="text-[10px] font-semibold text-red-600">completo</div>}
             </button>
           );
         })}
