@@ -361,3 +361,82 @@ function CoperturaMese({ cursor, setCursor, orgId }: { cursor: Date; setCursor: 
     </div>
   );
 }
+
+function ConfigPanel({ orgId, autisti, onSaved }: { orgId?: string; autisti: Autista[]; onSaved: () => void }) {
+  const [cfg, setCfg] = useState<{ max_ferie_mese: number; max_riposi_mese: number; max_permessi_mese: number; min_autisti_disponibili_giorno: number }>({
+    max_ferie_mese: 4, max_riposi_mese: 4, max_permessi_mese: 2, min_autisti_disponibili_giorno: 1,
+  });
+  const [overrides, setOverrides] = useState<Record<string, { max_ferie_mese: number | null; max_riposi_mese: number | null; max_permessi_mese: number | null }>>({});
+
+  useEffect(() => {
+    if (!orgId) return;
+    (async () => {
+      const { data } = await supabase.from("config_assenze" as any).select("*").eq("org_id", orgId).maybeSingle();
+      if (data) setCfg({
+        max_ferie_mese: (data as any).max_ferie_mese,
+        max_riposi_mese: (data as any).max_riposi_mese,
+        max_permessi_mese: (data as any).max_permessi_mese,
+        min_autisti_disponibili_giorno: (data as any).min_autisti_disponibili_giorno,
+      });
+      const { data: aRows } = await supabase.from("autisti")
+        .select("id,max_ferie_mese,max_riposi_mese,max_permessi_mese")
+        .eq("org_id", orgId).eq("attivo", true);
+      const map: any = {};
+      (aRows ?? []).forEach((r: any) => {
+        map[r.id] = { max_ferie_mese: r.max_ferie_mese, max_riposi_mese: r.max_riposi_mese, max_permessi_mese: r.max_permessi_mese };
+      });
+      setOverrides(map);
+    })();
+  }, [orgId]);
+
+  const saveConfig = async () => {
+    if (!orgId) return;
+    const { error } = await supabase.from("config_assenze" as any).upsert({ org_id: orgId, ...cfg }, { onConflict: "org_id" });
+    if (error) return toast.error(error.message);
+    toast.success("Configurazione salvata");
+    onSaved();
+  };
+
+  const saveOverride = async (id: string) => {
+    const o = overrides[id];
+    const { error } = await supabase.from("autisti").update({
+      max_ferie_mese: o.max_ferie_mese, max_riposi_mese: o.max_riposi_mese, max_permessi_mese: o.max_permessi_mese,
+    } as any).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Limiti autista aggiornati");
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader><CardTitle className="text-base">Limiti di default per organizzazione</CardTitle></CardHeader>
+        <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="space-y-1"><Label>Max ferie / mese</Label><Input type="number" min={0} value={cfg.max_ferie_mese} onChange={e => setCfg({ ...cfg, max_ferie_mese: +e.target.value })}/></div>
+          <div className="space-y-1"><Label>Max riposi / mese</Label><Input type="number" min={0} value={cfg.max_riposi_mese} onChange={e => setCfg({ ...cfg, max_riposi_mese: +e.target.value })}/></div>
+          <div className="space-y-1"><Label>Max permessi / mese</Label><Input type="number" min={0} value={cfg.max_permessi_mese} onChange={e => setCfg({ ...cfg, max_permessi_mese: +e.target.value })}/></div>
+          <div className="space-y-1"><Label>Copertura minima autisti/giorno</Label><Input type="number" min={0} value={cfg.min_autisti_disponibili_giorno} onChange={e => setCfg({ ...cfg, min_autisti_disponibili_giorno: +e.target.value })}/></div>
+          <div className="col-span-full"><Button size="sm" onClick={saveConfig}>Salva configurazione</Button></div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Sovrascritture per singolo autista</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          <p className="text-xs text-muted-foreground">Lascia vuoto per usare il default dell'organizzazione.</p>
+          {autisti.map(a => {
+            const o = overrides[a.id] ?? { max_ferie_mese: null, max_riposi_mese: null, max_permessi_mese: null };
+            return (
+              <div key={a.id} className="grid grid-cols-[1fr_repeat(3,90px)_auto] items-end gap-2 border-b pb-2">
+                <div className="text-sm font-medium">{a.cognome} {a.nome}</div>
+                <div className="space-y-1"><Label className="text-[10px]">Ferie</Label><Input type="number" value={o.max_ferie_mese ?? ""} onChange={e => setOverrides({ ...overrides, [a.id]: { ...o, max_ferie_mese: e.target.value === "" ? null : +e.target.value } })}/></div>
+                <div className="space-y-1"><Label className="text-[10px]">Riposi</Label><Input type="number" value={o.max_riposi_mese ?? ""} onChange={e => setOverrides({ ...overrides, [a.id]: { ...o, max_riposi_mese: e.target.value === "" ? null : +e.target.value } })}/></div>
+                <div className="space-y-1"><Label className="text-[10px]">Permessi</Label><Input type="number" value={o.max_permessi_mese ?? ""} onChange={e => setOverrides({ ...overrides, [a.id]: { ...o, max_permessi_mese: e.target.value === "" ? null : +e.target.value } })}/></div>
+                <Button size="sm" variant="outline" onClick={() => saveOverride(a.id)}>Salva</Button>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
