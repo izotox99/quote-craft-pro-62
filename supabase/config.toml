@@ -17,3 +17,7 @@ verify_jwt = true
 
 [functions.create-test-ncc-accounts]
 verify_jwt = false
+
+[functions.create-autista-account]
+verify_jwt = true
+

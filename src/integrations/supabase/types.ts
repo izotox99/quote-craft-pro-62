@@ -111,6 +111,13 @@ export type Database = {
             referencedRelation: "servizi"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agenda_eventi_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi_autista_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       agenda_promemoria_inviati: {
@@ -179,6 +186,7 @@ export type Database = {
         Row: {
           assicurazione: number | null
           attivo: boolean
+          auth_user_id: string | null
           buono_pasto: number | null
           calcola_riposi: boolean
           cellulare: string | null
@@ -186,6 +194,7 @@ export type Database = {
           cognome: string
           created_at: string
           email: string | null
+          foto_url: string | null
           id: string
           mansione: string | null
           nome: string
@@ -193,18 +202,22 @@ export type Database = {
           numero_ore_ord: number | null
           org_id: string
           password: string | null
+          password_cambiata_at: string | null
           patente: string | null
           percentuale_notturno: number | null
           prezzo_ora_ord: number | null
           prezzo_ora_straord: number | null
+          privacy_accettata_at: string | null
           telefono: string | null
           trasferta: number | null
           trasferta_2: number | null
+          ultimo_accesso_at: string | null
           updated_at: string
         }
         Insert: {
           assicurazione?: number | null
           attivo?: boolean
+          auth_user_id?: string | null
           buono_pasto?: number | null
           calcola_riposi?: boolean
           cellulare?: string | null
@@ -212,6 +225,7 @@ export type Database = {
           cognome: string
           created_at?: string
           email?: string | null
+          foto_url?: string | null
           id?: string
           mansione?: string | null
           nome: string
@@ -219,18 +233,22 @@ export type Database = {
           numero_ore_ord?: number | null
           org_id?: string
           password?: string | null
+          password_cambiata_at?: string | null
           patente?: string | null
           percentuale_notturno?: number | null
           prezzo_ora_ord?: number | null
           prezzo_ora_straord?: number | null
+          privacy_accettata_at?: string | null
           telefono?: string | null
           trasferta?: number | null
           trasferta_2?: number | null
+          ultimo_accesso_at?: string | null
           updated_at?: string
         }
         Update: {
           assicurazione?: number | null
           attivo?: boolean
+          auth_user_id?: string | null
           buono_pasto?: number | null
           calcola_riposi?: boolean
           cellulare?: string | null
@@ -238,6 +256,7 @@ export type Database = {
           cognome?: string
           created_at?: string
           email?: string | null
+          foto_url?: string | null
           id?: string
           mansione?: string | null
           nome?: string
@@ -245,13 +264,16 @@ export type Database = {
           numero_ore_ord?: number | null
           org_id?: string
           password?: string | null
+          password_cambiata_at?: string | null
           patente?: string | null
           percentuale_notturno?: number | null
           prezzo_ora_ord?: number | null
           prezzo_ora_straord?: number | null
+          privacy_accettata_at?: string | null
           telefono?: string | null
           trasferta?: number | null
           trasferta_2?: number | null
+          ultimo_accesso_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -879,6 +901,13 @@ export type Database = {
             columns: ["servizio_id"]
             isOneToOne: false
             referencedRelation: "servizi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifiche_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi_autista_view"
             referencedColumns: ["id"]
           },
           {
@@ -1524,6 +1553,13 @@ export type Database = {
             referencedRelation: "servizi"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "servizi_accessori_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi_autista_view"
+            referencedColumns: ["id"]
+          },
         ]
       }
       servizi_modifiche: {
@@ -1563,6 +1599,13 @@ export type Database = {
             columns: ["servizio_id"]
             isOneToOne: false
             referencedRelation: "servizi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_modifiche_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi_autista_view"
             referencedColumns: ["id"]
           },
         ]
@@ -1646,10 +1689,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "servizi_network_servizio_a_id_fkey"
+            columns: ["servizio_a_id"]
+            isOneToOne: false
+            referencedRelation: "servizi_autista_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "servizi_network_servizio_b_id_fkey"
             columns: ["servizio_b_id"]
             isOneToOne: false
             referencedRelation: "servizi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_network_servizio_b_id_fkey"
+            columns: ["servizio_b_id"]
+            isOneToOne: false
+            referencedRelation: "servizi_autista_view"
             referencedColumns: ["id"]
           },
         ]
@@ -2079,7 +2136,156 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      servizi_autista_view: {
+        Row: {
+          accessori: string | null
+          allegato_nome: string | null
+          allegato_path: string | null
+          autista_id: string | null
+          citta: string | null
+          codice: string | null
+          con_assistente: boolean | null
+          con_guida: boolean | null
+          contatto: string | null
+          created_at: string | null
+          data_servizio: string | null
+          disposizione_oraria: string | null
+          email_contatto: string | null
+          foglio: string | null
+          id: string | null
+          info_autista: string | null
+          info_cliente_autista: string | null
+          itinerario: string | null
+          luogo_fine: string | null
+          luogo_inizio: string | null
+          modificato_at: string | null
+          modificato_da_cliente: boolean | null
+          n_bagagli: number | null
+          n_passeggeri: number | null
+          network_autista_nome: string | null
+          network_autista_targa: string | null
+          network_autista_telefono: string | null
+          note: string | null
+          ora_inizio: string | null
+          org_id: string | null
+          permesso_effettuato: boolean | null
+          ritirare_voucher: boolean | null
+          stato: Database["public"]["Enums"]["servizio_stato"] | null
+          telefono_contatto: string | null
+          telefono_d: string | null
+          tipo_pagamento: string | null
+          tipologia: Database["public"]["Enums"]["servizio_tipologia"] | null
+          tour_tipo: string | null
+          transfer_tipo: string | null
+          updated_at: string | null
+          veicolo_id: string | null
+          veicolo_tipo: string | null
+        }
+        Insert: {
+          accessori?: string | null
+          allegato_nome?: string | null
+          allegato_path?: string | null
+          autista_id?: string | null
+          citta?: string | null
+          codice?: string | null
+          con_assistente?: boolean | null
+          con_guida?: boolean | null
+          contatto?: string | null
+          created_at?: string | null
+          data_servizio?: string | null
+          disposizione_oraria?: string | null
+          email_contatto?: string | null
+          foglio?: string | null
+          id?: string | null
+          info_autista?: string | null
+          info_cliente_autista?: string | null
+          itinerario?: string | null
+          luogo_fine?: string | null
+          luogo_inizio?: string | null
+          modificato_at?: string | null
+          modificato_da_cliente?: boolean | null
+          n_bagagli?: number | null
+          n_passeggeri?: number | null
+          network_autista_nome?: string | null
+          network_autista_targa?: string | null
+          network_autista_telefono?: string | null
+          note?: string | null
+          ora_inizio?: string | null
+          org_id?: string | null
+          permesso_effettuato?: boolean | null
+          ritirare_voucher?: boolean | null
+          stato?: Database["public"]["Enums"]["servizio_stato"] | null
+          telefono_contatto?: string | null
+          telefono_d?: string | null
+          tipo_pagamento?: string | null
+          tipologia?: Database["public"]["Enums"]["servizio_tipologia"] | null
+          tour_tipo?: string | null
+          transfer_tipo?: string | null
+          updated_at?: string | null
+          veicolo_id?: string | null
+          veicolo_tipo?: string | null
+        }
+        Update: {
+          accessori?: string | null
+          allegato_nome?: string | null
+          allegato_path?: string | null
+          autista_id?: string | null
+          citta?: string | null
+          codice?: string | null
+          con_assistente?: boolean | null
+          con_guida?: boolean | null
+          contatto?: string | null
+          created_at?: string | null
+          data_servizio?: string | null
+          disposizione_oraria?: string | null
+          email_contatto?: string | null
+          foglio?: string | null
+          id?: string | null
+          info_autista?: string | null
+          info_cliente_autista?: string | null
+          itinerario?: string | null
+          luogo_fine?: string | null
+          luogo_inizio?: string | null
+          modificato_at?: string | null
+          modificato_da_cliente?: boolean | null
+          n_bagagli?: number | null
+          n_passeggeri?: number | null
+          network_autista_nome?: string | null
+          network_autista_targa?: string | null
+          network_autista_telefono?: string | null
+          note?: string | null
+          ora_inizio?: string | null
+          org_id?: string | null
+          permesso_effettuato?: boolean | null
+          ritirare_voucher?: boolean | null
+          stato?: Database["public"]["Enums"]["servizio_stato"] | null
+          telefono_contatto?: string | null
+          telefono_d?: string | null
+          tipo_pagamento?: string | null
+          tipologia?: Database["public"]["Enums"]["servizio_tipologia"] | null
+          tour_tipo?: string | null
+          transfer_tipo?: string | null
+          updated_at?: string | null
+          veicolo_id?: string | null
+          veicolo_tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servizi_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "servizi_veicolo_id_fkey"
+            columns: ["veicolo_id"]
+            isOneToOne: false
+            referencedRelation: "veicoli"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       agenda_process_promemoria: { Args: never; Returns: undefined }
@@ -2184,6 +2390,8 @@ export type Database = {
       }
       current_user_email: { Args: never; Returns: string }
       get_active_utenza_id: { Args: { _user_id: string }; Returns: string }
+      get_autista_id: { Args: { _user_id: string }; Returns: string }
+      get_autista_org_id: { Args: { _user_id: string }; Returns: string }
       get_client_org_id: { Args: { _user_id: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
       get_utenza_parent_client_id: {
@@ -2199,6 +2407,7 @@ export type Database = {
       }
       hash_share_password: { Args: { _password: string }; Returns: string }
       hash_utenza_password: { Args: { _password: string }; Returns: string }
+      is_autista_user: { Args: { _user_id: string }; Returns: boolean }
       is_client_user: { Args: { _user_id: string }; Returns: boolean }
       network_dispatch_servizio: {
         Args: {

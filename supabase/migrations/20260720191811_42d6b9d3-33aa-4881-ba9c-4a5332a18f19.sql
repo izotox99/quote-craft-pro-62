@@ -1,0 +1,5 @@
+
+ALTER TABLE public.password_fingerprints DROP CONSTRAINT IF EXISTS password_fingerprints_owner_type_check;
+ALTER TABLE public.password_fingerprints
+  ADD CONSTRAINT password_fingerprints_owner_type_check
+  CHECK (owner_type = ANY (ARRAY['client'::text, 'utenza'::text, 'autista'::text]));
