@@ -115,6 +115,7 @@ export default function AutistiAssenze() {
             <TabsTrigger value="richieste">In attesa ({richieste.length})</TabsTrigger>
             <TabsTrigger value="copertura">Calendario copertura</TabsTrigger>
             <TabsTrigger value="storico">Storico</TabsTrigger>
+            <TabsTrigger value="config">Configurazione</TabsTrigger>
           </TabsList>
 
           <TabsContent value="richieste" className="mt-4">
