@@ -334,12 +334,12 @@ export function NuovoAutistaDialog({
               />
             </Field>
 
-            <Field label="Password">
+            <Field label={editing ? "Reimposta password app autista" : "Password app autista"} hint="La password dell'app autista è gestita esclusivamente dall'ufficio. In modifica, inserisci un nuovo valore per reimpostare la credenziale dell'autista; lascia vuoto per mantenere quella attuale.">
               <Input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder={editing ? "Lascia vuoto per non cambiarla" : "Min. 6 caratteri (per accesso app autista)"}
+                placeholder={editing ? "Nuova password (min. 6 caratteri) — vuoto = invariata" : "Min. 6 caratteri (per accesso app autista)"}
                 autoComplete="new-password"
               />
             </Field>
