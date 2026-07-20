@@ -298,6 +298,22 @@ export default function Autisti() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={!!revokeId} onOpenChange={(o) => !o && setRevokeId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revocare l'accesso all'app?</AlertDialogTitle>
+            <AlertDialogDescription>
+              L'autista non potrà più accedere all'app autisti. L'anagrafica resta invariata: potrai riabilitare l'accesso in seguito impostando una nuova password.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRevoke}>Revoca</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
       {/* Dialog Spese */}
       <Dialog open={speseOpen} onOpenChange={setSpeseOpen}>
         <DialogContent className="max-w-5xl">
