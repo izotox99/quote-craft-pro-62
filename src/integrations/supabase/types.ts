@@ -922,7 +922,8 @@ export type Database = {
           max_ferie_mese: number
           max_permessi_mese: number
           max_riposi_mese: number
-          min_autisti_disponibili_giorno: number
+          mezzi_richiesti_giorno: number
+          mezzi_totali: number
           org_id: string
           updated_at: string
         }
@@ -931,7 +932,8 @@ export type Database = {
           max_ferie_mese?: number
           max_permessi_mese?: number
           max_riposi_mese?: number
-          min_autisti_disponibili_giorno?: number
+          mezzi_richiesti_giorno?: number
+          mezzi_totali?: number
           org_id: string
           updated_at?: string
         }
@@ -940,7 +942,8 @@ export type Database = {
           max_ferie_mese?: number
           max_permessi_mese?: number
           max_riposi_mese?: number
-          min_autisti_disponibili_giorno?: number
+          mezzi_richiesti_giorno?: number
+          mezzi_totali?: number
           org_id?: string
           updated_at?: string
         }
