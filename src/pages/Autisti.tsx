@@ -58,6 +58,7 @@ export default function Autisti() {
   // Dialog autista (nuovo / modifica)
   const [autistaDialogOpen, setAutistaDialogOpen] = useState(false);
   const [editingAutista, setEditingAutista] = useState<{ tipo: "interno" | "esterno"; id: string; data: any } | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [revokeId, setRevokeId] = useState<string | null>(null);
 
   // Spese dialog
@@ -199,8 +200,8 @@ export default function Autisti() {
                   <TableHead className="text-right">Prezzo Ora.Straord</TableHead>
                   <TableHead>Cellulare</TableHead>
                   <TableHead>Email</TableHead>
-                  
-                  <TableHead className="text-center w-32">Azioni</TableHead>
+                  <TableHead className="text-center w-16">App</TableHead>
+                  <TableHead className="text-center w-40">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
