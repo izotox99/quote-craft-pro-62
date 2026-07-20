@@ -16,12 +16,20 @@ import { cn } from "@/lib/utils";
 
 type ViewMode = "giorno" | "settimana" | "mese";
 
+type Assenza = { id: string; autista_id: string; tipo: string; data_inizio: string; data_fine: string; autisti?: { nome: string|null; cognome: string|null } };
+
+const ASSENZA_COLOR: Record<string,string> = {
+  ferie: "#2563eb", riposo: "#059669", permesso: "#d97706", malattia: "#dc2626",
+};
+
 export default function Agenda() {
-  const { user } = useAuth();
+  const { user, organization } = useAuth();
   const isMobile = useIsMobile();
   const [view, setView] = useState<ViewMode>(isMobile ? "giorno" : "settimana");
   const [cursor, setCursor] = useState<Date>(new Date());
   const [eventi, setEventi] = useState<AgendaEvento[]>([]);
+  const [assenze, setAssenze] = useState<Assenza[]>([]);
+  const [showAssenze, setShowAssenze] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState<AgendaEvento | null>(null);
   const [defaultStart, setDefaultStart] = useState<Date | null>(null);
@@ -49,9 +57,18 @@ export default function Agenda() {
       .lte("data_inizio", rangeEnd.toISOString())
       .order("data_inizio", { ascending: true });
     if (!error && data) setEventi(data as AgendaEvento[]);
+    if (organization?.id) {
+      const { data: aRows } = await supabase
+        .from("autisti_assenze" as any)
+        .select("id,autista_id,tipo,data_inizio,data_fine,autisti(nome,cognome)")
+        .eq("org_id", organization.id).eq("stato", "approvata")
+        .lte("data_inizio", format(rangeEnd, "yyyy-MM-dd"))
+        .gte("data_fine", format(rangeStart, "yyyy-MM-dd"));
+      setAssenze((aRows as any) ?? []);
+    }
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, rangeStart.getTime(), rangeEnd.getTime()]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, organization?.id, rangeStart.getTime(), rangeEnd.getTime()]);
 
   const handleGoto = (dir: "prev" | "next" | "today") => {
     if (dir === "today") { setCursor(new Date()); return; }
