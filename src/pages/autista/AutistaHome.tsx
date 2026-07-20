@@ -18,19 +18,40 @@ function todayISO(offset = 0) {
 export default function AutistaHome() {
   const navigate = useNavigate();
   const [nome, setNome] = useState("");
-  const [inServizio] = useState(false);
+  const [inServizio, setInServizio] = useState(false);
+  const [inizioTurno, setInizioTurno] = useState<string | null>(null);
+  const [warn, setWarn] = useState<string | null>(null);
   const [counts, setCounts] = useState({ oggi: 0, domani: 0, dopodomani: 0 });
 
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: aInt } = await supabase.from("autisti").select("nome, cognome").eq("auth_user_id", user.id).maybeSingle();
+      let autistaId: string | null = null;
+      const { data: aInt } = await supabase.from("autisti").select("id, nome, cognome").eq("auth_user_id", user.id).maybeSingle();
       if (aInt) {
         setNome(`${aInt.nome ?? ""} ${aInt.cognome ?? ""}`.trim());
+        autistaId = aInt.id;
       } else {
-        const { data: aExt } = await supabase.from("autisti_esterni").select("nome").eq("auth_user_id", user.id).maybeSingle();
-        if (aExt) setNome(aExt.nome ?? "");
+        const { data: aExt } = await supabase.from("autisti_esterni").select("id, nome").eq("auth_user_id", user.id).maybeSingle();
+        if (aExt) { setNome(aExt.nome ?? ""); autistaId = aExt.id; }
+      }
+
+      // Stato presenza reale
+      if (autistaId) {
+        const { data: pres } = await supabase
+          .from("autisti_presenze")
+          .select("inizio_at, fine_at")
+          .is("fine_at", null)
+          .order("inizio_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (pres) {
+          setInServizio(true);
+          setInizioTurno(pres.inizio_at);
+          const hrs = (Date.now() - new Date(pres.inizio_at).getTime()) / 3600000;
+          if (hrs > 16) setWarn("Turno aperto da oltre 16 ore: ricordati di terminarlo");
+        }
       }
 
       const load = async (date: string) => {
@@ -42,13 +63,27 @@ export default function AutistaHome() {
           .neq("stato_autista", "concluso");
         return count ?? 0;
       };
+      const todayCount = await load(todayISO(0));
       setCounts({
-        oggi: await load(todayISO(0)),
+        oggi: todayCount,
         domani: await load(todayISO(1)),
         dopodomani: await load(todayISO(2)),
       });
+
+      // avviso: servizi già iniziati oggi ma nessun turno aperto
+      if (!inizioTurno && autistaId) {
+        const { count: started } = await supabase
+          .from("servizi_autista_view" as any)
+          .select("id", { count: "exact", head: true })
+          .eq("data_servizio", todayISO(0))
+          .eq("stato_autista", "in_corso");
+        if ((started ?? 0) > 0) {
+          setWarn("Hai servizi in corso ma nessun turno di presenza aperto");
+        }
+      }
     })();
   }, []);
+
 
   const tiles: Array<{ label: string; icon: any; to: string; badge?: number }> = [
     { label: "Servizi OGGI", icon: Calendar, to: "/autista/servizi/oggi", badge: counts.oggi },
@@ -83,9 +118,16 @@ export default function AutistaHome() {
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-white" />
               </span>
             )}
-            {inServizio ? "IN SERVIZIO" : "NON IN SERVIZIO"}
+            {inServizio ? `IN SERVIZIO dalle ${new Date(inizioTurno!).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}` : "NON IN SERVIZIO"}
           </div>
         </button>
+
+        {warn && (
+          <div className="rounded-lg bg-amber-50 border border-amber-300 text-amber-900 px-3 py-2 text-xs">
+            ⚠ {warn}
+          </div>
+        )}
+
 
         {/* Veicolo in uso */}
         <Card className="p-4">
