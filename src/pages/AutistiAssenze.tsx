@@ -164,6 +164,10 @@ export default function AutistiAssenze() {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="config" className="mt-4">
+            <ConfigPanel orgId={organization?.id} autisti={autisti} onSaved={load} />
+          </TabsContent>
         </Tabs>
       </div>
 
