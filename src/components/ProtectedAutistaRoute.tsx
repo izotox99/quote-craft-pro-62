@@ -23,10 +23,10 @@ export function ProtectedAutistaRoute({
 
       const [{ data: autInt }, { data: autExt }] = await Promise.all([
         supabase.from("autisti")
-          .select("id, attivo, password_cambiata_at, privacy_accettata_at")
+          .select("id, attivo, privacy_accettata_at")
           .eq("auth_user_id", user.id).maybeSingle(),
         supabase.from("autisti_esterni")
-          .select("id, attivo, password_cambiata_at, privacy_accettata_at")
+          .select("id, attivo, privacy_accettata_at")
           .eq("auth_user_id", user.id).maybeSingle(),
       ]);
 
@@ -50,7 +50,7 @@ export function ProtectedAutistaRoute({
         setIsAutista(false);
       } else {
         setIsAutista(true);
-        setSetupDone(!!autista.password_cambiata_at && !!autista.privacy_accettata_at);
+        setSetupDone(!!autista.privacy_accettata_at);
       }
       setChecking(false);
     };

@@ -18,11 +18,11 @@ export default function AutistaLogin() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
       const [{ data: aInt }, { data: aExt }] = await Promise.all([
-        supabase.from("autisti").select("id, attivo, password_cambiata_at, privacy_accettata_at").eq("auth_user_id", user.id).maybeSingle(),
-        supabase.from("autisti_esterni").select("id, attivo, password_cambiata_at, privacy_accettata_at").eq("auth_user_id", user.id).maybeSingle(),
+        supabase.from("autisti").select("id, attivo, privacy_accettata_at").eq("auth_user_id", user.id).maybeSingle(),
+        supabase.from("autisti_esterni").select("id, attivo, privacy_accettata_at").eq("auth_user_id", user.id).maybeSingle(),
       ]);
       const a = (aInt?.attivo ? aInt : null) ?? (aExt?.attivo ? aExt : null);
-      if (a) navigate(a.password_cambiata_at && a.privacy_accettata_at ? "/autista" : "/autista/setup", { replace: true });
+      if (a) navigate(a.privacy_accettata_at ? "/autista" : "/autista/setup", { replace: true });
     });
   }, [navigate]);
 
@@ -34,8 +34,8 @@ export default function AutistaLogin() {
       if (error || !data.user) { toast.error("Credenziali non valide"); return; }
 
       const [{ data: aInt }, { data: aExt }] = await Promise.all([
-        supabase.from("autisti").select("id, attivo, password_cambiata_at, privacy_accettata_at").eq("auth_user_id", data.user.id).maybeSingle(),
-        supabase.from("autisti_esterni").select("id, attivo, password_cambiata_at, privacy_accettata_at").eq("auth_user_id", data.user.id).maybeSingle(),
+        supabase.from("autisti").select("id, attivo, privacy_accettata_at").eq("auth_user_id", data.user.id).maybeSingle(),
+        supabase.from("autisti_esterni").select("id, attivo, privacy_accettata_at").eq("auth_user_id", data.user.id).maybeSingle(),
       ]);
 
       const row = aInt ?? aExt;
@@ -64,7 +64,7 @@ export default function AutistaLogin() {
       }
 
       await supabase.from(table).update({ ultimo_accesso_at: new Date().toISOString() }).eq("id", row.id);
-      navigate(row.password_cambiata_at && row.privacy_accettata_at ? "/autista" : "/autista/setup", { replace: true });
+      navigate(row.privacy_accettata_at ? "/autista" : "/autista/setup", { replace: true });
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,7 @@ export default function AutistaLogin() {
             <Car className="h-5 w-5 text-primary-foreground" />
           </div>
           <CardTitle className="font-display text-2xl">Area Autisti</CardTitle>
-          <CardDescription>Accedi con le credenziali fornite dalla tua azienda</CardDescription>
+          <CardDescription>Accedi con le credenziali fornite dalla tua azienda. Password dimenticata? Contatta il tuo ufficio.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
