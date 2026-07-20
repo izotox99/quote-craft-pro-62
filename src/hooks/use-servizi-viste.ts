@@ -17,16 +17,33 @@ export type ViewRef = {
   predefinita: boolean;
   descrizione?: string;
   columns: ViewColumnState[];
+  fontLevel?: number | null;
 };
 
 const LS_VERSION = "v2";
 const LS_ACTIVE_KEY = `servizi_vista_attiva_id_${LS_VERSION}`;
 const LS_LEGACY_KEYS = ["servizi_vista_attiva_id"];
 const LS_WIDTHS_PREFIX = `servizi_col_widths_${LS_VERSION}:`;
+const LS_FONT_PREFIX = `servizi_font_level_${LS_VERSION}:`;
 
 type WidthMap = Partial<Record<ColumnKey, number>>;
 
 function lsWidthsKey(viewId: string) { return `${LS_WIDTHS_PREFIX}${viewId}`; }
+function lsFontKey(viewId: string) { return `${LS_FONT_PREFIX}${viewId}`; }
+
+export function readFontLevelCache(viewId: string): number | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(lsFontKey(viewId));
+    if (raw == null) return null;
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) ? n : null;
+  } catch { return null; }
+}
+function writeFontLevelCache(viewId: string, level: number) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(lsFontKey(viewId), String(level)); } catch {}
+}
 
 export function readWidthsCache(viewId: string): WidthMap {
   if (typeof window === "undefined") return {};
