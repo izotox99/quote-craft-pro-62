@@ -79,7 +79,7 @@ export default function AutistaServizi() {
               <section className="space-y-2">
                 <h2 className="text-xs font-bold uppercase text-muted-foreground">Da effettuare · {daFare.length}</h2>
                 {daFare.map((s) => (
-                  <CardServizio key={s.id} s={s} onOpen={() => navigate(`/autista/servizi/${s.id}`)} />
+                  <CardServizio key={s.id} s={s} onOpen={() => navigate(`/autista/servizi/dett/${s.id}`)} />
                 ))}
               </section>
             )}
@@ -87,7 +87,7 @@ export default function AutistaServizi() {
               <section className="space-y-2">
                 <h2 className="text-xs font-bold uppercase text-muted-foreground">Conclusi · {conclusi.length}</h2>
                 {conclusi.map((s) => (
-                  <CardConcluso key={s.id} s={s} onOpen={() => navigate(`/autista/servizi/${s.id}`)} />
+                  <CardConcluso key={s.id} s={s} onOpen={() => navigate(`/autista/servizi/dett/${s.id}`)} />
                 ))}
               </section>
             )}
