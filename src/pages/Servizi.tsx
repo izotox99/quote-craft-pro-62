@@ -713,6 +713,34 @@ export default function Servizi() {
                 activeId={viste.activeView.id}
                 onSelect={viste.selectView}
               />
+              <div
+                className="inline-flex items-center h-8 rounded-md border border-input bg-background overflow-hidden"
+                title="Dimensione testo tabella"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cur = fontLevelIndex;
+                    if (cur > 0) viste.setFontLevel(viste.activeView.id, FONT_LEVELS[cur - 1]);
+                  }}
+                  disabled={fontLevelIndex === 0}
+                  className="px-2 text-xs font-semibold hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed h-full"
+                  aria-label="Riduci dimensione testo tabella"
+                >A−</button>
+                <span className="px-1.5 text-[10px] font-mono text-muted-foreground border-x border-input h-full inline-flex items-center min-w-[34px] justify-center">
+                  {FONT_LEVELS[fontLevelIndex]}px
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cur = fontLevelIndex;
+                    if (cur < FONT_LEVELS.length - 1) viste.setFontLevel(viste.activeView.id, FONT_LEVELS[cur + 1]);
+                  }}
+                  disabled={fontLevelIndex === FONT_LEVELS.length - 1}
+                  className="px-2 text-xs font-semibold hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed h-full"
+                  aria-label="Aumenta dimensione testo tabella"
+                >A+</button>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
