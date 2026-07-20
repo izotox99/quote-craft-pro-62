@@ -13,7 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Trash2, Pencil, Calculator } from "lucide-react";
+import { PlusCircle, Trash2, Pencil, Calculator, KeyRound, ShieldOff } from "lucide-react";
 import { NuovoAutistaDialog } from "@/components/NuovoAutistaDialog";
 
 type Autista = {
@@ -31,6 +31,7 @@ type Autista = {
   
   note: string | null;
   attivo: boolean;
+  auth_user_id: string | null;
 };
 
 type Spesa = {
@@ -57,7 +58,7 @@ export default function Autisti() {
   // Dialog autista (nuovo / modifica)
   const [autistaDialogOpen, setAutistaDialogOpen] = useState(false);
   const [editingAutista, setEditingAutista] = useState<{ tipo: "interno" | "esterno"; id: string; data: any } | null>(null);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [revokeId, setRevokeId] = useState<string | null>(null);
 
   // Spese dialog
   const [speseOpen, setSpeseOpen] = useState(false);
