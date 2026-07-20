@@ -30,17 +30,26 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const [{ data: profile }, { data: roles }, { data: client }, { data: utenza }] = await Promise.all([
+      const [{ data: profile }, { data: roles }, { data: client }, { data: utenza }, { data: autista }] = await Promise.all([
         supabase.from("profiles").select("org_id").eq("user_id", user.id).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id).limit(1),
         supabase.from("clients").select("id").eq("auth_user_id", user.id).maybeSingle(),
         supabase.from("client_utenze").select("id").eq("auth_user_id", user.id).eq("attivo", true).maybeSingle(),
+        supabase.from("autisti").select("id").eq("auth_user_id", user.id).eq("attivo", true).maybeSingle(),
       ]);
 
       if (!active) return;
+      // Un autista non può mai entrare nella dashboard NCC
+      if (autista) {
+        setHasDashboardAccess(false);
+        setIsClientAccount(false);
+        setCheckingAccess(false);
+        return;
+      }
       setHasDashboardAccess(!!profile?.org_id && Array.isArray(roles) && roles.length > 0);
       setIsClientAccount(!!client || !!utenza);
       setCheckingAccess(false);
+
     };
 
     if (!loading) checkAccess();
