@@ -72,6 +72,14 @@ export type ServizioFormInitial = Partial<{
   n_bagagli: number | null;
   accessori: string | null;
   info_autista: string | null;
+  cartello: string | null;
+  stato_autista?: string | null;
+  transfer_concluso_at?: string | null;
+  transfer_nota_chiusura?: string | null;
+  dispo_conclusa_at?: string | null;
+  dispo_nota_chiusura?: string | null;
+  km_inizio_servizio?: number | null;
+  km_fine_servizio?: number | null;
   info_interne: string | null;
   info_cliente_autista: string | null;
   info_cliente: string | null;
