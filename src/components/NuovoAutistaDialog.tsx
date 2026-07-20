@@ -132,6 +132,8 @@ export function NuovoAutistaDialog({
       setEsterno(emptyEsterno);
       setFoglio(null);
     }
+    setPassword("");
+
   }, [open, editing, defaultTipo]);
 
   const splitNome = (full: string) => {
