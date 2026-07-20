@@ -28,14 +28,16 @@ type CalRow = { giorno: string; autista_nome: string; tipo: string; stato: strin
 export default function AutistaFerie() {
   const [cursor, setCursor] = useState(new Date());
   const [cal, setCal] = useState<CalRow[]>([]);
-  const [attivi, setAttivi] = useState(0);
-  const [minCfg, setMinCfg] = useState(1);
+  const [mezziTot, setMezziTot] = useState(1);
+  const [mezziReq, setMezziReq] = useState(1);
   const [limits, setLimits] = useState<{ max_ferie: number; max_riposi: number; max_permessi: number } | null>(null);
   const [counters, setCounters] = useState<{ ferie: number; riposi: number; permessi: number }>({ ferie: 0, riposi: 0, permessi: 0 });
   const [myReqs, setMyReqs] = useState<any[]>([]);
   const [autistaId, setAutistaId] = useState<string | null>(null);
   const [orgId, setOrgId] = useState<string | null>(null);
   const [detailDay, setDetailDay] = useState<Date | null>(null);
+
+  const maxAss = Math.max(mezziTot - mezziReq, 0);
 
   const [formOpen, setFormOpen] = useState(false);
   const [tipo, setTipo] = useState<"ferie"|"riposo"|"permesso"|"malattia">("ferie");
@@ -59,16 +61,15 @@ export default function AutistaFerie() {
     setAutistaId(aInt.id); setOrgId(aInt.org_id);
 
     const anno = cursor.getFullYear(), mese = cursor.getMonth() + 1;
-    const [{ data: rows }, { data: lim }, { count }, { data: cfg }, { data: mine }] = await Promise.all([
+    const [{ data: rows }, { data: lim }, { data: cfg }, { data: mine }] = await Promise.all([
       supabase.rpc("assenze_calendario_mese" as any, { _anno: anno, _mese: mese }),
       supabase.rpc("assenze_get_effective_limits" as any, { _autista_id: aInt.id }),
-      supabase.from("autisti").select("id", { count: "exact", head: true }).eq("org_id", aInt.org_id).eq("attivo", true),
-      supabase.from("config_assenze" as any).select("min_autisti_disponibili_giorno").eq("org_id", aInt.org_id).maybeSingle(),
+      supabase.from("config_assenze" as any).select("mezzi_totali,mezzi_richiesti_giorno").eq("org_id", aInt.org_id).maybeSingle(),
       supabase.from("autisti_assenze" as any).select("*").eq("autista_id", aInt.id).order("created_at", { ascending: false }).limit(50),
     ]);
     setCal((rows as any) ?? []);
-    setAttivi(count ?? 0);
-    setMinCfg((cfg as any)?.min_autisti_disponibili_giorno ?? 1);
+    setMezziTot((cfg as any)?.mezzi_totali ?? 1);
+    setMezziReq((cfg as any)?.mezzi_richiesti_giorno ?? 1);
     const L = lim as any;
     if (L) setLimits({ max_ferie: L.max_ferie, max_riposi: L.max_riposi, max_permessi: L.max_permessi });
     setMyReqs((mine as any) ?? []);
