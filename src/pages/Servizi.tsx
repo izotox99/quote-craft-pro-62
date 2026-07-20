@@ -270,6 +270,14 @@ export default function Servizi() {
   const [customizerOpen, setCustomizerOpen] = useState(false);
   const [networkMap, setNetworkMap] = useState<Record<string, { stato: string; partnerName: string | null }>>({});
 
+  // Livello font tabella (indice in FONT_LEVELS): dalla vista attiva, con fallback default.
+  const fontLevelPx = (() => {
+    const fl = viste.activeView.fontLevel;
+    if (typeof fl === "number" && FONT_LEVELS.includes(fl as any)) return fl;
+    return FONT_LEVELS[FONT_DEFAULT_INDEX];
+  })();
+  const fontLevelIndex = Math.max(0, FONT_LEVELS.indexOf(fontLevelPx as any));
+
   // Ridimensionamento colonne (Excel-like)
   const tableRef = useRef<HTMLTableElement>(null);
   const MIN_COL_PX = 40;
