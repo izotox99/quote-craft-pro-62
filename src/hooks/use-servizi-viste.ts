@@ -17,16 +17,33 @@ export type ViewRef = {
   predefinita: boolean;
   descrizione?: string;
   columns: ViewColumnState[];
+  fontLevel?: number | null;
 };
 
 const LS_VERSION = "v2";
 const LS_ACTIVE_KEY = `servizi_vista_attiva_id_${LS_VERSION}`;
 const LS_LEGACY_KEYS = ["servizi_vista_attiva_id"];
 const LS_WIDTHS_PREFIX = `servizi_col_widths_${LS_VERSION}:`;
+const LS_FONT_PREFIX = `servizi_font_level_${LS_VERSION}:`;
 
 type WidthMap = Partial<Record<ColumnKey, number>>;
 
 function lsWidthsKey(viewId: string) { return `${LS_WIDTHS_PREFIX}${viewId}`; }
+function lsFontKey(viewId: string) { return `${LS_FONT_PREFIX}${viewId}`; }
+
+export function readFontLevelCache(viewId: string): number | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(lsFontKey(viewId));
+    if (raw == null) return null;
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) ? n : null;
+  } catch { return null; }
+}
+function writeFontLevelCache(viewId: string, level: number) {
+  if (typeof window === "undefined") return;
+  try { localStorage.setItem(lsFontKey(viewId), String(level)); } catch {}
+}
 
 export function readWidthsCache(viewId: string): WidthMap {
   if (typeof window === "undefined") return {};
@@ -108,7 +125,7 @@ export function useServiziViste(userId: string | undefined) {
     if (!userId) return;
     const { data, error } = await supabase
       .from("dashboard_viste")
-      .select("id, nome, colonne, predefinita")
+      .select("id, nome, colonne, predefinita, font_level")
       .order("nome");
     if (error) return;
     setPersonal(
@@ -118,6 +135,7 @@ export function useServiziViste(userId: string | undefined) {
         system: false,
         predefinita: !!r.predefinita,
         columns: reconcileColumns(r.colonne),
+        fontLevel: typeof r.font_level === "number" ? r.font_level : null,
       })),
     );
     setLoaded(true);
@@ -139,7 +157,9 @@ export function useServiziViste(userId: string | undefined) {
 
   // Cache reattiva delle larghezze per-vista (localStorage-first).
   const [widthsById, setWidthsById] = useState<Record<string, WidthMap>>({});
+  const [fontById, setFontById] = useState<Record<string, number>>({});
   const dbDebounce = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const dbFontDebounce = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const activeView: ViewRef = useMemo(() => {
     const found = viste.find((v) => v.id === activeId);
@@ -149,9 +169,14 @@ export function useServiziViste(userId: string | undefined) {
     if (cache === undefined) {
       cache = readWidthsCache(base.id);
     }
-    if (Object.keys(cache).length === 0) return base;
-    return { ...base, columns: applyWidthsToColumns(base.columns, cache) };
-  }, [viste, activeId, systemRefs, widthsById]);
+    // Merge font level: state → LS → DB
+    let fl: number | null | undefined = fontById[base.id];
+    if (fl === undefined) fl = readFontLevelCache(base.id);
+    if (fl == null) fl = base.fontLevel ?? null;
+    const merged: ViewRef = { ...base, fontLevel: fl };
+    if (Object.keys(cache).length > 0) merged.columns = applyWidthsToColumns(base.columns, cache);
+    return merged;
+  }, [viste, activeId, systemRefs, widthsById, fontById]);
 
   const selectView = useCallback((id: string) => {
     setActiveId(id);
@@ -256,6 +281,20 @@ export function useServiziViste(userId: string | undefined) {
     if (!error) await reload();
   }, [personal, reload]);
 
+  /** Aggiorna il livello di font della vista: LS immediato + DB debounced (solo viste personali). */
+  const setFontLevel = useCallback((viewId: string, level: number) => {
+    writeFontLevelCache(viewId, level);
+    setFontById((prev) => ({ ...prev, [viewId]: level }));
+    if (SYSTEM_VIEW_IDS.has(viewId)) return;
+    if (dbFontDebounce.current[viewId]) clearTimeout(dbFontDebounce.current[viewId]);
+    dbFontDebounce.current[viewId] = setTimeout(async () => {
+      const { error } = await supabase
+        .from("dashboard_viste")
+        .update({ font_level: level } as any)
+        .eq("id", viewId);
+      if (!error) await reload();
+    }, 400);
+  }, [reload]);
 
   return {
     viste,
@@ -265,6 +304,7 @@ export function useServiziViste(userId: string | undefined) {
     updateViewColumns,
     updateColumnWidths,
     resetColumnWidths,
+    setFontLevel,
     renameView,
     deleteView,
     setAsDefault,

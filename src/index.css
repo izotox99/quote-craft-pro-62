@@ -287,3 +287,40 @@
   background-clip: padding-box;
   border: 2px solid transparent;
 }
+
+/* === Servizi table: text-size zoom control =========================
+   Applica una dimensione unica a tutto il contenuto testuale della
+   tabella (thead + tbody), forzando l'ereditarietà e disattivando i
+   troncamenti così che con font grande le righe crescano in verticale
+   (word-wrap agli spazi) senza scroll orizzontale. */
+table.servizi-table-scaled,
+table.servizi-table-scaled th,
+table.servizi-table-scaled td,
+table.servizi-table-scaled th *,
+table.servizi-table-scaled td * {
+  font-size: inherit !important;
+  line-height: 1.2 !important;
+}
+/* icone, checkbox e SVG mantengono la loro dimensione fisica */
+table.servizi-table-scaled svg,
+table.servizi-table-scaled input[type="checkbox"],
+table.servizi-table-scaled [data-keep-size] {
+  font-size: 0 !important;
+}
+/* Disattiva troncamento su tutte le celle: il testo va a capo agli
+   spazi, senza spezzare parole a metà. */
+table.servizi-table-scaled .truncate,
+table.servizi-table-scaled .whitespace-nowrap {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+}
+table.servizi-table-scaled td,
+table.servizi-table-scaled th {
+  white-space: normal !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  overflow: hidden;
+}

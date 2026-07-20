@@ -43,6 +43,10 @@ const NETWORK_STATO_COLOR: Record<string, string> = {
   completato: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200",
 };
 
+const FONT_LEVELS = [9, 10, 11, 12, 14] as const;
+const FONT_DEFAULT_INDEX = 0; // 9px
+
+
 type Servizio = {
   id: string;
   data_servizio: string;
@@ -265,6 +269,14 @@ export default function Servizi() {
   const viste = useServiziViste(user?.id);
   const [customizerOpen, setCustomizerOpen] = useState(false);
   const [networkMap, setNetworkMap] = useState<Record<string, { stato: string; partnerName: string | null }>>({});
+
+  // Livello font tabella (indice in FONT_LEVELS): dalla vista attiva, con fallback default.
+  const fontLevelPx = (() => {
+    const fl = viste.activeView.fontLevel;
+    if (typeof fl === "number" && FONT_LEVELS.includes(fl as any)) return fl;
+    return FONT_LEVELS[FONT_DEFAULT_INDEX];
+  })();
+  const fontLevelIndex = Math.max(0, FONT_LEVELS.indexOf(fontLevelPx as any));
 
   // Ridimensionamento colonne (Excel-like)
   const tableRef = useRef<HTMLTableElement>(null);
@@ -713,6 +725,34 @@ export default function Servizi() {
                 activeId={viste.activeView.id}
                 onSelect={viste.selectView}
               />
+              <div
+                className="inline-flex items-center h-8 rounded-md border border-input bg-background overflow-hidden"
+                title="Dimensione testo tabella"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cur = fontLevelIndex;
+                    if (cur > 0) viste.setFontLevel(viste.activeView.id, FONT_LEVELS[cur - 1]);
+                  }}
+                  disabled={fontLevelIndex === 0}
+                  className="px-2 text-xs font-semibold hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed h-full"
+                  aria-label="Riduci dimensione testo tabella"
+                >A−</button>
+                <span className="px-1.5 text-[10px] font-mono text-muted-foreground border-x border-input h-full inline-flex items-center min-w-[34px] justify-center">
+                  {FONT_LEVELS[fontLevelIndex]}px
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const cur = fontLevelIndex;
+                    if (cur < FONT_LEVELS.length - 1) viste.setFontLevel(viste.activeView.id, FONT_LEVELS[cur + 1]);
+                  }}
+                  disabled={fontLevelIndex === FONT_LEVELS.length - 1}
+                  className="px-2 text-xs font-semibold hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed h-full"
+                  aria-label="Aumenta dimensione testo tabella"
+                >A+</button>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -1231,12 +1271,12 @@ export default function Servizi() {
           return (
             <div className="hidden md:block -mx-3 lg:-mx-4 overflow-x-hidden border-y bg-card">
               <TooltipProvider delayDuration={200}>
-                <table ref={tableRef} className="w-full table-fixed border-collapse text-[8px] font-semibold italic leading-[1.15] text-foreground xl:text-[8.5px]" style={{ borderSpacing: 0 }}>
+                <table ref={tableRef} className="servizi-table-scaled w-full table-fixed border-collapse font-semibold italic leading-[1.2] text-foreground" style={{ borderSpacing: 0, fontSize: `${fontLevelPx}px` }}>
                       <colgroup>
                         {visibleCols.map((c) => <col key={c.key} style={{ width: colWidth(c.key) }} />)}
                       </colgroup>
                       <thead className="border-b border-border bg-muted/70">
-                        <tr className="text-[7.5px] font-bold not-italic leading-[1.05] text-foreground xl:text-[8px]">
+                        <tr className="font-bold not-italic leading-[1.1] text-foreground">
                           {visibleCols.map((c, idx) => {
                             const def = COLUMNS_MAP[c.key];
                             const edgePad = idx === 0 ? "pl-[7px] pr-0" : idx === visibleCols.length - 1 ? "pl-0 pr-[7px]" : "px-0";
