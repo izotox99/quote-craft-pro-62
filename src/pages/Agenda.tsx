@@ -163,12 +163,40 @@ function EventoChip({ e, onClick }: { e: AgendaEvento; onClick: () => void }) {
   );
 }
 
-function DayView({ date, eventi, onNew, onOpen }: { date: Date; eventi: AgendaEvento[]; onNew: (d: Date) => void; onOpen: (e: AgendaEvento) => void }) {
+function AssenzaChip({ a }: { a: Assenza }) {
+  const color = ASSENZA_COLOR[a.tipo] ?? "#64748b";
+  const nome = `${a.autisti?.cognome ?? ""} ${a.autisti?.nome ?? ""}`.trim() || "Autista";
+  return (
+    <div
+      className="block w-full text-left rounded px-1.5 py-0.5 text-[11px] font-medium truncate border-l-2"
+      style={{ backgroundColor: color + "22", borderLeftColor: color, color }}
+      title={`${nome} — ${a.tipo}`}
+    >
+      <span className="opacity-70 mr-1 uppercase text-[9px]">{a.tipo}</span>{nome}
+    </div>
+  );
+}
+
+const assenzeOfDay = (assenze: Assenza[], d: Date) =>
+  assenze.filter(a => {
+    const di = new Date(a.data_inizio), df = new Date(a.data_fine);
+    const day = new Date(d); day.setHours(12,0,0,0);
+    return day >= new Date(di.setHours(0,0,0,0)) && day <= new Date(df.setHours(23,59,59,999));
+  });
+
+function DayView({ date, eventi, assenze, onNew, onOpen }: { date: Date; eventi: AgendaEvento[]; assenze: Assenza[]; onNew: (d: Date) => void; onOpen: (e: AgendaEvento) => void }) {
   const dayEventi = eventi.filter(e => isSameDay(new Date(e.data_inizio), date));
+  const dayAss = assenzeOfDay(assenze, date);
   const hours = Array.from({ length: 24 }, (_, i) => i);
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
-      <div className="max-h-[calc(100vh-220px)] overflow-y-auto">
+      {dayAss.length > 0 && (
+        <div className="p-2 bg-muted/30 space-y-1 border-b">
+          <div className="text-[10px] uppercase text-muted-foreground font-semibold">Assenze autisti</div>
+          {dayAss.map(a => <AssenzaChip key={a.id} a={a} />)}
+        </div>
+      )}
+      <div className="max-h-[calc(100vh-260px)] overflow-y-auto">
         {hours.map(h => {
           const slotDate = new Date(date); slotDate.setHours(h, 0, 0, 0);
           const slotEventi = dayEventi.filter(e => !e.tutto_il_giorno && new Date(e.data_inizio).getHours() === h);
@@ -198,13 +226,14 @@ function DayView({ date, eventi, onNew, onOpen }: { date: Date; eventi: AgendaEv
   );
 }
 
-function WeekView({ start, eventi, onNew, onOpen }: { start: Date; eventi: AgendaEvento[]; onNew: (d: Date) => void; onOpen: (e: AgendaEvento) => void }) {
+function WeekView({ start, eventi, assenze, onNew, onOpen }: { start: Date; eventi: AgendaEvento[]; assenze: Assenza[]; onNew: (d: Date) => void; onOpen: (e: AgendaEvento) => void }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   return (
     <div className="grid grid-cols-7 gap-1 rounded-lg border bg-card p-2">
       {days.map(d => {
         const isToday = isSameDay(d, new Date());
         const dayEventi = eventi.filter(e => isSameDay(new Date(e.data_inizio), d));
+        const dayAss = assenzeOfDay(assenze, d);
         return (
           <div
             key={d.toISOString()}
@@ -221,6 +250,7 @@ function WeekView({ start, eventi, onNew, onOpen }: { start: Date; eventi: Agend
               {format(d, "d")}
             </div>
             <div className="mt-1 space-y-1 flex-1 overflow-hidden">
+              {dayAss.map(a => <AssenzaChip key={a.id} a={a} />)}
               {dayEventi.slice(0, 6).map(e => <EventoChip key={e.id} e={e} onClick={() => onOpen(e)} />)}
               {dayEventi.length > 6 && <div className="text-[10px] text-muted-foreground">+{dayEventi.length - 6} altri</div>}
             </div>
@@ -231,8 +261,8 @@ function WeekView({ start, eventi, onNew, onOpen }: { start: Date; eventi: Agend
   );
 }
 
-function MonthView({ cursor, start, end, eventi, onNew, onOpen }: {
-  cursor: Date; start: Date; end: Date; eventi: AgendaEvento[];
+function MonthView({ cursor, start, end, eventi, assenze, onNew, onOpen }: {
+  cursor: Date; start: Date; end: Date; eventi: AgendaEvento[]; assenze: Assenza[];
   onNew: (d: Date) => void; onOpen: (e: AgendaEvento) => void;
 }) {
   const days: Date[] = [];
@@ -248,6 +278,7 @@ function MonthView({ cursor, start, end, eventi, onNew, onOpen }: {
           const inMonth = isSameMonth(d, cursor);
           const isToday = isSameDay(d, new Date());
           const dayEventi = eventi.filter(e => isSameDay(new Date(e.data_inizio), d));
+          const dayAss = assenzeOfDay(assenze, d);
           return (
             <div
               key={d.toISOString()}
@@ -262,8 +293,9 @@ function MonthView({ cursor, start, end, eventi, onNew, onOpen }: {
                 {format(d, "d")}
               </div>
               <div className="space-y-0.5">
+                {dayAss.slice(0, 2).map(a => <AssenzaChip key={a.id} a={a} />)}
                 {dayEventi.slice(0, 3).map(e => <EventoChip key={e.id} e={e} onClick={() => onOpen(e)} />)}
-                {dayEventi.length > 3 && <div className="text-[10px] text-muted-foreground">+{dayEventi.length - 3}</div>}
+                {(dayEventi.length + dayAss.length) > 5 && <div className="text-[10px] text-muted-foreground">+{(dayEventi.length + dayAss.length) - 5}</div>}
               </div>
             </div>
           );
