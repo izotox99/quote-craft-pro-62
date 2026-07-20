@@ -609,6 +609,26 @@ export function ServizioFormDialog({
             <Label>Note</Label>
             <Textarea value={f.note} onChange={e => set({ note: e.target.value })} className="min-h-[60px]" />
           </section>
+
+          {mode === "edit" && (initialData?.stato_autista || initialData?.km_inizio_servizio != null) && (
+            <section className="rounded-md border p-3 space-y-2 bg-background">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Stato autista: {initialData?.stato_autista ?? "—"}
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                <div><span className="text-muted-foreground">Km inizio:</span> <b>{initialData?.km_inizio_servizio ?? "—"}</b></div>
+                <div><span className="text-muted-foreground">Km fine:</span> <b>{initialData?.km_fine_servizio ?? "—"}</b></div>
+                <div><span className="text-muted-foreground">Fine transfer:</span> <b>{initialData?.transfer_concluso_at ? new Date(initialData.transfer_concluso_at).toLocaleString("it-IT") : "—"}</b></div>
+                <div><span className="text-muted-foreground">Fine disposizione:</span> <b>{initialData?.dispo_conclusa_at ? new Date(initialData.dispo_conclusa_at).toLocaleString("it-IT") : "—"}</b></div>
+              </div>
+              {(initialData?.transfer_nota_chiusura || initialData?.dispo_nota_chiusura) && (
+                <div className="space-y-1 text-xs">
+                  {initialData?.transfer_nota_chiusura && <div><b>Nota transfer:</b> {initialData.transfer_nota_chiusura}</div>}
+                  {initialData?.dispo_nota_chiusura && <div><b>Nota disposizione:</b> {initialData.dispo_nota_chiusura}</div>}
+                </div>
+              )}
+            </section>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t">
