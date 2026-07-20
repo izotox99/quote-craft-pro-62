@@ -142,6 +142,7 @@ const emptyForm = (): Required<Omit<ServizioFormInitial, "id">> => ({
   n_bagagli: 0,
   accessori: "",
   info_autista: "",
+  cartello: "",
   info_interne: "",
   info_cliente_autista: "",
   info_cliente: "",
