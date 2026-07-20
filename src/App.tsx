@@ -48,6 +48,9 @@ import Fatture from "./pages/client-portal/Fatture";
 import AutistaLogin from "./pages/autista/AutistaLogin";
 import AutistaSetup from "./pages/autista/AutistaSetup";
 import AutistaHome from "./pages/autista/AutistaHome";
+import AutistaServizi from "./pages/autista/AutistaServizi";
+import AutistaServizioDetail from "./pages/autista/AutistaServizioDetail";
+import AutistaPlaceholder from "./pages/autista/AutistaPlaceholder";
 
 
 const queryClient = new QueryClient();
