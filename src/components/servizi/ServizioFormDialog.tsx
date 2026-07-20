@@ -259,6 +259,7 @@ export function ServizioFormDialog({
       n_passeggeri: f.n_passeggeri ?? 1,
       n_bagagli: f.n_bagagli ?? 0,
       info_autista: f.info_autista || null,
+      cartello: (f as any).cartello || null,
       info_interne: f.info_interne || null,
       info_cliente_autista: f.info_cliente_autista || null,
       info_cliente: f.info_cliente || null,
