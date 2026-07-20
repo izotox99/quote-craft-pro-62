@@ -314,9 +314,20 @@ export function NuovoAutistaDialog({
               />
             </Field>
 
-
+            {tipo === "interno" && (
+              <Field label="Password">
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={editing ? "Lascia vuoto per non cambiarla" : "Min. 6 caratteri"}
+                  autoComplete="new-password"
+                />
+              </Field>
+            )}
 
             <Field label="Calcola riposi">
+
               <Select
                 value={common.calcola_riposi}
                 onValueChange={(v) => setCommon({ ...common, calcola_riposi: v })}
