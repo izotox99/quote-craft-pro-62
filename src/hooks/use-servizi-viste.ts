@@ -125,7 +125,7 @@ export function useServiziViste(userId: string | undefined) {
     if (!userId) return;
     const { data, error } = await supabase
       .from("dashboard_viste")
-      .select("id, nome, colonne, predefinita")
+      .select("id, nome, colonne, predefinita, font_level")
       .order("nome");
     if (error) return;
     setPersonal(
@@ -135,6 +135,7 @@ export function useServiziViste(userId: string | undefined) {
         system: false,
         predefinita: !!r.predefinita,
         columns: reconcileColumns(r.colonne),
+        fontLevel: typeof r.font_level === "number" ? r.font_level : null,
       })),
     );
     setLoaded(true);
