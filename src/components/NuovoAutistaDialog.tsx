@@ -466,11 +466,26 @@ export function NuovoAutistaDialog({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[140px_1fr] items-center gap-3">
-      <Label className="text-sm italic font-semibold text-right">{label}:</Label>
+      <Label className="text-sm italic font-semibold text-right flex items-center justify-end gap-1">
+        <span>{label}:</span>
+        {hint && (
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="text-muted-foreground hover:text-foreground">
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs text-xs">{hint}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </Label>
       <div>{children}</div>
     </div>
   );
 }
+
