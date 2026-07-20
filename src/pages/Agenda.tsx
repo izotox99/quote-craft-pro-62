@@ -117,13 +117,17 @@ export default function Agenda() {
               <Button size="sm" variant="outline" onClick={() => handleGoto("today")}>Oggi</Button>
               <Button size="icon" variant="outline" onClick={() => handleGoto("next")}><ChevronRight className="h-4 w-4" /></Button>
             </div>
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer select-none border rounded px-2 py-1.5">
+              <input type="checkbox" checked={showAssenze} onChange={e => setShowAssenze(e.target.checked)} />
+              Assenze autisti
+            </label>
             <Button size="sm" onClick={() => openNew(new Date())} className="gap-1"><Plus className="h-4 w-4" /> Nuovo</Button>
           </div>
         </div>
 
-        {view === "giorno" && <DayView date={cursor} eventi={eventi} onNew={openNew} onOpen={openEvento} />}
-        {view === "settimana" && <WeekView start={rangeStart} eventi={eventi} onNew={openNew} onOpen={openEvento} />}
-        {view === "mese" && <MonthView cursor={cursor} start={rangeStart} end={rangeEnd} eventi={eventi} onNew={openNew} onOpen={openEvento} />}
+        {view === "giorno" && <DayView date={cursor} eventi={eventi} assenze={showAssenze ? assenze : []} onNew={openNew} onOpen={openEvento} />}
+        {view === "settimana" && <WeekView start={rangeStart} eventi={eventi} assenze={showAssenze ? assenze : []} onNew={openNew} onOpen={openEvento} />}
+        {view === "mese" && <MonthView cursor={cursor} start={rangeStart} end={rangeEnd} eventi={eventi} assenze={showAssenze ? assenze : []} onNew={openNew} onOpen={openEvento} />}
       </div>
 
       <EventoDialog
