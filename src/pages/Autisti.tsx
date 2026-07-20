@@ -216,7 +216,15 @@ export default function Autisti() {
                     <TableCell className="text-right tabular-nums">{a.prezzo_ora_straord?.toFixed(2) ?? "0.00"}</TableCell>
                     <TableCell>{a.cellulare ?? a.telefono ?? "—"}</TableCell>
                     <TableCell className="lowercase">{a.email ?? "—"}</TableCell>
-                    
+                    <TableCell className="text-center">
+                      {a.auth_user_id ? (
+                        <span title="Accesso app autista attivo" className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[10px] font-semibold">
+                          <KeyRound className="h-3 w-3" /> ON
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex justify-center gap-1">
                         <Button variant="ghost" size="icon" title="Spese / Scadenze" onClick={() => openSpese(a)}>
@@ -225,6 +233,11 @@ export default function Autisti() {
                         <Button variant="ghost" size="icon" title="Modifica" onClick={() => openModifica(a)}>
                           <Pencil className="h-4 w-4 text-blue-600" />
                         </Button>
+                        {a.auth_user_id && (
+                          <Button variant="ghost" size="icon" title="Revoca accesso app" onClick={() => setRevokeId(a.id)}>
+                            <ShieldOff className="h-4 w-4 text-orange-600" />
+                          </Button>
+                        )}
                         {showDisattivati ? (
                           <Button variant="ghost" size="sm" onClick={() => riattiva(a.id)}>Riattiva</Button>
                         ) : (
@@ -237,7 +250,8 @@ export default function Autisti() {
                   </TableRow>
                 ))}
                 {!loading && autisti.length === 0 && (
-                  <TableRow><TableCell colSpan={11} className="text-center py-10 text-muted-foreground">Nessun autista</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={12} className="text-center py-10 text-muted-foreground">Nessun autista</TableCell></TableRow>
+
                 )}
               </TableBody>
             </Table>
