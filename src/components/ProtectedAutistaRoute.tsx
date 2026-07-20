@@ -21,20 +21,23 @@ export function ProtectedAutistaRoute({
       setChecking(true);
       if (!user) { if (active) setChecking(false); return; }
 
-      const { data: autista } = await supabase
-        .from("autisti")
-        .select("id, attivo, password_cambiata_at, privacy_accettata_at")
-        .eq("auth_user_id", user.id)
-        .maybeSingle();
+      const [{ data: autInt }, { data: autExt }] = await Promise.all([
+        supabase.from("autisti")
+          .select("id, attivo, password_cambiata_at, privacy_accettata_at")
+          .eq("auth_user_id", user.id).maybeSingle(),
+        supabase.from("autisti_esterni")
+          .select("id, attivo, password_cambiata_at, privacy_accettata_at")
+          .eq("auth_user_id", user.id).maybeSingle(),
+      ]);
 
+      const autista = (autInt?.attivo ? autInt : null) ?? (autExt?.attivo ? autExt : null);
       if (!active) return;
-      if (!autista || !autista.attivo) {
+      if (!autista) {
         setIsAutista(false);
         setChecking(false);
         return;
       }
 
-      // esclusione mutua: nessun ruolo NCC né record cliente/utenza
       const [{ data: role }, { data: prof }, { data: cli }, { data: ute }] = await Promise.all([
         supabase.from("user_roles").select("user_id").eq("user_id", user.id).maybeSingle(),
         supabase.from("profiles").select("org_id").eq("user_id", user.id).maybeSingle(),

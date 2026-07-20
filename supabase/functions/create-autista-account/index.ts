@@ -81,31 +81,35 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const autistaId: string | null = body?.autista_id ?? null;
+    const tipoRaw: string = (body?.tipo ?? "interno").toString();
+    const tipo: "interno" | "esterno" = tipoRaw === "esterno" ? "esterno" : "interno";
+    const table = tipo === "esterno" ? "autisti_esterni" : "autisti";
     const email = cleanEmail(body?.email);
     const password: string = (body?.password ?? "").toString();
 
     if (!autistaId) return jsonResponse({ error: "autista_id mancante", code: "missing_autista" }, 400);
-    if (!email) return jsonResponse({ error: "Email obbligatoria", code: "missing_email" }, 400);
+    if (!email) return jsonResponse({ error: "Email obbligatoria per abilitare l'accesso all'app autisti", code: "missing_email" }, 400);
     if (!isValidEmail(email)) return jsonResponse({ error: "Email non valida", code: "invalid_email" }, 400);
     if (password && password.length < 6) {
       return jsonResponse({ error: "La password deve avere almeno 6 caratteri", code: "weak_password" }, 400);
     }
 
     const { data: autista, error: aErr } = await admin
-      .from("autisti").select("id, org_id, auth_user_id, email").eq("id", autistaId).maybeSingle();
+      .from(table).select("id, org_id, auth_user_id, email").eq("id", autistaId).maybeSingle();
     if (aErr || !autista) return jsonResponse({ error: "Autista non trovato", code: "autista_not_found" }, 404);
-    if (autista.org_id !== callerProfile.org_id) {
+    if ((autista as any).org_id !== callerProfile.org_id) {
       return jsonResponse({ error: "Non autorizzato per questo autista", code: "forbidden" }, 403);
     }
 
     // Password fingerprint uniqueness (shared con clienti/utenze)
+    const ownerType = tipo === "esterno" ? "autista_esterno" : "autista";
     let passwordFingerprint: string | null = null;
     if (password) {
       passwordFingerprint = await computePasswordFingerprint(password);
       const { data: existingFp } = await admin
         .from("password_fingerprints").select("owner_type, owner_id")
         .eq("fingerprint", passwordFingerprint).maybeSingle();
-      if (existingFp && !(existingFp.owner_type === "autista" && existingFp.owner_id === autistaId)) {
+      if (existingFp && !(existingFp.owner_type === ownerType && existingFp.owner_id === autistaId)) {
         return jsonResponse({
           error: "Password già in uso da un altro account, scegline una diversa.",
           code: "password_in_use",
@@ -113,25 +117,28 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Email non deve collidere con NCC/cliente/utenza (o altro autista di altra riga)
+    // Email non deve collidere con NCC/cliente/utenza/altro autista
     const existingAuthUser = await findUserByEmail(admin, email);
     if (existingAuthUser) {
-      const [{ data: prof }, { data: role }, { data: cli }, { data: ute }, { data: otherAut }] = await Promise.all([
+      const [{ data: prof }, { data: role }, { data: cli }, { data: ute }, { data: otherAutInt }, { data: otherAutExt }] = await Promise.all([
         admin.from("profiles").select("user_id").eq("user_id", existingAuthUser.id).maybeSingle(),
         admin.from("user_roles").select("user_id").eq("user_id", existingAuthUser.id).maybeSingle(),
         admin.from("clients").select("id").eq("auth_user_id", existingAuthUser.id).maybeSingle(),
         admin.from("client_utenze").select("id").eq("auth_user_id", existingAuthUser.id).maybeSingle(),
         admin.from("autisti").select("id").eq("auth_user_id", existingAuthUser.id).maybeSingle(),
+        admin.from("autisti_esterni").select("id").eq("auth_user_id", existingAuthUser.id).maybeSingle(),
       ]);
       if (prof || role) return jsonResponse({ error: "Email già usata da un account NCC", code: "email_taken_ncc" }, 409);
       if (cli) return jsonResponse({ error: "Email già usata da un cliente", code: "email_taken_client" }, 409);
       if (ute) return jsonResponse({ error: "Email già usata da un'utenza cliente", code: "email_taken_utenza" }, 409);
-      if (otherAut && otherAut.id !== autistaId) {
+      const collidesInterno = otherAutInt && !(tipo === "interno" && otherAutInt.id === autistaId);
+      const collidesEsterno = otherAutExt && !(tipo === "esterno" && otherAutExt.id === autistaId);
+      if (collidesInterno || collidesEsterno) {
         return jsonResponse({ error: "Email già usata da un altro autista", code: "email_taken_autista" }, 409);
       }
     }
 
-    let authUserId = autista.auth_user_id ?? existingAuthUser?.id ?? null;
+    let authUserId = (autista as any).auth_user_id ?? existingAuthUser?.id ?? null;
     let authAction: "none" | "created" | "updated" | "linked" = "none";
 
     if (authUserId) {
@@ -142,7 +149,7 @@ Deno.serve(async (req) => {
       if (password) updates.password = password;
       const { error } = await admin.auth.admin.updateUserById(authUserId, updates);
       if (error) return jsonResponse({ error: error.message, code: "auth_update_failed" }, 400);
-      authAction = autista.auth_user_id ? "updated" : "linked";
+      authAction = (autista as any).auth_user_id ? "updated" : "linked";
     } else {
       if (!password) return jsonResponse({ error: "Password obbligatoria per creare l'account autista", code: "password_required" }, 400);
       const { data: created, error } = await admin.auth.admin.createUser({
@@ -159,8 +166,8 @@ Deno.serve(async (req) => {
     const updatePayload: Record<string, unknown> = {
       email, auth_user_id: authUserId,
     };
-    if (password) updatePayload.password_cambiata_at = null; // primo accesso: forza cambio
-    const { error: uErr } = await admin.from("autisti").update(updatePayload).eq("id", autistaId);
+    if (password) updatePayload.password_cambiata_at = null;
+    const { error: uErr } = await admin.from(table).update(updatePayload).eq("id", autistaId);
     if (uErr) {
       if (authAction === "created" && authUserId) await admin.auth.admin.deleteUser(authUserId);
       return jsonResponse({ error: uErr.message, code: "autista_save_failed" }, 400);
@@ -168,10 +175,10 @@ Deno.serve(async (req) => {
 
     if (passwordFingerprint) {
       await admin.from("password_fingerprints").delete()
-        .eq("owner_type", "autista").eq("owner_id", autistaId);
+        .eq("owner_type", ownerType).eq("owner_id", autistaId);
       const { error: fpErr } = await admin.from("password_fingerprints").insert({
         fingerprint: passwordFingerprint,
-        owner_type: "autista",
+        owner_type: ownerType,
         owner_id: autistaId,
         org_id: callerProfile.org_id,
       });
@@ -182,6 +189,7 @@ Deno.serve(async (req) => {
         }, 409);
       }
     }
+
 
     return jsonResponse({ success: true, autista_id: autistaId, user_id: authUserId, auth_action: authAction });
   } catch (err) {

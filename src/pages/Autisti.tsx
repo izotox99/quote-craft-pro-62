@@ -13,7 +13,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { PlusCircle, Trash2, Pencil, Calculator } from "lucide-react";
+import { PlusCircle, Trash2, Pencil, Calculator, KeyRound, ShieldOff } from "lucide-react";
 import { NuovoAutistaDialog } from "@/components/NuovoAutistaDialog";
 
 type Autista = {
@@ -31,6 +31,7 @@ type Autista = {
   
   note: string | null;
   attivo: boolean;
+  auth_user_id: string | null;
 };
 
 type Spesa = {
@@ -58,6 +59,7 @@ export default function Autisti() {
   const [autistaDialogOpen, setAutistaDialogOpen] = useState(false);
   const [editingAutista, setEditingAutista] = useState<{ tipo: "interno" | "esterno"; id: string; data: any } | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [revokeId, setRevokeId] = useState<string | null>(null);
 
   // Spese dialog
   const [speseOpen, setSpeseOpen] = useState(false);
@@ -102,6 +104,20 @@ export default function Autisti() {
     const { error } = await supabase.from("autisti").update({ attivo: true }).eq("id", id);
     if (error) toast.error(error.message);
     else { toast.success("Autista riattivato"); load(); }
+  };
+
+  const confirmRevoke = async () => {
+    if (!revokeId) return;
+    const { data, error } = await supabase.functions.invoke("revoke-autista-account", {
+      body: { autista_id: revokeId, tipo: "interno" },
+    });
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error ?? error?.message ?? "Errore revoca");
+    } else {
+      toast.success("Accesso app revocato");
+      load();
+    }
+    setRevokeId(null);
   };
 
   // Spese
@@ -198,8 +214,8 @@ export default function Autisti() {
                   <TableHead className="text-right">Prezzo Ora.Straord</TableHead>
                   <TableHead>Cellulare</TableHead>
                   <TableHead>Email</TableHead>
-                  
-                  <TableHead className="text-center w-32">Azioni</TableHead>
+                  <TableHead className="text-center w-16">App</TableHead>
+                  <TableHead className="text-center w-40">Azioni</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -214,7 +230,15 @@ export default function Autisti() {
                     <TableCell className="text-right tabular-nums">{a.prezzo_ora_straord?.toFixed(2) ?? "0.00"}</TableCell>
                     <TableCell>{a.cellulare ?? a.telefono ?? "—"}</TableCell>
                     <TableCell className="lowercase">{a.email ?? "—"}</TableCell>
-                    
+                    <TableCell className="text-center">
+                      {a.auth_user_id ? (
+                        <span title="Accesso app autista attivo" className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[10px] font-semibold">
+                          <KeyRound className="h-3 w-3" /> ON
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <div className="flex justify-center gap-1">
                         <Button variant="ghost" size="icon" title="Spese / Scadenze" onClick={() => openSpese(a)}>
@@ -223,6 +247,11 @@ export default function Autisti() {
                         <Button variant="ghost" size="icon" title="Modifica" onClick={() => openModifica(a)}>
                           <Pencil className="h-4 w-4 text-blue-600" />
                         </Button>
+                        {a.auth_user_id && (
+                          <Button variant="ghost" size="icon" title="Revoca accesso app" onClick={() => setRevokeId(a.id)}>
+                            <ShieldOff className="h-4 w-4 text-orange-600" />
+                          </Button>
+                        )}
                         {showDisattivati ? (
                           <Button variant="ghost" size="sm" onClick={() => riattiva(a.id)}>Riattiva</Button>
                         ) : (
@@ -235,7 +264,8 @@ export default function Autisti() {
                   </TableRow>
                 ))}
                 {!loading && autisti.length === 0 && (
-                  <TableRow><TableCell colSpan={11} className="text-center py-10 text-muted-foreground">Nessun autista</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={12} className="text-center py-10 text-muted-foreground">Nessun autista</TableCell></TableRow>
+
                 )}
               </TableBody>
             </Table>
@@ -267,6 +297,22 @@ export default function Autisti() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={!!revokeId} onOpenChange={(o) => !o && setRevokeId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revocare l'accesso all'app?</AlertDialogTitle>
+            <AlertDialogDescription>
+              L'autista non potrà più accedere all'app autisti. L'anagrafica resta invariata: potrai riabilitare l'accesso in seguito impostando una nuova password.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRevoke}>Revoca</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       {/* Dialog Spese */}
       <Dialog open={speseOpen} onOpenChange={setSpeseOpen}>

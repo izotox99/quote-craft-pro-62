@@ -10,6 +10,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 
 type TipoAutista = "interno" | "esterno";
 
@@ -183,6 +185,7 @@ export function NuovoAutistaDialog({
           const { data: fnData, error: fnErr } = await supabase.functions.invoke("create-autista-account", {
             body: {
               autista_id: internoId,
+              tipo: "interno",
               email: common.email.trim(),
               password: password || undefined,
             },
@@ -225,6 +228,22 @@ export function NuovoAutistaDialog({
           id = data.id;
         }
 
+        // Account autista collaboratore esterno
+        if (id && (common.email.trim() || password)) {
+          const { data: fnData, error: fnErr } = await supabase.functions.invoke("create-autista-account", {
+            body: {
+              autista_id: id,
+              tipo: "esterno",
+              email: common.email.trim(),
+              password: password || undefined,
+            },
+          });
+          if (fnErr || (fnData as any)?.error) {
+            const msg = (fnData as any)?.error ?? fnErr?.message ?? "Errore creazione account autista";
+            throw new Error(msg);
+          }
+        }
+
         // Upload foglio (tariffario) se presente
         if (foglio && id) {
           const ext = foglio.name.split(".").pop() ?? "bin";
@@ -237,6 +256,7 @@ export function NuovoAutistaDialog({
             .update({ tariffario_url: path, tariffario_nome: foglio.name })
             .eq("id", id);
         }
+
       }
 
       toast.success(editing ? "Autista aggiornato" : "Autista inserito");
@@ -314,17 +334,16 @@ export function NuovoAutistaDialog({
               />
             </Field>
 
-            {tipo === "interno" && (
-              <Field label="Password">
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={editing ? "Lascia vuoto per non cambiarla" : "Min. 6 caratteri"}
-                  autoComplete="new-password"
-                />
-              </Field>
-            )}
+            <Field label="Password">
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={editing ? "Lascia vuoto per non cambiarla" : "Min. 6 caratteri (per accesso app autista)"}
+                autoComplete="new-password"
+              />
+            </Field>
+
 
             <Field label="Calcola riposi">
 
@@ -348,30 +367,31 @@ export function NuovoAutistaDialog({
                 <Field label="Mansione">
                   <Input value={interno.mansione} onChange={(e) => setInterno({ ...interno, mansione: e.target.value })} />
                 </Field>
-                <Field label="Numero Ore Ordinarie">
+                <Field label="Numero Ore Ordinarie" hint="Ore giornaliere considerate ordinarie: oltre questa soglia le ore vengono conteggiate come straordinario nel calcolo del compenso.">
                   <Input inputMode="decimal" value={interno.numero_ore_ord} onChange={(e) => setInterno({ ...interno, numero_ore_ord: e.target.value })} />
                 </Field>
-                <Field label="Prezzo Ore Ordinarie">
+                <Field label="Prezzo Ore Ordinarie" hint="Tariffa oraria (€) applicata alle ore ordinarie per il calcolo del compenso giornaliero.">
                   <Input inputMode="decimal" value={interno.prezzo_ora_ord} onChange={(e) => setInterno({ ...interno, prezzo_ora_ord: e.target.value })} />
                 </Field>
-                <Field label="Prezzo Ore Straordinarie">
+                <Field label="Prezzo Ore Straordinarie" hint="Tariffa oraria (€) applicata alle ore eccedenti quelle ordinarie.">
                   <Input inputMode="decimal" value={interno.prezzo_ora_straord} onChange={(e) => setInterno({ ...interno, prezzo_ora_straord: e.target.value })} />
                 </Field>
-                <Field label="Trasferta">
+                <Field label="Trasferta" hint="Indennità fissa di trasferta (€) sommata al compenso quando l'autista opera fuori sede.">
                   <Input inputMode="decimal" value={interno.trasferta} onChange={(e) => setInterno({ ...interno, trasferta: e.target.value })} />
                 </Field>
-                <Field label="Trasferta 2">
+                <Field label="Trasferta 2" hint="Seconda fascia di indennità di trasferta (€), applicata a trasferte più lunghe o particolari.">
                   <Input inputMode="decimal" value={interno.trasferta_2} onChange={(e) => setInterno({ ...interno, trasferta_2: e.target.value })} />
                 </Field>
-                <Field label="Buono pasto">
+                <Field label="Buono pasto" hint="Valore giornaliero del buono pasto (€) aggiunto al compenso nei giorni lavorati.">
                   <Input inputMode="decimal" value={interno.buono_pasto} onChange={(e) => setInterno({ ...interno, buono_pasto: e.target.value })} />
                 </Field>
-                <Field label="Assicurazione">
+                <Field label="Assicurazione" hint="Quota assicurativa giornaliera (€) a carico o a favore dell'autista, considerata nel calcolo del compenso.">
                   <Input inputMode="decimal" value={interno.assicurazione} onChange={(e) => setInterno({ ...interno, assicurazione: e.target.value })} />
                 </Field>
-                <Field label="Percentuale notturno">
+                <Field label="Percentuale notturno" hint="Maggiorazione percentuale (%) applicata alle ore lavorate in fascia notturna.">
                   <Input inputMode="decimal" value={interno.percentuale_notturno} onChange={(e) => setInterno({ ...interno, percentuale_notturno: e.target.value })} />
                 </Field>
+
               </>
             ) : (
               <>
@@ -446,11 +466,26 @@ export function NuovoAutistaDialog({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-[140px_1fr] items-center gap-3">
-      <Label className="text-sm italic font-semibold text-right">{label}:</Label>
+      <Label className="text-sm italic font-semibold text-right flex items-center justify-end gap-1">
+        <span>{label}:</span>
+        {hint && (
+          <TooltipProvider delayDuration={100}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button type="button" className="text-muted-foreground hover:text-foreground">
+                  <HelpCircle className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs text-xs">{hint}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </Label>
       <div>{children}</div>
     </div>
   );
 }
+

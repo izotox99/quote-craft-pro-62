@@ -281,12 +281,14 @@ export type Database = {
       autisti_esterni: {
         Row: {
           attivo: boolean
+          auth_user_id: string | null
           banca: string | null
           calcola_riposi: boolean
           cellulare: string | null
           codice_fiscale: string | null
           created_at: string
           email: string | null
+          foto_url: string | null
           iban: string | null
           id: string
           km_voucher: number | null
@@ -298,23 +300,28 @@ export type Database = {
           numero_compto: string | null
           org_id: string
           password: string | null
+          password_cambiata_at: string | null
           patente: string | null
           percentuale_last_minute: number | null
           percentuale_network: number | null
+          privacy_accettata_at: string | null
           targa: string | null
           tariffario_nome: string | null
           tariffario_url: string | null
           tipo_macchina: string | null
+          ultimo_accesso_at: string | null
           updated_at: string
         }
         Insert: {
           attivo?: boolean
+          auth_user_id?: string | null
           banca?: string | null
           calcola_riposi?: boolean
           cellulare?: string | null
           codice_fiscale?: string | null
           created_at?: string
           email?: string | null
+          foto_url?: string | null
           iban?: string | null
           id?: string
           km_voucher?: number | null
@@ -326,23 +333,28 @@ export type Database = {
           numero_compto?: string | null
           org_id?: string
           password?: string | null
+          password_cambiata_at?: string | null
           patente?: string | null
           percentuale_last_minute?: number | null
           percentuale_network?: number | null
+          privacy_accettata_at?: string | null
           targa?: string | null
           tariffario_nome?: string | null
           tariffario_url?: string | null
           tipo_macchina?: string | null
+          ultimo_accesso_at?: string | null
           updated_at?: string
         }
         Update: {
           attivo?: boolean
+          auth_user_id?: string | null
           banca?: string | null
           calcola_riposi?: boolean
           cellulare?: string | null
           codice_fiscale?: string | null
           created_at?: string
           email?: string | null
+          foto_url?: string | null
           iban?: string | null
           id?: string
           km_voucher?: number | null
@@ -354,13 +366,16 @@ export type Database = {
           numero_compto?: string | null
           org_id?: string
           password?: string | null
+          password_cambiata_at?: string | null
           patente?: string | null
           percentuale_last_minute?: number | null
           percentuale_network?: number | null
+          privacy_accettata_at?: string | null
           targa?: string | null
           tariffario_nome?: string | null
           tariffario_url?: string | null
           tipo_macchina?: string | null
+          ultimo_accesso_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2533,6 +2548,7 @@ export type Database = {
       }
       current_user_email: { Args: never; Returns: string }
       get_active_utenza_id: { Args: { _user_id: string }; Returns: string }
+      get_autista_esterno_id: { Args: { _user_id: string }; Returns: string }
       get_autista_id: { Args: { _user_id: string }; Returns: string }
       get_autista_org_id: { Args: { _user_id: string }; Returns: string }
       get_client_org_id: { Args: { _user_id: string }; Returns: string }
