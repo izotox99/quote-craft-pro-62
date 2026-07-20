@@ -168,11 +168,32 @@ export function NuovoAutistaDialog({
           assicurazione: interno.assicurazione ? Number(interno.assicurazione) : null,
           percentuale_notturno: interno.percentuale_notturno ? Number(interno.percentuale_notturno) : null,
         };
-        const { error } = editing
-          ? await supabase.from("autisti").update(payload).eq("id", editing.id)
-          : await supabase.from("autisti").insert(payload);
-        if (error) throw error;
+        let internoId = editing?.id ?? null;
+        if (editing) {
+          const { error } = await supabase.from("autisti").update(payload).eq("id", editing.id);
+          if (error) throw error;
+        } else {
+          const { data, error } = await supabase.from("autisti").insert(payload).select("id").single();
+          if (error) throw error;
+          internoId = data.id;
+        }
+
+        // Account autista: crea o aggiorna solo se email fornita, o password fornita in modifica
+        if (internoId && (common.email.trim() || password)) {
+          const { data: fnData, error: fnErr } = await supabase.functions.invoke("create-autista-account", {
+            body: {
+              autista_id: internoId,
+              email: common.email.trim(),
+              password: password || undefined,
+            },
+          });
+          if (fnErr || (fnData as any)?.error) {
+            const msg = (fnData as any)?.error ?? fnErr?.message ?? "Errore creazione account autista";
+            throw new Error(msg);
+          }
+        }
       } else {
+
         const payload: any = {
           nome: common.nome,
           codice_fiscale: common.codice_fiscale || null,
