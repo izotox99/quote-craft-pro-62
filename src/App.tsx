@@ -48,6 +48,9 @@ import Fatture from "./pages/client-portal/Fatture";
 import AutistaLogin from "./pages/autista/AutistaLogin";
 import AutistaSetup from "./pages/autista/AutistaSetup";
 import AutistaHome from "./pages/autista/AutistaHome";
+import AutistaServizi from "./pages/autista/AutistaServizi";
+import AutistaServizioDetail from "./pages/autista/AutistaServizioDetail";
+import AutistaPlaceholder from "./pages/autista/AutistaPlaceholder";
 
 
 const queryClient = new QueryClient();
@@ -103,6 +106,17 @@ const App = () => (
             <Route path="/autista/login" element={<AutistaLogin />} />
             <Route path="/autista/setup" element={<AutistaSetup />} />
             <Route path="/autista" element={<ProtectedAutistaRoute><AutistaHome /></ProtectedAutistaRoute>} />
+            <Route path="/autista/servizi/:giorno" element={<ProtectedAutistaRoute><AutistaServizi /></ProtectedAutistaRoute>} />
+            <Route path="/autista/servizi/dett/:id" element={<ProtectedAutistaRoute><AutistaServizioDetail /></ProtectedAutistaRoute>} />
+            <Route path="/autista/presenza" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Presenza" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/impostazioni" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Impostazioni" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/notifiche" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Notifiche" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/veicolo" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Veicolo" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/comunicazioni" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Comunicazioni" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/carta" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Carta di Credito" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/carburante" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Carburante" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/ferie" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Ferie e Riposo" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/lista" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Lista" /></ProtectedAutistaRoute>} />
 
 
             <Route path="*" element={<NotFound />} />

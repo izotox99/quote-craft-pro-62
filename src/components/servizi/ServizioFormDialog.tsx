@@ -72,6 +72,14 @@ export type ServizioFormInitial = Partial<{
   n_bagagli: number | null;
   accessori: string | null;
   info_autista: string | null;
+  cartello: string | null;
+  stato_autista?: string | null;
+  transfer_concluso_at?: string | null;
+  transfer_nota_chiusura?: string | null;
+  dispo_conclusa_at?: string | null;
+  dispo_nota_chiusura?: string | null;
+  km_inizio_servizio?: number | null;
+  km_fine_servizio?: number | null;
   info_interne: string | null;
   info_cliente_autista: string | null;
   info_cliente: string | null;
@@ -134,6 +142,7 @@ const emptyForm = (): Required<Omit<ServizioFormInitial, "id">> => ({
   n_bagagli: 0,
   accessori: "",
   info_autista: "",
+  cartello: "",
   info_interne: "",
   info_cliente_autista: "",
   info_cliente: "",
@@ -250,6 +259,7 @@ export function ServizioFormDialog({
       n_passeggeri: f.n_passeggeri ?? 1,
       n_bagagli: f.n_bagagli ?? 0,
       info_autista: f.info_autista || null,
+      cartello: (f as any).cartello || null,
       info_interne: f.info_interne || null,
       info_cliente_autista: f.info_cliente_autista || null,
       info_cliente: f.info_cliente || null,
@@ -469,6 +479,13 @@ export function ServizioFormDialog({
             <Row label="Info autista:">
               <Input value={f.info_autista} onChange={e => set({ info_autista: e.target.value })} />
             </Row>
+            <Row label="Cartello:">
+              <Input
+                placeholder="Nome da mostrare all'aeroporto (es. Sig. Rossi)"
+                value={f.cartello ?? ""}
+                onChange={e => set({ cartello: e.target.value })}
+              />
+            </Row>
             <Row label="Info interne:">
               <Input value={f.info_interne} onChange={e => set({ info_interne: e.target.value })} />
             </Row>
@@ -592,6 +609,26 @@ export function ServizioFormDialog({
             <Label>Note</Label>
             <Textarea value={f.note} onChange={e => set({ note: e.target.value })} className="min-h-[60px]" />
           </section>
+
+          {mode === "edit" && (initialData?.stato_autista || initialData?.km_inizio_servizio != null) && (
+            <section className="rounded-md border p-3 space-y-2 bg-background">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Stato autista: {initialData?.stato_autista ?? "—"}
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                <div><span className="text-muted-foreground">Km inizio:</span> <b>{initialData?.km_inizio_servizio ?? "—"}</b></div>
+                <div><span className="text-muted-foreground">Km fine:</span> <b>{initialData?.km_fine_servizio ?? "—"}</b></div>
+                <div><span className="text-muted-foreground">Fine transfer:</span> <b>{initialData?.transfer_concluso_at ? new Date(initialData.transfer_concluso_at).toLocaleString("it-IT") : "—"}</b></div>
+                <div><span className="text-muted-foreground">Fine disposizione:</span> <b>{initialData?.dispo_conclusa_at ? new Date(initialData.dispo_conclusa_at).toLocaleString("it-IT") : "—"}</b></div>
+              </div>
+              {(initialData?.transfer_nota_chiusura || initialData?.dispo_nota_chiusura) && (
+                <div className="space-y-1 text-xs">
+                  {initialData?.transfer_nota_chiusura && <div><b>Nota transfer:</b> {initialData.transfer_nota_chiusura}</div>}
+                  {initialData?.dispo_nota_chiusura && <div><b>Nota disposizione:</b> {initialData.dispo_nota_chiusura}</div>}
+                </div>
+              )}
+            </section>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 pt-2 border-t">
