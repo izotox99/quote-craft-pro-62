@@ -1,0 +1,1 @@
+ALTER VIEW public.servizi_autista_view SET (security_invoker = true);
