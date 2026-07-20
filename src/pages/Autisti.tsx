@@ -106,6 +106,20 @@ export default function Autisti() {
     else { toast.success("Autista riattivato"); load(); }
   };
 
+  const confirmRevoke = async () => {
+    if (!revokeId) return;
+    const { data, error } = await supabase.functions.invoke("revoke-autista-account", {
+      body: { autista_id: revokeId, tipo: "interno" },
+    });
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error ?? error?.message ?? "Errore revoca");
+    } else {
+      toast.success("Accesso app revocato");
+      load();
+    }
+    setRevokeId(null);
+  };
+
   // Spese
   const openSpese = async (a: Autista) => {
     setCurrentAutista(a);
