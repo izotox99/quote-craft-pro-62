@@ -316,17 +316,16 @@ export function NuovoAutistaDialog({
               />
             </Field>
 
-            {tipo === "interno" && (
-              <Field label="Password">
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={editing ? "Lascia vuoto per non cambiarla" : "Min. 6 caratteri"}
-                  autoComplete="new-password"
-                />
-              </Field>
-            )}
+            <Field label="Password">
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={editing ? "Lascia vuoto per non cambiarla" : "Min. 6 caratteri (per accesso app autista)"}
+                autoComplete="new-password"
+              />
+            </Field>
+
 
             <Field label="Calcola riposi">
 
