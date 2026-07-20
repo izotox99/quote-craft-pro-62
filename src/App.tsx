@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ProtectedClientRoute } from "@/components/ProtectedClientRoute";
+import { ProtectedAutistaRoute } from "@/components/ProtectedAutistaRoute";
+
 
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -41,6 +43,12 @@ import Prenota from "./pages/client-portal/Prenota";
 import Utenze from "./pages/client-portal/Utenze";
 import Tariffario from "./pages/client-portal/Tariffario";
 import Fatture from "./pages/client-portal/Fatture";
+
+// Autista app
+import AutistaLogin from "./pages/autista/AutistaLogin";
+import AutistaSetup from "./pages/autista/AutistaSetup";
+import AutistaHome from "./pages/autista/AutistaHome";
+
 
 const queryClient = new QueryClient();
 
@@ -90,6 +98,12 @@ const App = () => (
             <Route path="/client-portal/utenze" element={<ProtectedClientRoute><Utenze /></ProtectedClientRoute>} />
             <Route path="/client-portal/tariffario" element={<ProtectedClientRoute><Tariffario /></ProtectedClientRoute>} />
             <Route path="/client-portal/fatture" element={<ProtectedClientRoute><Fatture /></ProtectedClientRoute>} />
+
+            {/* Area Autisti */}
+            <Route path="/autista/login" element={<AutistaLogin />} />
+            <Route path="/autista/setup" element={<AutistaSetup />} />
+            <Route path="/autista" element={<ProtectedAutistaRoute><AutistaHome /></ProtectedAutistaRoute>} />
+
 
             <Route path="*" element={<NotFound />} />
           </Routes>
