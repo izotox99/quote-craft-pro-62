@@ -93,7 +93,7 @@ export default function AutistaHome() {
     { label: "Carta di Credito", icon: CreditCard, to: "/autista/carta" },
     { label: "Carburante", icon: Fuel, to: "/autista/carburante" },
     { label: "Presenza", icon: Clock, to: "/autista/presenza" },
-    { label: "Ferie e Riposo", icon: Palmtree, to: "/autista/ferie" },
+    { label: "Ore", icon: ListChecks, to: "/autista/ore" },
     { label: "Lista", icon: ListChecks, to: "/autista/lista" },
   ];
 
