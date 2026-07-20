@@ -293,7 +293,9 @@
    tabella (thead + tbody), forzando l'ereditarietà e disattivando i
    troncamenti così che con font grande le righe crescano in verticale
    (word-wrap agli spazi) senza scroll orizzontale. */
-table.servizi-table-scaled,
+/* NB: NON includere `table.servizi-table-scaled` in questo selettore,
+   altrimenti `font-size: inherit !important` sovrascriverebbe lo
+   `style={{ fontSize: ... }}` inline della tabella, azzerando il controllo A-/A+. */
 table.servizi-table-scaled th,
 table.servizi-table-scaled td,
 table.servizi-table-scaled th *,
