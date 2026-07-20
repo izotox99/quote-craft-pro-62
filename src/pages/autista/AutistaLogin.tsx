@@ -31,20 +31,25 @@ export default function AutistaLogin() {
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
-      if (error || !data.user) { toast.error("Email o password non corretti"); return; }
+      if (error || !data.user) { toast.error("Credenziali non valide"); return; }
 
       const [{ data: aInt }, { data: aExt }] = await Promise.all([
         supabase.from("autisti").select("id, attivo, password_cambiata_at, privacy_accettata_at").eq("auth_user_id", data.user.id).maybeSingle(),
         supabase.from("autisti_esterni").select("id, attivo, password_cambiata_at, privacy_accettata_at").eq("auth_user_id", data.user.id).maybeSingle(),
       ]);
-      const autista = (aInt?.attivo ? aInt : null) ?? (aExt?.attivo ? aExt : null);
-      const table: "autisti" | "autisti_esterni" = aInt?.attivo ? "autisti" : "autisti_esterni";
 
-      if (!autista) {
+      const row = aInt ?? aExt;
+      if (!row) {
         await supabase.auth.signOut();
-        toast.error("Accesso riservato agli autisti attivi");
+        toast.error("Account non collegato a nessun autista");
         return;
       }
+      if (!row.attivo) {
+        await supabase.auth.signOut();
+        toast.error("Autista disattivato: contatta l'ufficio");
+        return;
+      }
+      const table: "autisti" | "autisti_esterni" = aInt ? "autisti" : "autisti_esterni";
 
       const [{ data: role }, { data: prof }, { data: cli }, { data: ute }] = await Promise.all([
         supabase.from("user_roles").select("user_id").eq("user_id", data.user.id).maybeSingle(),
@@ -58,8 +63,8 @@ export default function AutistaLogin() {
         return;
       }
 
-      await supabase.from(table).update({ ultimo_accesso_at: new Date().toISOString() }).eq("id", autista.id);
-      navigate(autista.password_cambiata_at && autista.privacy_accettata_at ? "/autista" : "/autista/setup", { replace: true });
+      await supabase.from(table).update({ ultimo_accesso_at: new Date().toISOString() }).eq("id", row.id);
+      navigate(row.password_cambiata_at && row.privacy_accettata_at ? "/autista" : "/autista/setup", { replace: true });
     } finally {
       setLoading(false);
     }
