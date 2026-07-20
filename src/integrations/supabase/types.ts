@@ -588,6 +588,7 @@ export type Database = {
         Row: {
           colonne: Json
           created_at: string
+          font_level: number | null
           id: string
           nome: string
           org_id: string
@@ -598,6 +599,7 @@ export type Database = {
         Insert: {
           colonne?: Json
           created_at?: string
+          font_level?: number | null
           id?: string
           nome: string
           org_id: string
@@ -608,6 +610,7 @@ export type Database = {
         Update: {
           colonne?: Json
           created_at?: string
+          font_level?: number | null
           id?: string
           nome?: string
           org_id?: string

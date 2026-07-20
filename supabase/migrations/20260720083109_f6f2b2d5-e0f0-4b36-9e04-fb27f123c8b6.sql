@@ -1,0 +1,1 @@
+ALTER TABLE public.dashboard_viste ADD COLUMN IF NOT EXISTS font_level smallint;
