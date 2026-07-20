@@ -367,30 +367,31 @@ export function NuovoAutistaDialog({
                 <Field label="Mansione">
                   <Input value={interno.mansione} onChange={(e) => setInterno({ ...interno, mansione: e.target.value })} />
                 </Field>
-                <Field label="Numero Ore Ordinarie">
+                <Field label="Numero Ore Ordinarie" hint="Ore giornaliere considerate ordinarie: oltre questa soglia le ore vengono conteggiate come straordinario nel calcolo del compenso.">
                   <Input inputMode="decimal" value={interno.numero_ore_ord} onChange={(e) => setInterno({ ...interno, numero_ore_ord: e.target.value })} />
                 </Field>
-                <Field label="Prezzo Ore Ordinarie">
+                <Field label="Prezzo Ore Ordinarie" hint="Tariffa oraria (€) applicata alle ore ordinarie per il calcolo del compenso giornaliero.">
                   <Input inputMode="decimal" value={interno.prezzo_ora_ord} onChange={(e) => setInterno({ ...interno, prezzo_ora_ord: e.target.value })} />
                 </Field>
-                <Field label="Prezzo Ore Straordinarie">
+                <Field label="Prezzo Ore Straordinarie" hint="Tariffa oraria (€) applicata alle ore eccedenti quelle ordinarie.">
                   <Input inputMode="decimal" value={interno.prezzo_ora_straord} onChange={(e) => setInterno({ ...interno, prezzo_ora_straord: e.target.value })} />
                 </Field>
-                <Field label="Trasferta">
+                <Field label="Trasferta" hint="Indennità fissa di trasferta (€) sommata al compenso quando l'autista opera fuori sede.">
                   <Input inputMode="decimal" value={interno.trasferta} onChange={(e) => setInterno({ ...interno, trasferta: e.target.value })} />
                 </Field>
-                <Field label="Trasferta 2">
+                <Field label="Trasferta 2" hint="Seconda fascia di indennità di trasferta (€), applicata a trasferte più lunghe o particolari.">
                   <Input inputMode="decimal" value={interno.trasferta_2} onChange={(e) => setInterno({ ...interno, trasferta_2: e.target.value })} />
                 </Field>
-                <Field label="Buono pasto">
+                <Field label="Buono pasto" hint="Valore giornaliero del buono pasto (€) aggiunto al compenso nei giorni lavorati.">
                   <Input inputMode="decimal" value={interno.buono_pasto} onChange={(e) => setInterno({ ...interno, buono_pasto: e.target.value })} />
                 </Field>
-                <Field label="Assicurazione">
+                <Field label="Assicurazione" hint="Quota assicurativa giornaliera (€) a carico o a favore dell'autista, considerata nel calcolo del compenso.">
                   <Input inputMode="decimal" value={interno.assicurazione} onChange={(e) => setInterno({ ...interno, assicurazione: e.target.value })} />
                 </Field>
-                <Field label="Percentuale notturno">
+                <Field label="Percentuale notturno" hint="Maggiorazione percentuale (%) applicata alle ore lavorate in fascia notturna.">
                   <Input inputMode="decimal" value={interno.percentuale_notturno} onChange={(e) => setInterno({ ...interno, percentuale_notturno: e.target.value })} />
                 </Field>
+
               </>
             ) : (
               <>
