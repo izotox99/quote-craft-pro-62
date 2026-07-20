@@ -479,6 +479,13 @@ export function ServizioFormDialog({
             <Row label="Info autista:">
               <Input value={f.info_autista} onChange={e => set({ info_autista: e.target.value })} />
             </Row>
+            <Row label="Cartello:">
+              <Input
+                placeholder="Nome da mostrare all'aeroporto (es. Sig. Rossi)"
+                value={f.cartello ?? ""}
+                onChange={e => set({ cartello: e.target.value })}
+              />
+            </Row>
             <Row label="Info interne:">
               <Input value={f.info_interne} onChange={e => set({ info_interne: e.target.value })} />
             </Row>
