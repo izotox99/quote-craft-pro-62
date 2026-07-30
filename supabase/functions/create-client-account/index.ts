@@ -6,6 +6,7 @@ const corsHeaders = {
 };
 
 function jsonResponse(body: unknown, status = 200) {
+  if (status >= 400) console.error("create-client-account error response", status, JSON.stringify(body));
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -297,6 +298,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: true, client_id: savedClient.id, user_id: authUserId, action: existingClient ? "updated" : "created", auth_action: authAction });
 
   } catch (err) {
+    console.error("create-client-account exception", err);
     return jsonResponse({ error: (err as Error).message ?? "Errore interno", code: "internal_error" }, 500);
   }
 });
