@@ -145,10 +145,21 @@ export default function Clients() {
     });
 
     if (fnError || fnData?.error) {
-      const message = fnData?.error || fnError?.message || "Errore durante il salvataggio";
+      let message = fnData?.error || "Errore durante il salvataggio";
+      // supabase-js non espone il body sugli errori non-2xx: leggiamolo dalla Response
+      const ctx = (fnError as unknown as { context?: Response })?.context;
+      if (ctx && typeof ctx.text === "function") {
+        try {
+          const raw = await ctx.text();
+          const parsed = JSON.parse(raw);
+          if (parsed?.error) message = parsed.error;
+        } catch { /* body non leggibile */ }
+      }
+      if (message === "Errore durante il salvataggio" && fnError?.message) message = fnError.message;
       toast.error(message);
       return;
     }
+
 
     toast.success(editing ? "Cliente aggiornato" : "Cliente e account creati con successo!");
     setDialogOpen(false);
