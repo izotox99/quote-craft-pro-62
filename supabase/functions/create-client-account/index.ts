@@ -139,6 +139,7 @@ Deno.serve(async (req) => {
         .from("password_fingerprints")
         .select("owner_type, owner_id")
         .eq("fingerprint", passwordFingerprint)
+        .eq("org_id", callerProfile.org_id)
         .maybeSingle();
       if (existingFp && !(existingFp.owner_type === "client" && clientId && existingFp.owner_id === clientId)) {
         return jsonResponse({
