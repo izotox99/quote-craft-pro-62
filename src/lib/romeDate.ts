@@ -22,3 +22,31 @@ export function romeLabel(iso: string): string {
     timeZone: "UTC",
   });
 }
+
+/** Primo giorno del mese corrente (Europe/Rome), formato YYYY-MM-DD */
+export function romeMonthStart(): string {
+  return romeToday().slice(0, 8) + "01";
+}
+
+/** Range primo/ultimo giorno di un mese "YYYY-MM", senza slittamenti di fuso */
+export function romeMonthRange(ym: string): { from: string; to: string } {
+  const [y, m] = ym.split("-").map(Number);
+  const from = new Date(Date.UTC(y, m - 1, 1)).toISOString().slice(0, 10);
+  const to = new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10);
+  return { from, to };
+}
+
+/** Mese corrente "YYYY-MM" in Europe/Rome */
+export function romeYearMonth(): string {
+  return romeToday().slice(0, 7);
+}
+
+/** Formatta un timestamp per l'utente sempre in orario italiano */
+export function romeDateTimeLabel(iso: string, opts: Intl.DateTimeFormatOptions = { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) {
+  return new Date(iso).toLocaleString("it-IT", { timeZone: "Europe/Rome", ...opts });
+}
+
+/** Formatta solo l'orario di un timestamp in orario italiano */
+export function romeTimeLabel(iso: string) {
+  return new Date(iso).toLocaleTimeString("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit" });
+}
