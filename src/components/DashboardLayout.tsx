@@ -41,6 +41,7 @@ const autistiSubItems = [
   { to: "/autisti/mensile", icon: CalendarDays, label: "Mensile autisti interni" },
   { to: "/autisti/ore", icon: Clock, label: "Ore autisti" },
   { to: "/autisti/assenze", icon: Calendar, label: "Ferie e assenze" },
+  { to: "/autisti/comunicazioni", icon: Megaphone, label: "Comunicazioni e spese" },
 ];
 
 const mezziSubItems = [
