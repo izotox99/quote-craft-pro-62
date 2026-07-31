@@ -385,7 +385,7 @@ export default function AutistaCarburante() {
       {stato === "review" && (
         <div className="fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur border-t px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <div className="mx-auto max-w-2xl space-y-2">
-            <Button className="w-full h-12 rounded-xl" disabled={!kmValido || sending} onClick={submit}>
+            <Button className="w-full h-12 rounded-xl" disabled={!kmValido || !veicoloId || sending} onClick={submit}>
               {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Invia rifornimento
             </Button>
             <Button variant="ghost" className="w-full h-11 rounded-xl text-muted-foreground" onClick={reset}>
