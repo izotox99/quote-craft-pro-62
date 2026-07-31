@@ -21,3 +21,6 @@ verify_jwt = false
 [functions.create-autista-account]
 verify_jwt = true
 
+[functions.analyze-scontrino]
+verify_jwt = true
+

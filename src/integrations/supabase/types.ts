@@ -2298,45 +2298,69 @@ export type Database = {
         Row: {
           autista_id: string | null
           autista_nome: string | null
+          confidence: number | null
+          consumo_calcolato: number | null
           created_at: string
           data: string
+          distributore: string | null
+          foto_path: string | null
           id: string
           km: number | null
           luogo: string | null
           org_id: string
+          origine: string
           prezzo_totale: number | null
           prezzo_unitario: number | null
           quantita: number | null
+          raw_ocr: Json | null
+          registrato_da: string | null
+          tipo_carburante: string | null
           updated_at: string
           veicolo_id: string
         }
         Insert: {
           autista_id?: string | null
           autista_nome?: string | null
+          confidence?: number | null
+          consumo_calcolato?: number | null
           created_at?: string
           data?: string
+          distributore?: string | null
+          foto_path?: string | null
           id?: string
           km?: number | null
           luogo?: string | null
           org_id: string
+          origine?: string
           prezzo_totale?: number | null
           prezzo_unitario?: number | null
           quantita?: number | null
+          raw_ocr?: Json | null
+          registrato_da?: string | null
+          tipo_carburante?: string | null
           updated_at?: string
           veicolo_id: string
         }
         Update: {
           autista_id?: string | null
           autista_nome?: string | null
+          confidence?: number | null
+          consumo_calcolato?: number | null
           created_at?: string
           data?: string
+          distributore?: string | null
+          foto_path?: string | null
           id?: string
           km?: number | null
           luogo?: string | null
           org_id?: string
+          origine?: string
           prezzo_totale?: number | null
           prezzo_unitario?: number | null
           quantita?: number | null
+          raw_ocr?: Json | null
+          registrato_da?: string | null
+          tipo_carburante?: string | null
           updated_at?: string
           veicolo_id?: string
         }
@@ -2769,6 +2793,50 @@ export type Database = {
       assenze_get_effective_limits: {
         Args: { _autista_id: string }
         Returns: Json
+      }
+      autista_registra_rifornimento: {
+        Args: {
+          _confidence: number
+          _data: string
+          _distributore: string
+          _foto_path: string
+          _km: number
+          _litri: number
+          _prezzo_totale: number
+          _prezzo_unitario: number
+          _raw_ocr: Json
+          _tipo_carburante: string
+          _veicolo_id: string
+        }
+        Returns: {
+          autista_id: string | null
+          autista_nome: string | null
+          confidence: number | null
+          consumo_calcolato: number | null
+          created_at: string
+          data: string
+          distributore: string | null
+          foto_path: string | null
+          id: string
+          km: number | null
+          luogo: string | null
+          org_id: string
+          origine: string
+          prezzo_totale: number | null
+          prezzo_unitario: number | null
+          quantita: number | null
+          raw_ocr: Json | null
+          registrato_da: string | null
+          tipo_carburante: string | null
+          updated_at: string
+          veicolo_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "veicoli_gasolio"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       autista_update_servizio: {
         Args: {
