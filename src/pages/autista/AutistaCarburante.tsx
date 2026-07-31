@@ -11,6 +11,7 @@ import {
   ArrowLeft, Camera, Car, CheckCircle2, AlertTriangle, ImageUp, RefreshCw, Loader2, XCircle,
 } from "lucide-react";
 import { romeToday } from "@/lib/romeDate";
+import { getSessioneVeicoloAttiva } from "@/lib/veicoloSessione";
 
 type Ocr = {
   data: string | null;
@@ -87,18 +88,11 @@ export default function AutistaCarburante() {
         .select("id, targa, marca, modello, km_attuale")
         .eq("attivo", true)
         .order("targa");
-      const list = (v ?? []) as Veicolo[];
-      setVeicoli(list);
+      setVeicoli((v ?? []) as Veicolo[]);
 
-      const oggi = romeToday();
-      const { data: srv } = await supabase
-        .from("servizi")
-        .select("veicolo_id")
-        .eq("data_servizio", oggi)
-        .not("veicolo_id", "is", null)
-        .limit(1)
-        .maybeSingle();
-      setVeicoloId((srv?.veicolo_id as string) || list[0]?.id || "");
+      // Unica fonte: sessione veicolo attiva. Nessun veicolo "indovinato".
+      const sess = await getSessioneVeicoloAttiva();
+      setVeicoloId(sess?.veicolo_id ?? "");
     })();
   }, []);
 
@@ -245,13 +239,15 @@ export default function AutistaCarburante() {
         </button>
 
         {/* Veicolo */}
-        <div className="rounded-[18px] bg-white border p-4">
+        <div className={`rounded-[18px] bg-white border p-4 ${!veicoloId ? "border-amber-400" : ""}`}>
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-primary/10 p-2.5"><Car className="h-5 w-5 text-primary" /></div>
             <div className="flex-1">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Veicolo</div>
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
+                {veicoloId ? "Veicolo" : "Seleziona il veicolo del rifornimento"}
+              </div>
               <Select value={veicoloId} onValueChange={setVeicoloId}>
-                <SelectTrigger className="h-11 mt-1 rounded-xl"><SelectValue placeholder="Seleziona veicolo" /></SelectTrigger>
+                <SelectTrigger className="h-11 mt-1 rounded-xl"><SelectValue placeholder="Nessun veicolo selezionato" /></SelectTrigger>
                 <SelectContent>
                   {veicoli.map((v) => (
                     <SelectItem key={v.id} value={v.id}>
@@ -260,6 +256,11 @@ export default function AutistaCarburante() {
                   ))}
                 </SelectContent>
               </Select>
+              {!veicoloId && (
+                <div className="text-xs text-amber-700 mt-1">
+                  Obbligatorio: nessuna sessione veicolo attiva.
+                </div>
+              )}
               {veicolo?.km_attuale != null && (
                 <div className="text-xs text-muted-foreground mt-1 tabular-nums">
                   Km attuali: {veicolo.km_attuale.toLocaleString("it-IT")}
@@ -384,7 +385,7 @@ export default function AutistaCarburante() {
       {stato === "review" && (
         <div className="fixed bottom-0 inset-x-0 z-50 bg-white/95 backdrop-blur border-t px-3 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <div className="mx-auto max-w-2xl space-y-2">
-            <Button className="w-full h-12 rounded-xl" disabled={!kmValido || sending} onClick={submit}>
+            <Button className="w-full h-12 rounded-xl" disabled={!kmValido || !veicoloId || sending} onClick={submit}>
               {sending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Invia rifornimento
             </Button>
             <Button variant="ghost" className="w-full h-11 rounded-xl text-muted-foreground" onClick={reset}>

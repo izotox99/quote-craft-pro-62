@@ -910,6 +910,61 @@ export type Database = {
           },
         ]
       }
+      autisti_veicolo_sessioni: {
+        Row: {
+          aperta_at: string
+          autista_id: string
+          chiusa_at: string | null
+          created_at: string
+          id: string
+          org_id: string
+          updated_at: string
+          veicolo_id: string
+        }
+        Insert: {
+          aperta_at?: string
+          autista_id: string
+          chiusa_at?: string | null
+          created_at?: string
+          id?: string
+          org_id: string
+          updated_at?: string
+          veicolo_id: string
+        }
+        Update: {
+          aperta_at?: string
+          autista_id?: string
+          chiusa_at?: string | null
+          created_at?: string
+          id?: string
+          org_id?: string
+          updated_at?: string
+          veicolo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autisti_veicolo_sessioni_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_veicolo_sessioni_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_veicolo_sessioni_veicolo_id_fkey"
+            columns: ["veicolo_id"]
+            isOneToOne: false
+            referencedRelation: "veicoli"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_utenze: {
         Row: {
           attivo: boolean
@@ -3153,6 +3208,26 @@ export type Database = {
         Args: { _autista_id: string }
         Returns: Json
       }
+      autista_apri_sessione_veicolo: {
+        Args: { _veicolo_id: string }
+        Returns: {
+          aperta_at: string
+          autista_id: string
+          chiusa_at: string | null
+          created_at: string
+          id: string
+          org_id: string
+          updated_at: string
+          veicolo_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "autisti_veicolo_sessioni"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      autista_chiudi_sessione_veicolo: { Args: never; Returns: undefined }
       autista_registra_rifornimento: {
         Args: {
           _confidence: number
