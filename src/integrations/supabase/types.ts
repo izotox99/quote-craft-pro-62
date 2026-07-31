@@ -917,6 +917,8 @@ export type Database = {
           chiusa_at: string | null
           created_at: string
           id: string
+          km_fine: number | null
+          km_inizio: number | null
           org_id: string
           updated_at: string
           veicolo_id: string
@@ -927,6 +929,8 @@ export type Database = {
           chiusa_at?: string | null
           created_at?: string
           id?: string
+          km_fine?: number | null
+          km_inizio?: number | null
           org_id: string
           updated_at?: string
           veicolo_id: string
@@ -937,6 +941,8 @@ export type Database = {
           chiusa_at?: string | null
           created_at?: string
           id?: string
+          km_fine?: number | null
+          km_inizio?: number | null
           org_id?: string
           updated_at?: string
           veicolo_id?: string
@@ -2559,6 +2565,8 @@ export type Database = {
       veicoli: {
         Row: {
           attivo: boolean
+          autorizzazione_comune: string | null
+          autorizzazione_numero: string | null
           colore: string | null
           consumo_km_litro: number | null
           created_at: string
@@ -2587,13 +2595,17 @@ export type Database = {
           tagliando_ultimo_km: number | null
           targa: string
           telaio: string | null
+          telepass: string | null
           tipo_macchina: string | null
           updated_at: string
+          viacard: string | null
           visibile_magazzino: boolean
           visibile_servizi: boolean
         }
         Insert: {
           attivo?: boolean
+          autorizzazione_comune?: string | null
+          autorizzazione_numero?: string | null
           colore?: string | null
           consumo_km_litro?: number | null
           created_at?: string
@@ -2622,13 +2634,17 @@ export type Database = {
           tagliando_ultimo_km?: number | null
           targa: string
           telaio?: string | null
+          telepass?: string | null
           tipo_macchina?: string | null
           updated_at?: string
+          viacard?: string | null
           visibile_magazzino?: boolean
           visibile_servizi?: boolean
         }
         Update: {
           attivo?: boolean
+          autorizzazione_comune?: string | null
+          autorizzazione_numero?: string | null
           colore?: string | null
           consumo_km_litro?: number | null
           created_at?: string
@@ -2657,8 +2673,10 @@ export type Database = {
           tagliando_ultimo_km?: number | null
           targa?: string
           telaio?: string | null
+          telepass?: string | null
           tipo_macchina?: string | null
           updated_at?: string
+          viacard?: string | null
           visibile_magazzino?: boolean
           visibile_servizi?: boolean
         }
@@ -3209,13 +3227,15 @@ export type Database = {
         Returns: Json
       }
       autista_apri_sessione_veicolo: {
-        Args: { _veicolo_id: string }
+        Args: { _km_inizio?: number; _veicolo_id: string }
         Returns: {
           aperta_at: string
           autista_id: string
           chiusa_at: string | null
           created_at: string
           id: string
+          km_fine: number | null
+          km_inizio: number | null
           org_id: string
           updated_at: string
           veicolo_id: string
@@ -3227,7 +3247,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      autista_chiudi_sessione_veicolo: { Args: never; Returns: undefined }
+      autista_chiudi_sessione_veicolo: {
+        Args: { _km_fine?: number }
+        Returns: undefined
+      }
       autista_registra_rifornimento: {
         Args: {
           _confidence: number
@@ -3788,10 +3811,21 @@ export type Database = {
         }
       }
       veicoli_check_tagliandi: { Args: never; Returns: undefined }
+      veicoli_occupati: {
+        Args: never
+        Returns: {
+          aperta_at: string
+          autista_id: string
+          autista_nome: string
+          veicolo_id: string
+        }[]
+      }
       veicolo_tagliando_eseguito: {
         Args: { _intervallo?: number; _km?: number; _veicolo_id: string }
         Returns: {
           attivo: boolean
+          autorizzazione_comune: string | null
+          autorizzazione_numero: string | null
           colore: string | null
           consumo_km_litro: number | null
           created_at: string
@@ -3820,8 +3854,10 @@ export type Database = {
           tagliando_ultimo_km: number | null
           targa: string
           telaio: string | null
+          telepass: string | null
           tipo_macchina: string | null
           updated_at: string
+          viacard: string | null
           visibile_magazzino: boolean
           visibile_servizi: boolean
         }
