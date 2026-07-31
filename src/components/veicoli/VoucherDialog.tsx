@@ -54,13 +54,13 @@ export function VoucherDialog({
 
       setOggi({
         societa, piva, sede,
-        data: today.toLocaleDateString("it-IT"),
+        data: oggiISO.split("-").reverse().join("/"),
         autista: aOggi ? `${aOggi.nome} ${aOggi.cognome}`.toUpperCase() : "—",
         macchina, targa: veicolo.targa, km_inizio: km,
       });
       setDomani({
         societa, piva, sede,
-        data: tomorrow.toLocaleDateString("it-IT"),
+        data: domaniISO.split("-").reverse().join("/"),
         autista: aDomani ? `${aDomani.nome} ${aDomani.cognome}`.toUpperCase() : "—",
         macchina, targa: veicolo.targa, km_inizio: km,
       });
