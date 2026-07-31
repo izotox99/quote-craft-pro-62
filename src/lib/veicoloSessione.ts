@@ -15,11 +15,16 @@ export type VeicoloSessione = {
 
 /** Unica fonte di verità del veicolo in uso dall'autista. */
 export async function getSessioneVeicoloAttiva(): Promise<VeicoloSessione | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data: a } = await supabase.from("autisti").select("id").eq("auth_user_id", user.id).maybeSingle();
+  if (!a) return null;
   const { data, error } = await supabase
     .from("autisti_veicolo_sessioni" as any)
     .select(
       "id, veicolo_id, aperta_at, km_inizio, km_fine, veicolo:veicoli(id, targa, marca, modello, km_attuale, photo_url, telepass, viacard, autorizzazione_numero, autorizzazione_comune)"
     )
+    .eq("autista_id", a.id)
     .is("chiusa_at", null)
     .order("aperta_at", { ascending: false })
     .limit(1)
