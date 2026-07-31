@@ -18,6 +18,7 @@ export default function AutistaHome() {
   const [warn, setWarn] = useState<string | null>(null);
   const [counts, setCounts] = useState({ oggi: 0, domani: 0, dopodomani: 0 });
   const [tilePrefs, setTilePrefs] = useState<TilePref[] | null>(null);
+  const [sessioneVeicolo, setSessioneVeicolo] = useState<VeicoloSessione | null>(null);
 
   useEffect(() => {
     (async () => {
