@@ -5,17 +5,14 @@ import { AutistaLayout } from "@/components/autista/AutistaLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, Luggage, Tag, Wallet, ArrowRight } from "lucide-react";
+import { romeToday, romeLabel } from "@/lib/romeDate";
 
 type Servizio = any;
 
 function dateForKey(key: string): { iso: string; label: string } {
-  const d = new Date();
-  if (key === "domani") d.setDate(d.getDate() + 1);
-  else if (key === "dopodomani") d.setDate(d.getDate() + 2);
-  return {
-    iso: d.toISOString().slice(0, 10),
-    label: d.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" }),
-  };
+  const offset = key === "domani" ? 1 : key === "dopodomani" ? 2 : 0;
+  const iso = romeToday(offset);
+  return { iso, label: romeLabel(iso) };
 }
 
 function timeLeft(dataISO: string, ora: string | null): string {
@@ -47,7 +44,7 @@ export default function AutistaServizi() {
         .from("servizi_autista_view" as any)
         .select("*")
         .eq("data_servizio", iso)
-        .in("stato", ["confermato", "in_corso", "completato"])
+        .in("stato", ["confermato", "da_confermare", "in_corso", "completato"])
         .order("ora_inizio", { ascending: true });
       setItems((data as any[]) ?? []);
       setLoading(false);
