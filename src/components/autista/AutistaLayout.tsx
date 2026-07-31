@@ -51,7 +51,7 @@ export function AutistaLayout({ children }: Props) {
         <div className="mx-auto max-w-2xl flex items-center justify-between px-4 h-14">
           <div className="font-display font-semibold text-sm truncate">{azienda || "NCC"}</div>
           <button
-            onClick={() => navigate("/autista/notifiche")}
+            onClick={() => navigate("/autista/comunicazioni")}
             className="relative rounded-full p-2 hover:bg-white/10"
             aria-label="Notifiche"
           >
