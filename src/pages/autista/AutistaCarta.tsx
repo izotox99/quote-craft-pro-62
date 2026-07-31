@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { toast } from "sonner";
 import { ArrowLeft, CreditCard, PlusCircle, Camera, Receipt, Loader2, ImageUp } from "lucide-react";
 import { romeToday } from "@/lib/romeDate";
+import { getSessioneVeicoloAttiva } from "@/lib/veicoloSessione";
 
 type Carta = {
   id: string; intestazione: string; ultime_quattro: string | null;
