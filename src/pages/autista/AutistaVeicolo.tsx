@@ -63,9 +63,9 @@ export default function AutistaVeicolo() {
   useEffect(() => { load(); }, []);
 
   const openSelect = (v: Veicolo) => {
-    const occ = occupati.find((o) => o.veicolo_id === v.id && o.autista_id !== sessione?.veicolo_id);
-    if (occ && sessione?.veicolo_id !== v.id) {
-      toast.error(`Veicolo già in uso da ${occ.autista_nome}`);
+    const occ = occupati.find((o) => o.veicolo_id === v.id);
+    if (occ && v.id !== sessione?.veicolo_id) {
+      toast.error(`Veicolo non disponibile: in uso da ${occ.autista_nome}`);
       return;
     }
     setKmInizioInput(v.km_attuale != null ? String(v.km_attuale) : "");
