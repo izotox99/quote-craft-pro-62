@@ -34,6 +34,7 @@ import Network from "./pages/Network";
 import Settings from "./pages/Settings";
 import Agenda from "./pages/Agenda";
 import AutistiAssenze from "./pages/AutistiAssenze";
+import AutistiComunicazioni from "./pages/AutistiComunicazioni";
 import NotFound from "./pages/NotFound";
 
 // Client portal
@@ -57,6 +58,9 @@ import AutistaOre from "./pages/autista/AutistaOre";
 import AutistaLista from "./pages/autista/AutistaLista";
 import AutistaFerie from "./pages/autista/AutistaFerie";
 import AutistaCarburante from "./pages/autista/AutistaCarburante";
+import AutistaComunicazioni from "./pages/autista/AutistaComunicazioni";
+import AutistaFeedback from "./pages/autista/AutistaFeedback";
+import AutistaCarta from "./pages/autista/AutistaCarta";
 import AutistiOre from "./pages/AutistiOre";
 
 
