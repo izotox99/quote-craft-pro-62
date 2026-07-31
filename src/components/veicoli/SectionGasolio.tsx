@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { PlusCircle, Pencil, Trash2, Fuel } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Fuel, Receipt } from "lucide-react";
 
 type Row = {
   id: string;
@@ -72,6 +72,12 @@ export function SectionGasolio({ veicoloId }: { veicoloId: string }) {
     setOpen(false); load();
   };
 
+  const openFoto = async (path: string) => {
+    const { data, error } = await supabase.storage.from("scontrini-carburante").createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) return toast.error("Impossibile aprire lo scontrino");
+    window.open(data.signedUrl, "_blank");
+  };
+
   const handleDelete = async (r: Row) => {
     if (!confirm("Eliminare questo rifornimento?")) return;
     const { error } = await supabase.from("veicoli_gasolio").delete().eq("id", r.id);
@@ -132,8 +138,13 @@ export function SectionGasolio({ veicoloId }: { veicoloId: string }) {
                 <TableCell className="text-right tabular-nums font-medium">
                   {Number(r.prezzo_totale).toLocaleString("it-IT", { style: "currency", currency: "EUR" })}
                 </TableCell>
-                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{r.luogo ?? "—"}</TableCell>
+                <TableCell className="hidden md:table-cell text-sm text-muted-foreground">{r.luogo ?? r.distributore ?? "—"}</TableCell>
                 <TableCell className="text-right">
+                  {r.foto_path && (
+                    <Button variant="ghost" size="icon" title="Foto scontrino" onClick={() => openFoto(r.foto_path!)}>
+                      <Receipt className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => handleDelete(r)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </TableCell>
