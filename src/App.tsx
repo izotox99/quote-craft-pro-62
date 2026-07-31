@@ -35,6 +35,8 @@ import Settings from "./pages/Settings";
 import Agenda from "./pages/Agenda";
 import AutistiAssenze from "./pages/AutistiAssenze";
 import AutistiComunicazioni from "./pages/AutistiComunicazioni";
+import AutistiNuovaNota from "./pages/AutistiNuovaNota";
+import AutistiNote from "./pages/AutistiNote";
 import NotFound from "./pages/NotFound";
 
 // Client portal
