@@ -13,7 +13,7 @@ import {
   FileText, LayoutDashboard, Users, Car, UserCheck, Truck, Settings, LogOut, User, Menu,
   ChevronDown, List, Receipt, Star, Package, UserPlus, StickyNote, Clock, FileSpreadsheet,
   Users2, Fuel, ClipboardCheck, ClipboardList, TrendingUp, FilePlus, FileText as FileTextIcon, CalendarDays,
-  AlertTriangle, Wrench, Droplet, PlusCircle, Calendar,
+  AlertTriangle, Wrench, Droplet, PlusCircle, Calendar, Megaphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificheBell } from "@/components/NotificheBell";
@@ -41,6 +41,7 @@ const autistiSubItems = [
   { to: "/autisti/mensile", icon: CalendarDays, label: "Mensile autisti interni" },
   { to: "/autisti/ore", icon: Clock, label: "Ore autisti" },
   { to: "/autisti/assenze", icon: Calendar, label: "Ferie e assenze" },
+  { to: "/autisti/comunicazioni", icon: Megaphone, label: "Comunicazioni e spese" },
 ];
 
 const mezziSubItems = [

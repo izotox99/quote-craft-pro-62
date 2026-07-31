@@ -34,6 +34,7 @@ import Network from "./pages/Network";
 import Settings from "./pages/Settings";
 import Agenda from "./pages/Agenda";
 import AutistiAssenze from "./pages/AutistiAssenze";
+import AutistiComunicazioni from "./pages/AutistiComunicazioni";
 import NotFound from "./pages/NotFound";
 
 // Client portal
@@ -57,6 +58,9 @@ import AutistaOre from "./pages/autista/AutistaOre";
 import AutistaLista from "./pages/autista/AutistaLista";
 import AutistaFerie from "./pages/autista/AutistaFerie";
 import AutistaCarburante from "./pages/autista/AutistaCarburante";
+import AutistaComunicazioni from "./pages/autista/AutistaComunicazioni";
+import AutistaFeedback from "./pages/autista/AutistaFeedback";
+import AutistaCarta from "./pages/autista/AutistaCarta";
 import AutistiOre from "./pages/AutistiOre";
 
 
@@ -97,6 +101,7 @@ const App = () => (
             <Route path="/autisti/collaboratori" element={<ProtectedRoute><AutistiCollaboratori /></ProtectedRoute>} />
             <Route path="/autisti/ore" element={<ProtectedRoute><AutistiOre /></ProtectedRoute>} />
             <Route path="/autisti/assenze" element={<ProtectedRoute><AutistiAssenze /></ProtectedRoute>} />
+            <Route path="/autisti/comunicazioni" element={<ProtectedRoute><AutistiComunicazioni /></ProtectedRoute>} />
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
             <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -123,8 +128,9 @@ const App = () => (
             <Route path="/autista/impostazioni" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Impostazioni" /></ProtectedAutistaRoute>} />
             <Route path="/autista/notifiche" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Notifiche" /></ProtectedAutistaRoute>} />
             <Route path="/autista/veicolo" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Veicolo" /></ProtectedAutistaRoute>} />
-            <Route path="/autista/comunicazioni" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Comunicazioni" /></ProtectedAutistaRoute>} />
-            <Route path="/autista/carta" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Carta di Credito" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/comunicazioni" element={<ProtectedAutistaRoute><AutistaComunicazioni /></ProtectedAutistaRoute>} />
+            <Route path="/autista/feedback" element={<ProtectedAutistaRoute><AutistaFeedback /></ProtectedAutistaRoute>} />
+            <Route path="/autista/carta" element={<ProtectedAutistaRoute><AutistaCarta /></ProtectedAutistaRoute>} />
             <Route path="/autista/carburante" element={<ProtectedAutistaRoute><AutistaCarburante /></ProtectedAutistaRoute>} />
             <Route path="/autista/ferie" element={<ProtectedAutistaRoute><AutistaFerie /></ProtectedAutistaRoute>} />
 

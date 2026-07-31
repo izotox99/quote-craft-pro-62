@@ -35,12 +35,12 @@ export function AutistaLayout({ children }: Props) {
           .eq("id", a.org_id)
           .maybeSingle();
         setAzienda(o?.name ?? "");
-        const { count } = await supabase
-          .from("notifiche")
-          .select("id", { count: "exact", head: true })
-          .eq("org_id", a.org_id)
-          .eq("letta", false);
-        setUnread(count ?? 0);
+        const [{ data: com }, { data: let_ }] = await Promise.all([
+          supabase.from("comunicazioni").select("id"),
+          supabase.from("comunicazioni_letture").select("comunicazione_id"),
+        ]);
+        const lette = new Set((let_ ?? []).map((x: any) => x.comunicazione_id));
+        setUnread((com ?? []).filter((c: any) => !lette.has(c.id)).length);
       }
     })();
   }, []);
@@ -51,7 +51,7 @@ export function AutistaLayout({ children }: Props) {
         <div className="mx-auto max-w-2xl flex items-center justify-between px-4 h-14">
           <div className="font-display font-semibold text-sm truncate">{azienda || "NCC"}</div>
           <button
-            onClick={() => navigate("/autista/notifiche")}
+            onClick={() => navigate("/autista/comunicazioni")}
             className="relative rounded-full p-2 hover:bg-white/10"
             aria-label="Notifiche"
           >

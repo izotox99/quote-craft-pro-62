@@ -356,6 +356,63 @@ export type Database = {
           },
         ]
       }
+      autisti_carte: {
+        Row: {
+          autista_id: string
+          created_at: string
+          id: string
+          intestazione: string
+          note: string | null
+          org_id: string
+          plafond: number | null
+          scadenza: string | null
+          stato: string
+          ultime_quattro: string | null
+          updated_at: string
+        }
+        Insert: {
+          autista_id: string
+          created_at?: string
+          id?: string
+          intestazione: string
+          note?: string | null
+          org_id: string
+          plafond?: number | null
+          scadenza?: string | null
+          stato?: string
+          ultime_quattro?: string | null
+          updated_at?: string
+        }
+        Update: {
+          autista_id?: string
+          created_at?: string
+          id?: string
+          intestazione?: string
+          note?: string | null
+          org_id?: string
+          plafond?: number | null
+          scadenza?: string | null
+          stato?: string
+          ultime_quattro?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autisti_carte_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_carte_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       autisti_esterni: {
         Row: {
           attivo: boolean
@@ -457,6 +514,63 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      autisti_feedback: {
+        Row: {
+          autista_id: string
+          created_at: string
+          data: string
+          id: string
+          org_id: string
+          risposta: string | null
+          risposto_at: string | null
+          risposto_da: string | null
+          stato: string
+          testo: string
+          updated_at: string
+        }
+        Insert: {
+          autista_id: string
+          created_at?: string
+          data?: string
+          id?: string
+          org_id: string
+          risposta?: string | null
+          risposto_at?: string | null
+          risposto_da?: string | null
+          stato?: string
+          testo: string
+          updated_at?: string
+        }
+        Update: {
+          autista_id?: string
+          created_at?: string
+          data?: string
+          id?: string
+          org_id?: string
+          risposta?: string | null
+          risposto_at?: string | null
+          risposto_da?: string | null
+          stato?: string
+          testo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autisti_feedback_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_feedback_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       autisti_ore: {
         Row: {
@@ -678,39 +792,51 @@ export type Database = {
       autisti_spese: {
         Row: {
           autista_id: string
+          categoria: string | null
           created_at: string
           data_intervento: string | null
           data_scadenza: string | null
+          foto_path: string | null
           id: string
           importo_spese: number | null
           note: string | null
           org_id: string
+          origine: string
+          servizio_id: string | null
           tipo: string
           totale_fattura: number | null
           updated_at: string
         }
         Insert: {
           autista_id: string
+          categoria?: string | null
           created_at?: string
           data_intervento?: string | null
           data_scadenza?: string | null
+          foto_path?: string | null
           id?: string
           importo_spese?: number | null
           note?: string | null
           org_id?: string
+          origine?: string
+          servizio_id?: string | null
           tipo: string
           totale_fattura?: number | null
           updated_at?: string
         }
         Update: {
           autista_id?: string
+          categoria?: string | null
           created_at?: string
           data_intervento?: string | null
           data_scadenza?: string | null
+          foto_path?: string | null
           id?: string
           importo_spese?: number | null
           note?: string | null
           org_id?: string
+          origine?: string
+          servizio_id?: string | null
           tipo?: string
           totale_fattura?: number | null
           updated_at?: string
@@ -721,6 +847,20 @@ export type Database = {
             columns: ["autista_id"]
             isOneToOne: false
             referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_spese_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_spese_servizio_id_fkey"
+            columns: ["servizio_id"]
+            isOneToOne: false
+            referencedRelation: "servizi_autista_view"
             referencedColumns: ["id"]
           },
         ]
@@ -909,6 +1049,118 @@ export type Database = {
           },
           {
             foreignKeyName: "clients_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunicazioni: {
+        Row: {
+          allegato_nome: string | null
+          allegato_path: string | null
+          autista_id: string | null
+          created_at: string
+          created_by: string | null
+          destinatari: string
+          id: string
+          org_id: string
+          priorita: string
+          pubblicata_at: string
+          scade_at: string | null
+          testo: string
+          titolo: string
+          updated_at: string
+        }
+        Insert: {
+          allegato_nome?: string | null
+          allegato_path?: string | null
+          autista_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          destinatari?: string
+          id?: string
+          org_id: string
+          priorita?: string
+          pubblicata_at?: string
+          scade_at?: string | null
+          testo: string
+          titolo: string
+          updated_at?: string
+        }
+        Update: {
+          allegato_nome?: string | null
+          allegato_path?: string | null
+          autista_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          destinatari?: string
+          id?: string
+          org_id?: string
+          priorita?: string
+          pubblicata_at?: string
+          scade_at?: string | null
+          testo?: string
+          titolo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicazioni_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicazioni_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunicazioni_letture: {
+        Row: {
+          autista_id: string
+          comunicazione_id: string
+          id: string
+          letta_at: string
+          org_id: string
+        }
+        Insert: {
+          autista_id: string
+          comunicazione_id: string
+          id?: string
+          letta_at?: string
+          org_id: string
+        }
+        Update: {
+          autista_id?: string
+          comunicazione_id?: string
+          id?: string
+          letta_at?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicazioni_letture_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: false
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicazioni_letture_comunicazione_id_fkey"
+            columns: ["comunicazione_id"]
+            isOneToOne: false
+            referencedRelation: "comunicazioni"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comunicazioni_letture_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"

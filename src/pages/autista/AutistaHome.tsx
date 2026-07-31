@@ -94,6 +94,7 @@ export default function AutistaHome() {
     { label: "Carburante", icon: Fuel, to: "/autista/carburante" },
     { label: "Presenza", icon: Clock, to: "/autista/presenza" },
     { label: "Ore", icon: ListChecks, to: "/autista/ore" },
+    { label: "Feedback", icon: MessageSquare, to: "/autista/feedback" },
     { label: "Lista", icon: ListChecks, to: "/autista/lista" },
   ];
 
