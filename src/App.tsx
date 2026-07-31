@@ -53,6 +53,7 @@ import AutistaHome from "./pages/autista/AutistaHome";
 import AutistaServizi from "./pages/autista/AutistaServizi";
 import AutistaServizioDetail from "./pages/autista/AutistaServizioDetail";
 import AutistaPlaceholder from "./pages/autista/AutistaPlaceholder";
+import AutistaVeicolo from "./pages/autista/AutistaVeicolo";
 import AutistaPresenza from "./pages/autista/AutistaPresenza";
 import AutistaOre from "./pages/autista/AutistaOre";
 import AutistaLista from "./pages/autista/AutistaLista";
