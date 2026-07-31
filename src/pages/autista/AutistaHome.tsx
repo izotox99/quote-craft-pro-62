@@ -6,12 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Car, Star } from "lucide-react";
 import { applyTilePrefs, TilePref } from "@/lib/autistaTiles";
+import { romeToday } from "@/lib/romeDate";
 
-function todayISO(offset = 0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.toISOString().slice(0, 10);
-}
+const todayISO = (offset = 0) => romeToday(offset);
 
 export default function AutistaHome() {
   const navigate = useNavigate();
