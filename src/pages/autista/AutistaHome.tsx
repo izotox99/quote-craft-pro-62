@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Car, Star } from "lucide-react";
 import { applyTilePrefs, TilePref } from "@/lib/autistaTiles";
 import { romeToday } from "@/lib/romeDate";
+import { getSessioneVeicoloAttiva, VeicoloSessione } from "@/lib/veicoloSessione";
 
 const todayISO = (offset = 0) => romeToday(offset);
 
