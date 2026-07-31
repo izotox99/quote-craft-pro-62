@@ -61,6 +61,11 @@ import AutistaCarburante from "./pages/autista/AutistaCarburante";
 import AutistaComunicazioni from "./pages/autista/AutistaComunicazioni";
 import AutistaFeedback from "./pages/autista/AutistaFeedback";
 import AutistaCarta from "./pages/autista/AutistaCarta";
+import AutistaProfilo from "./pages/autista/AutistaProfilo";
+import AutistaLink from "./pages/autista/AutistaLink";
+import AutistaPreferiti from "./pages/autista/AutistaPreferiti";
+import AutistaImpostazioni from "./pages/autista/AutistaImpostazioni";
+import LinkUtili from "./pages/LinkUtili";
 import AutistiOre from "./pages/AutistiOre";
 
 
