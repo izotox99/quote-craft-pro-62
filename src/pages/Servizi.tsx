@@ -403,13 +403,15 @@ export default function Servizi() {
     setFornitori(f.data ?? []);
   };
 
-  const loadServizi = async () => {
+  const loadServizi = async (override?: { dal?: string; al?: string }) => {
     setLoading(true);
+    const dal = override?.dal ?? filterDal;
+    const al = override?.al ?? filterAl;
     let query = supabase
       .from("servizi")
       .select("*, clients(name, company), autisti(nome, cognome, cellulare), autisti_esterni(nome, cellulare, targa), veicoli(targa, tipo_macchina), fornitori_cs(nome, telefono)")
-      .gte("data_servizio", filterDal)
-      .lte("data_servizio", filterAl)
+      .gte("data_servizio", dal)
+      .lte("data_servizio", al)
       .order("data_servizio", { ascending: true });
 
     // Archiviati: mostra solo i servizi archiviati (sola lettura), altrimenti li nasconde
