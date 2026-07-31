@@ -403,6 +403,22 @@ export default function Servizi() {
     setFornitori(f.data ?? []);
   };
 
+  const handleServizioSaved = async (info?: { data_servizio?: string | null }) => {
+    const d = info?.data_servizio;
+    if (d) {
+      const dal = d < filterDal ? d : filterDal;
+      const al = d > filterAl ? d : filterAl;
+      if (dal !== filterDal || al !== filterAl) {
+        setFilterDal(dal);
+        setFilterAl(al);
+        toast.info("Intervallo date esteso per mostrare il servizio salvato");
+        await loadServizi({ dal, al });
+        return;
+      }
+    }
+    await loadServizi();
+  };
+
   const loadServizi = async (override?: { dal?: string; al?: string }) => {
     setLoading(true);
     const dal = override?.dal ?? filterDal;
