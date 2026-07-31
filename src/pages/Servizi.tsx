@@ -664,25 +664,31 @@ export default function Servizi() {
     ];
   }, []);
 
-  const quickDayCounts = useMemo(() => {
+  // Conteggi indipendenti dai filtri attivi (query dedicata sui giorni rapidi)
+  const [quickDayCounts, setQuickDayCounts] = useState<Record<string, number>>({});
+  const loadQuickDayCounts = async () => {
+    if (!user) return;
+    const dates = quickDayOptions.map(o => o.date);
+    const { data } = await supabase
+      .from("servizi")
+      .select("data_servizio")
+      .in("data_servizio", dates)
+      .eq("archiviato", false)
+      .eq("stato", "nuovo" as any);
     const counts: Record<string, number> = {};
     for (const opt of quickDayOptions) {
-      counts[opt.key] = servizi.filter(s => s.stato === "nuovo" && s.data_servizio === opt.date).length;
+      counts[opt.key] = (data ?? []).filter((r: any) => r.data_servizio === opt.date).length;
     }
-    return counts;
-  }, [servizi, quickDayOptions]);
+    setQuickDayCounts(counts);
+  };
+  useEffect(() => { loadQuickDayCounts(); }, [user, quickDayOptions, servizi]);
 
-  const handleQuickDay = (key: string) => {
+  const defaultDal = () => format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd");
+  const defaultAl = () => format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), "yyyy-MM-dd");
+
+  const handleQuickDay = async (key: string) => {
     const opt = quickDayOptions.find(o => o.key === key);
     if (!opt) return;
-    if (quickDay === key) {
-      setQuickDay(null);
-      return;
-    }
-    setQuickDay(key);
-    setFilterDal(opt.date);
-    setFilterAl(opt.date);
-    setFilterStato("nuovo");
     setFilterTipologia("all");
     setFilterTarga("");
     setFilterContatto("");
@@ -690,14 +696,23 @@ export default function Servizi() {
     setFilterAutista("all");
     setFilterFornitore("all");
     setFilterCodice("");
-  };
-
-  // Auto-search when quickDay changes
-  useEffect(() => {
-    if (quickDay !== null && user) {
-      loadServizi();
+    if (quickDay === key) {
+      // Deselezione: torna alla vista completa di default
+      const dal = defaultDal();
+      const al = defaultAl();
+      setQuickDay(null);
+      setFilterDal(dal);
+      setFilterAl(al);
+      setFilterStato("all");
+      await loadServizi({ dal, al, stato: "all" });
+      return;
     }
-  }, [quickDay]);
+    setQuickDay(key);
+    setFilterDal(opt.date);
+    setFilterAl(opt.date);
+    setFilterStato("nuovo");
+    await loadServizi({ dal: opt.date, al: opt.date, stato: "nuovo" });
+  };
 
   const [filtersOpen, setFiltersOpen] = useState(false);
 
