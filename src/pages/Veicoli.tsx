@@ -36,6 +36,8 @@ type Veicolo = {
   id: string; targa: string; tipo_macchina: string | null; marca: string | null; modello: string | null;
   colore: string | null; posti: number | null; note: string | null; attivo: boolean;
   dati_tecnici: string | null; km_attuale: number | null; km_prima_scadenza: number | null;
+  intervallo_tagliando_km: number | null; tagliando_alert_stato: string | null;
+  tagliando_ultimo_km: number | null; tagliando_ultimo_at: string | null;
   data_immatricolazione: string | null; telaio: string | null; consumo_km_litro: number | null;
   manutenzione_ordinaria: string | null; visibile_servizi: boolean; visibile_magazzino: boolean;
   km_voucher: number | null; km_iniziale: number | null; prezzo_acquisto: number | null;
@@ -52,7 +54,8 @@ const emptyForm = {
   km_voucher: "" as string | number, prezzo_acquisto: "" as string | number,
   quota_mensile_credito: "" as string | number, data_inizio_credito: "", data_ultima_quota_credito: "",
   marca: "", colore: "", posti: 4, telaio: "", data_immatricolazione: "",
-  km_attuale: "" as string | number, km_prima_scadenza: "" as string | number, note: "",
+  km_attuale: "" as string | number, km_prima_scadenza: "" as string | number,
+  intervallo_tagliando_km: 20000 as string | number, note: "",
 };
 
 const eur = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
@@ -130,7 +133,8 @@ export default function Veicoli() {
       data_inizio_credito: v.data_inizio_credito ?? "", data_ultima_quota_credito: v.data_ultima_quota_credito ?? "",
       marca: v.marca ?? "", colore: v.colore ?? "", posti: v.posti ?? 4, telaio: v.telaio ?? "",
       data_immatricolazione: v.data_immatricolazione ?? "",
-      km_attuale: v.km_attuale ?? "", km_prima_scadenza: v.km_prima_scadenza ?? "", note: v.note ?? "",
+      km_attuale: v.km_attuale ?? "", km_prima_scadenza: v.km_prima_scadenza ?? "",
+      intervallo_tagliando_km: v.intervallo_tagliando_km ?? 20000, note: v.note ?? "",
     });
     setPhotoFile(null); setDialogOpen(true);
   };
@@ -153,7 +157,8 @@ export default function Veicoli() {
         marca: form.marca || null, colore: form.colore || null,
         posti: Number(form.posti) || null, telaio: form.telaio || null,
         data_immatricolazione: form.data_immatricolazione || null,
-        km_attuale: num(form.km_attuale), km_prima_scadenza: num(form.km_prima_scadenza), note: form.note || null,
+        km_attuale: num(form.km_attuale), km_prima_scadenza: num(form.km_prima_scadenza),
+        intervallo_tagliando_km: num(form.intervallo_tagliando_km) ?? 20000, note: form.note || null,
       };
       let id = editing?.id;
       if (editing) {
@@ -387,7 +392,8 @@ export default function Veicoli() {
               <VField label="Dati tecnici"><Input value={form.dati_tecnici} onChange={(e) => setForm({ ...form, dati_tecnici: e.target.value })} /></VField>
               <VField label="Km iniziale"><Input inputMode="decimal" value={form.km_iniziale} onChange={(e) => setForm({ ...form, km_iniziale: e.target.value })} /></VField>
               <VField label="Km attuale"><Input inputMode="decimal" value={form.km_attuale} onChange={(e) => setForm({ ...form, km_attuale: e.target.value })} /></VField>
-              <VField label="Km prima scadenza"><Input inputMode="decimal" value={form.km_prima_scadenza} onChange={(e) => setForm({ ...form, km_prima_scadenza: e.target.value })} /></VField>
+              <VField label="Km prima scadenza (soglia tagliando)"><Input inputMode="decimal" value={form.km_prima_scadenza} onChange={(e) => setForm({ ...form, km_prima_scadenza: e.target.value })} /></VField>
+              <VField label="Intervallo tagliando (km)"><Input inputMode="decimal" value={form.intervallo_tagliando_km} onChange={(e) => setForm({ ...form, intervallo_tagliando_km: e.target.value })} /></VField>
               <VField label="Consumo km / 1L"><Input inputMode="decimal" value={form.consumo_km_litro} onChange={(e) => setForm({ ...form, consumo_km_litro: e.target.value })} /></VField>
               <VField label="Manutenzione ordinaria"><Input value={form.manutenzione_ordinaria} onChange={(e) => setForm({ ...form, manutenzione_ordinaria: e.target.value })} /></VField>
               <VField label="Visibile in servizi">
