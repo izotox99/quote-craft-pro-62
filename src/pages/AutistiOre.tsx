@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Pencil, Save, X } from "lucide-react";
+import { romeMonthRange } from "@/lib/romeDate";
 
 type Autista = { id: string; nome: string; cognome: string | null };
 type OreRow = {
@@ -27,13 +28,7 @@ type OreRow = {
   corretta_at: string | null;
 };
 
-function monthRange(ym: string) {
-  const [y, m] = ym.split("-").map(Number);
-  return {
-    from: new Date(y, m - 1, 1).toISOString().slice(0, 10),
-    to: new Date(y, m, 0).toISOString().slice(0, 10),
-  };
-}
+const monthRange = (ym: string) => romeMonthRange(ym);
 function fmtEur(n: number) {
   return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n);
 }

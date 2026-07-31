@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PlusCircle, Search, Users, FileText, StickyNote, ChevronRight, X, RotateCcw, ArchiveRestore } from "lucide-react";
 import { toast } from "sonner";
 import { TariffarioUpload } from "@/components/clients/TariffarioUpload";
+import { romeToday } from "@/lib/romeDate";
 
 type Client = {
   id: string; name: string; email: string | null; company: string | null;
@@ -167,7 +168,7 @@ export default function Clients() {
   };
 
   const tryDeactivate = async (client: Client) => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = romeToday();
     const { count } = await supabase
       .from("servizi")
       .select("id", { count: "exact", head: true })

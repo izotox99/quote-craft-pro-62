@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Play, Square, Pencil, Check, X } from "lucide-react";
+import { romeToday, romeMonthStart } from "@/lib/romeDate";
 
 type Presenza = {
   id: string;
@@ -41,16 +42,15 @@ export default function AutistaPresenza() {
   const [busy, setBusy] = useState(false);
   const [editing, setEditing] = useState<{ id: string; inizio: string; fine: string } | null>(null);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = romeToday();
 
   const load = async () => {
     setLoading(true);
-    const from = new Date();
-    from.setDate(1);
+    const from = romeMonthStart();
     const { data } = await supabase
       .from("autisti_presenze")
       .select("id, data, inizio_at, fine_at, note, corretta_at")
-      .gte("data", from.toISOString().slice(0, 10))
+      .gte("data", from)
       .order("inizio_at", { ascending: false });
     setList((data ?? []) as Presenza[]);
     setLoading(false);
