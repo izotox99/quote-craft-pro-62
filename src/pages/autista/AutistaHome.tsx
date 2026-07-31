@@ -36,6 +36,14 @@ export default function AutistaHome() {
         if (aExt) { setNome(aExt.nome ?? ""); autistaId = aExt.id; }
       }
 
+      if (aInt) {
+        const { data: pref } = await supabase
+          .from("autisti_preferenze").select("tasti").eq("autista_id", aInt.id).maybeSingle();
+        setTilePrefs((pref?.tasti as unknown as TilePref[]) ?? null);
+      }
+
+
+
       // Stato presenza reale
       if (autistaId) {
         const { data: pres } = await supabase
