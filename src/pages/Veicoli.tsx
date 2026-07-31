@@ -23,7 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   PlusCircle, Pencil, Power, PowerOff, Search, Car as CarIcon, Trash2,
-  Image as ImageIcon, FileText, Ticket, StickyNote,
+  Image as ImageIcon, FileText, Ticket, StickyNote, AlertTriangle, Wrench,
 } from "lucide-react";
 import { VoucherDialog } from "@/components/veicoli/VoucherDialog";
 
@@ -200,6 +200,16 @@ export default function Veicoli() {
   };
 
   const goTab = (id: string, tab: string) => navigate(`/veicoli/${id}?tab=${tab}`);
+
+  const tagliandoEseguito = async (v: Veicolo) => {
+    const { data, error } = await supabase.rpc("veicolo_tagliando_eseguito", {
+      _veicolo_id: v.id, _km: v.km_attuale ?? null, _intervallo: v.intervallo_tagliando_km ?? null,
+    });
+    if (error) return toast.error(error.message);
+    const nuovo = (data as any)?.km_prima_scadenza;
+    toast.success(`Tagliando registrato. Nuova soglia: ${nuovo?.toLocaleString("it-IT") ?? "—"} km`);
+    load();
+  };
 
   return (
     <DashboardLayout>
