@@ -239,13 +239,15 @@ export default function AutistaCarburante() {
         </button>
 
         {/* Veicolo */}
-        <div className="rounded-[18px] bg-white border p-4">
+        <div className={`rounded-[18px] bg-white border p-4 ${!veicoloId ? "border-amber-400" : ""}`}>
           <div className="flex items-center gap-3">
             <div className="rounded-xl bg-primary/10 p-2.5"><Car className="h-5 w-5 text-primary" /></div>
             <div className="flex-1">
-              <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">Veicolo</div>
+              <div className="text-[11px] uppercase tracking-wide text-muted-foreground font-semibold">
+                {veicoloId ? "Veicolo" : "Seleziona il veicolo del rifornimento"}
+              </div>
               <Select value={veicoloId} onValueChange={setVeicoloId}>
-                <SelectTrigger className="h-11 mt-1 rounded-xl"><SelectValue placeholder="Seleziona veicolo" /></SelectTrigger>
+                <SelectTrigger className="h-11 mt-1 rounded-xl"><SelectValue placeholder="Nessun veicolo selezionato" /></SelectTrigger>
                 <SelectContent>
                   {veicoli.map((v) => (
                     <SelectItem key={v.id} value={v.id}>
@@ -254,6 +256,11 @@ export default function AutistaCarburante() {
                   ))}
                 </SelectContent>
               </Select>
+              {!veicoloId && (
+                <div className="text-xs text-amber-700 mt-1">
+                  Obbligatorio: nessuna sessione veicolo attiva.
+                </div>
+              )}
               {veicolo?.km_attuale != null && (
                 <div className="text-xs text-muted-foreground mt-1 tabular-nums">
                   Km attuali: {veicolo.km_attuale.toLocaleString("it-IT")}
