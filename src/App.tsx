@@ -56,6 +56,7 @@ import AutistaPresenza from "./pages/autista/AutistaPresenza";
 import AutistaOre from "./pages/autista/AutistaOre";
 import AutistaLista from "./pages/autista/AutistaLista";
 import AutistaFerie from "./pages/autista/AutistaFerie";
+import AutistaCarburante from "./pages/autista/AutistaCarburante";
 import AutistiOre from "./pages/AutistiOre";
 
 
@@ -124,7 +125,7 @@ const App = () => (
             <Route path="/autista/veicolo" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Veicolo" /></ProtectedAutistaRoute>} />
             <Route path="/autista/comunicazioni" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Comunicazioni" /></ProtectedAutistaRoute>} />
             <Route path="/autista/carta" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Carta di Credito" /></ProtectedAutistaRoute>} />
-            <Route path="/autista/carburante" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Carburante" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/carburante" element={<ProtectedAutistaRoute><AutistaCarburante /></ProtectedAutistaRoute>} />
             <Route path="/autista/ferie" element={<ProtectedAutistaRoute><AutistaFerie /></ProtectedAutistaRoute>} />
 
 
