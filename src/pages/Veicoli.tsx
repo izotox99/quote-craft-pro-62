@@ -269,12 +269,31 @@ export default function Veicoli() {
                     const t = totals[v.id] ?? { ord: 0, straord: 0, gasolio: 0, spese: 0 };
                     const kmDiff = v.km_attuale != null && v.km_prima_scadenza != null
                       ? v.km_prima_scadenza - v.km_attuale : null;
-                    const scadenzaWarn = kmDiff !== null && kmDiff < 5000;
+                    const stato = kmDiff === null ? "ok" : kmDiff <= 0 ? "scaduto" : kmDiff <= 5000 ? "avviso" : "ok";
                     return (
-                      <TableRow key={v.id} className="group">
+                      <TableRow
+                        key={v.id}
+                        className={
+                          stato === "scaduto"
+                            ? "group bg-destructive/10 hover:bg-destructive/15"
+                            : stato === "avviso"
+                              ? "group bg-amber-500/10 hover:bg-amber-500/15"
+                              : "group"
+                        }
+                      >
                         <TableCell>
                           <div className="font-semibold">{v.targa}</div>
                           {v.tipo_macchina && <div className="text-xs text-muted-foreground">{v.tipo_macchina}</div>}
+                          {stato === "scaduto" && (
+                            <Badge variant="destructive" className="mt-1 gap-1 text-[10px]">
+                              <AlertTriangle className="h-3 w-3" /> Tagliando da eseguire: soglia superata
+                            </Badge>
+                          )}
+                          {stato === "avviso" && (
+                            <Badge className="mt-1 gap-1 text-[10px] bg-amber-500 text-white hover:bg-amber-500">
+                              <AlertTriangle className="h-3 w-3" /> Tagliando in avvicinamento: mancano {kmDiff!.toLocaleString("it-IT")} km
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">{[v.marca, v.modello].filter(Boolean).join(" ") || "—"}</div>
@@ -290,9 +309,16 @@ export default function Veicoli() {
                         </TableCell>
                         <TableCell className="hidden lg:table-cell text-right tabular-nums">
                           {v.km_prima_scadenza != null ? (
-                            <span className={scadenzaWarn ? "text-destructive font-semibold" : ""}>
-                              {v.km_prima_scadenza.toLocaleString("it-IT")}
-                            </span>
+                            <div>
+                              <span className={stato === "scaduto" ? "text-destructive font-semibold" : stato === "avviso" ? "text-amber-600 font-semibold" : ""}>
+                                {v.km_prima_scadenza.toLocaleString("it-IT")}
+                              </span>
+                              {kmDiff !== null && (
+                                <div className="text-[10px] text-muted-foreground">
+                                  {kmDiff > 0 ? `mancano ${kmDiff.toLocaleString("it-IT")} km` : `superata di ${Math.abs(kmDiff).toLocaleString("it-IT")} km`}
+                                </div>
+                              )}
+                            </div>
                           ) : "—"}
                         </TableCell>
                         <TableCell className="text-right hidden sm:table-cell">
