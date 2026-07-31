@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ArrowLeft, CreditCard, PlusCircle, Camera, Receipt, Loader2, ImageUp } from "lucide-react";
+import { romeToday } from "@/lib/romeDate";
 
 type Carta = {
   id: string; intestazione: string; ultime_quattro: string | null;
@@ -48,7 +49,7 @@ export default function AutistaCarta() {
   const [sending, setSending] = useState(false);
   const [foto, setFoto] = useState<{ blob: Blob; url: string } | null>(null);
   const [form, setForm] = useState({
-    data: new Date().toISOString().slice(0, 10), importo: "", categoria: "", servizio_id: "", note: "",
+    data: romeToday(), importo: "", categoria: "", servizio_id: "", note: "",
   });
 
   const load = async (autistaId: string) => {
@@ -68,7 +69,7 @@ export default function AutistaCarta() {
       if (!a) return;
       setMe({ id: a.id, org_id: a.org_id });
       load(a.id);
-      const oggi = new Date().toISOString().slice(0, 10);
+      const oggi = romeToday();
       const { data: srv } = await supabase
         .from("servizi_autista_view" as any)
         .select("id, data_servizio, ora_inizio, luogo_inizio")
@@ -120,7 +121,7 @@ export default function AutistaCarta() {
       if (error) throw error;
       toast.success("Spesa registrata");
       setOpen(false); setFoto(null);
-      setForm({ data: new Date().toISOString().slice(0, 10), importo: "", categoria: "", servizio_id: "", note: "" });
+      setForm({ data: romeToday(), importo: "", categoria: "", servizio_id: "", note: "" });
       load(me.id);
     } catch (e: any) {
       toast.error(e.message ?? "Salvataggio non riuscito");

@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { PlusCircle, Pencil, Trash2, Fuel, Receipt } from "lucide-react";
+import { romeToday } from "@/lib/romeDate";
 
 type Row = {
   id: string;
@@ -43,7 +44,7 @@ export function SectionGasolio({ veicoloId }: { veicoloId: string }) {
 
   const openNew = () => {
     setEditing(null);
-    setForm({ data: new Date().toISOString().split("T")[0] });
+    setForm({ data: romeToday() });
     setOpen(true);
   };
   const openEdit = (r: Row) => { setEditing(r); setForm({ ...r }); setOpen(true); };

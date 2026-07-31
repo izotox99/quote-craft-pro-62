@@ -11,6 +11,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Save, Trash2 } from "lucide-react";
+import { romeToday, romeMonthStart } from "@/lib/romeDate";
 
 type OreRow = {
   id: string;
@@ -43,7 +44,7 @@ export default function AutistaOre() {
   const [orgId, setOrgId] = useState<string | null>(null);
   const [list, setList] = useState<OreRow[]>([]);
   const [busy, setBusy] = useState(false);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = romeToday();
 
   const emptyForm = {
     data: today,
@@ -65,13 +66,12 @@ export default function AutistaOre() {
     if (!a) return;
     setAutistaId(a.id);
     setOrgId(a.org_id);
-    const from = new Date();
-    from.setDate(1);
+    const from = romeMonthStart();
     const { data } = await supabase
       .from("autisti_ore")
       .select("*")
       .eq("autista_id", a.id)
-      .gte("data", from.toISOString().slice(0, 10))
+      .gte("data", from)
       .order("data", { ascending: false });
     setList((data ?? []) as OreRow[]);
   };

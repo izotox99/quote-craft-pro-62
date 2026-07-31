@@ -18,6 +18,7 @@ import {
   DISPOSIZIONE_OPZIONI,
 } from "@/lib/booking-shared";
 import { AccessoriEditor, type AccessorioRow, loadServizioAccessori, saveServizioAccessori } from "./AccessoriEditor";
+import { romeToday } from "@/lib/romeDate";
 
 
 const TRANSFER_OPZIONI = [
@@ -123,7 +124,7 @@ type Props = {
 };
 
 const emptyForm = (): Required<Omit<ServizioFormInitial, "id">> => ({
-  data_servizio: new Date().toISOString().slice(0, 10),
+  data_servizio: romeToday(),
   ora_inizio: "",
   citta: "",
   luogo_inizio: "",

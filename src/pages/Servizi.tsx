@@ -27,6 +27,7 @@ import { COLUMNS_MAP, computeEffectiveWidths, type ColumnKey, type ViewColumnSta
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { format, addDays } from "date-fns";
 import { it as itLocale } from "date-fns/locale";
+import { romeToday, romeMonthRange, romeYearMonth } from "@/lib/romeDate";
 
 const NETWORK_STATO_LABEL: Record<string, string> = {
   inviato: "Inviato",
@@ -249,8 +250,8 @@ export default function Servizi() {
   
 
   // Filters
-  const [filterDal, setFilterDal] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"));
-  const [filterAl, setFilterAl] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), "yyyy-MM-dd"));
+  const [filterDal, setFilterDal] = useState(romeMonthRange(romeYearMonth()).from);
+  const [filterAl, setFilterAl] = useState(romeMonthRange(romeYearMonth()).to);
   const [filterStato, setFilterStato] = useState("all");
   const [filterTipologia, setFilterTipologia] = useState("all");
   const [filterTarga, setFilterTarga] = useState("");
@@ -656,12 +657,15 @@ export default function Servizi() {
   // Quick day filters for "Nuovi" services
   const [quickDay, setQuickDay] = useState<string | null>(null);
   const quickDayOptions = useMemo(() => {
-    const today = new Date();
+    const chipLabel = (iso: string) => {
+      const [y, m, d] = iso.split("-").map(Number);
+      return format(new Date(y, m - 1, d), "EEE dd/MM", { locale: itLocale });
+    };
     return [
-      { key: "oggi", label: "Nuovi Oggi", date: format(today, "yyyy-MM-dd") },
-      { key: "domani", label: "Nuovi Domani", date: format(addDays(today, 1), "yyyy-MM-dd") },
-      { key: "day2", label: format(addDays(today, 2), "EEE dd/MM", { locale: itLocale }), date: format(addDays(today, 2), "yyyy-MM-dd") },
-      { key: "day3", label: format(addDays(today, 3), "EEE dd/MM", { locale: itLocale }), date: format(addDays(today, 3), "yyyy-MM-dd") },
+      { key: "oggi", label: "Nuovi Oggi", date: romeToday(0) },
+      { key: "domani", label: "Nuovi Domani", date: romeToday(1) },
+      { key: "day2", label: chipLabel(romeToday(2)), date: romeToday(2) },
+      { key: "day3", label: chipLabel(romeToday(3)), date: romeToday(3) },
     ];
   }, []);
 
@@ -684,8 +688,8 @@ export default function Servizi() {
   };
   useEffect(() => { loadQuickDayCounts(); }, [user, quickDayOptions, servizi]);
 
-  const defaultDal = () => format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd");
-  const defaultAl = () => format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), "yyyy-MM-dd");
+  const defaultDal = () => romeMonthRange(romeYearMonth()).from;
+  const defaultAl = () => romeMonthRange(romeYearMonth()).to;
 
   const handleQuickDay = async (key: string) => {
     const opt = quickDayOptions.find(o => o.key === key);
@@ -721,8 +725,8 @@ export default function Servizi() {
 
   const resetAllFilters = () => {
     setQuickDay(null);
-    setFilterDal(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"));
-    setFilterAl(format(new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0), "yyyy-MM-dd"));
+    setFilterDal(romeMonthRange(romeYearMonth()).from);
+    setFilterAl(romeMonthRange(romeYearMonth()).to);
     setFilterStato("all");
     setFilterTipologia("all");
     setFilterTarga("");

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Printer } from "lucide-react";
+import { romeToday } from "@/lib/romeDate";
 
 type VoucherInfo = {
   societa: string;
@@ -33,14 +34,13 @@ export function VoucherDialog({
     if (!open || !veicolo) return;
     (async () => {
       setLoading(true);
-      const today = new Date(); today.setHours(0,0,0,0);
-      const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
-      const fmt = (d: Date) => d.toISOString().split("T")[0];
+      const oggiISO = romeToday(0);
+      const domaniISO = romeToday(1);
 
       const [{ data: org }, { data: serviziOggi }, { data: serviziDomani }, { data: lastKm }] = await Promise.all([
         supabase.from("organizations").select("name, p_iva, sede_legale, address").maybeSingle(),
-        supabase.from("servizi").select("autista_id, autisti(nome, cognome)").eq("data_servizio", fmt(today)).eq("veicolo_id", veicolo.id).eq("archiviato", false).limit(1).maybeSingle(),
-        supabase.from("servizi").select("autista_id, autisti(nome, cognome)").eq("data_servizio", fmt(tomorrow)).eq("veicolo_id", veicolo.id).eq("archiviato", false).limit(1).maybeSingle(),
+        supabase.from("servizi").select("autista_id, autisti(nome, cognome)").eq("data_servizio", oggiISO).eq("veicolo_id", veicolo.id).eq("archiviato", false).limit(1).maybeSingle(),
+        supabase.from("servizi").select("autista_id, autisti(nome, cognome)").eq("data_servizio", domaniISO).eq("veicolo_id", veicolo.id).eq("archiviato", false).limit(1).maybeSingle(),
         supabase.from("veicoli_gasolio").select("km").eq("veicolo_id", veicolo.id).order("data", { ascending: false }).limit(1).maybeSingle(),
       ]);
 
@@ -54,13 +54,13 @@ export function VoucherDialog({
 
       setOggi({
         societa, piva, sede,
-        data: today.toLocaleDateString("it-IT"),
+        data: oggiISO.split("-").reverse().join("/"),
         autista: aOggi ? `${aOggi.nome} ${aOggi.cognome}`.toUpperCase() : "—",
         macchina, targa: veicolo.targa, km_inizio: km,
       });
       setDomani({
         societa, piva, sede,
-        data: tomorrow.toLocaleDateString("it-IT"),
+        data: domaniISO.split("-").reverse().join("/"),
         autista: aDomani ? `${aDomani.nome} ${aDomani.cognome}`.toUpperCase() : "—",
         macchina, targa: veicolo.targa, km_inizio: km,
       });

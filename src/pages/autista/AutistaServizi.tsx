@@ -110,13 +110,17 @@ function CardServizio({ s, onOpen }: { s: any; onOpen: () => void }) {
           <div className="text-3xl font-bold tabular-nums leading-none">{s.ora_inizio ?? "--:--"}</div>
           <div className="text-xs text-muted-foreground mt-1">{timeLeft(s.data_servizio, s.ora_inizio)}</div>
         </div>
-        {veicolo && (
+        {veicolo ? (
           <div className="text-right">
             {veicolo.foto_url && <img src={veicolo.foto_url} className="h-10 w-16 object-cover rounded ml-auto" alt="" />}
             <div className="text-[11px] font-medium mt-1">{veicolo.modello}</div>
             {veicolo.targa && (
               <div className="inline-block text-[10px] font-mono border rounded px-1.5 py-0.5 bg-yellow-50 border-slate-400">{veicolo.targa}</div>
             )}
+          </div>
+        ) : (
+          <div className="text-right text-[11px] text-muted-foreground italic max-w-[120px]">
+            Veicolo non assegnato
           </div>
         )}
       </div>

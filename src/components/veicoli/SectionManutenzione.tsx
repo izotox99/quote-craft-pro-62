@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { PlusCircle, Pencil, Trash2, Wrench } from "lucide-react";
+import { romeToday } from "@/lib/romeDate";
 
 type Mode = "ord" | "straord";
 
@@ -42,7 +43,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
 
   const openNew = () => {
     setEditing(null);
-    setForm({ data: new Date().toISOString().split("T")[0], totale: "" });
+    setForm({ data: romeToday(), totale: "" });
     setOpen(true);
   };
   const openEdit = (r: Row) => {

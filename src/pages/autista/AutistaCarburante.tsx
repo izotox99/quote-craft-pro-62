@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft, Camera, Car, CheckCircle2, AlertTriangle, ImageUp, RefreshCw, Loader2, XCircle,
 } from "lucide-react";
+import { romeToday } from "@/lib/romeDate";
 
 type Ocr = {
   data: string | null;
@@ -89,7 +90,7 @@ export default function AutistaCarburante() {
       const list = (v ?? []) as Veicolo[];
       setVeicoli(list);
 
-      const oggi = new Date().toISOString().slice(0, 10);
+      const oggi = romeToday();
       const { data: srv } = await supabase
         .from("servizi")
         .select("veicolo_id")
@@ -195,7 +196,7 @@ export default function AutistaCarburante() {
       }
       const { error } = await supabase.rpc("autista_registra_rifornimento", {
         _veicolo_id: veicoloId,
-        _data: itaToISO(f.data) ?? new Date().toISOString().slice(0, 10),
+        _data: itaToISO(f.data) ?? romeToday(),
         _km: kmNum!,
         _litri: li,
         _prezzo_unitario: pl,

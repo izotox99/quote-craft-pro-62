@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { romeMonthRange } from "@/lib/romeDate";
 
 type Compenso = {
   totale: number;
@@ -12,12 +13,7 @@ type Compenso = {
   parametri: Record<string, number | null>;
 };
 
-function monthRange(ym: string) {
-  const [y, m] = ym.split("-").map(Number);
-  const from = new Date(y, m - 1, 1).toISOString().slice(0, 10);
-  const to = new Date(y, m, 0).toISOString().slice(0, 10);
-  return { from, to };
-}
+const monthRange = (ym: string) => romeMonthRange(ym);
 function fmtEur(n: number) {
   return new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(n);
 }
