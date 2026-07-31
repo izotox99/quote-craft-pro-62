@@ -42,6 +42,7 @@ export default function AutistaHome() {
       }
 
 
+      setSessioneVeicolo(await getSessioneVeicoloAttiva());
 
       // Stato presenza reale
       if (autistaId) {
