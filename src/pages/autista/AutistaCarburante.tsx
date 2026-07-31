@@ -87,18 +87,11 @@ export default function AutistaCarburante() {
         .select("id, targa, marca, modello, km_attuale")
         .eq("attivo", true)
         .order("targa");
-      const list = (v ?? []) as Veicolo[];
-      setVeicoli(list);
+      setVeicoli((v ?? []) as Veicolo[]);
 
-      const oggi = romeToday();
-      const { data: srv } = await supabase
-        .from("servizi")
-        .select("veicolo_id")
-        .eq("data_servizio", oggi)
-        .not("veicolo_id", "is", null)
-        .limit(1)
-        .maybeSingle();
-      setVeicoloId((srv?.veicolo_id as string) || list[0]?.id || "");
+      // Unica fonte: sessione veicolo attiva. Nessun veicolo "indovinato".
+      const sess = await getSessioneVeicoloAttiva();
+      setVeicoloId(sess?.veicolo_id ?? "");
     })();
   }, []);
 
