@@ -137,14 +137,23 @@ export default function AutistaHome() {
             </div>
             <div className="flex-1">
               <div className="text-xs uppercase text-muted-foreground font-semibold">Veicolo in uso</div>
-              <div className="text-sm text-muted-foreground mt-1">Nessun veicolo selezionato</div>
+              {sessioneVeicolo?.veicolo ? (
+                <>
+                  <div className="font-semibold mt-1">{sessioneVeicolo.veicolo.targa}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {[sessioneVeicolo.veicolo.marca, sessioneVeicolo.veicolo.modello].filter(Boolean).join(" ") || "—"}
+                  </div>
+                </>
+              ) : (
+                <div className="text-sm text-muted-foreground mt-1">Nessun veicolo selezionato</div>
+              )}
               <Button
                 size="sm"
                 variant="outline"
                 className="mt-2"
                 onClick={() => navigate("/autista/veicolo")}
               >
-                Seleziona veicolo
+                {sessioneVeicolo ? "Cambia veicolo" : "Seleziona veicolo"}
               </Button>
             </div>
           </div>
