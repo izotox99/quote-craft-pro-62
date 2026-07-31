@@ -372,6 +372,15 @@ export default function Veicoli() {
                             </TooltipTrigger><TooltipContent>Modifica info</TooltipContent></Tooltip>
 
                             <Tooltip><TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" onClick={() => tagliandoEseguito(v)}>
+                                <Wrench className="h-4 w-4 text-emerald-600" />
+                              </Button>
+                            </TooltipTrigger><TooltipContent>
+                              Tagliando eseguito (sposta la soglia di {(v.intervallo_tagliando_km ?? 20000).toLocaleString("it-IT")} km)
+                            </TooltipContent></Tooltip>
+
+
+                            <Tooltip><TooltipTrigger asChild>
                               <Button variant="ghost" size="icon" onClick={() => toggleAttivo(v)}>
                                 {v.attivo
                                   ? <PowerOff className="h-4 w-4 text-amber-600" />
