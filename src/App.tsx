@@ -61,6 +61,11 @@ import AutistaCarburante from "./pages/autista/AutistaCarburante";
 import AutistaComunicazioni from "./pages/autista/AutistaComunicazioni";
 import AutistaFeedback from "./pages/autista/AutistaFeedback";
 import AutistaCarta from "./pages/autista/AutistaCarta";
+import AutistaProfilo from "./pages/autista/AutistaProfilo";
+import AutistaLink from "./pages/autista/AutistaLink";
+import AutistaPreferiti from "./pages/autista/AutistaPreferiti";
+import AutistaImpostazioni from "./pages/autista/AutistaImpostazioni";
+import LinkUtili from "./pages/LinkUtili";
 import AutistiOre from "./pages/AutistiOre";
 
 
@@ -102,6 +107,7 @@ const App = () => (
             <Route path="/autisti/ore" element={<ProtectedRoute><AutistiOre /></ProtectedRoute>} />
             <Route path="/autisti/assenze" element={<ProtectedRoute><AutistiAssenze /></ProtectedRoute>} />
             <Route path="/autisti/comunicazioni" element={<ProtectedRoute><AutistiComunicazioni /></ProtectedRoute>} />
+            <Route path="/link-utili" element={<ProtectedRoute><LinkUtili /></ProtectedRoute>} />
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
             <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -125,7 +131,10 @@ const App = () => (
             <Route path="/autista/presenza" element={<ProtectedAutistaRoute><AutistaPresenza /></ProtectedAutistaRoute>} />
             <Route path="/autista/ore" element={<ProtectedAutistaRoute><AutistaOre /></ProtectedAutistaRoute>} />
             <Route path="/autista/lista" element={<ProtectedAutistaRoute><AutistaLista /></ProtectedAutistaRoute>} />
-            <Route path="/autista/impostazioni" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Impostazioni" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/impostazioni" element={<ProtectedAutistaRoute><AutistaImpostazioni /></ProtectedAutistaRoute>} />
+            <Route path="/autista/profilo" element={<ProtectedAutistaRoute><AutistaProfilo /></ProtectedAutistaRoute>} />
+            <Route path="/autista/link" element={<ProtectedAutistaRoute><AutistaLink /></ProtectedAutistaRoute>} />
+            <Route path="/autista/preferiti" element={<ProtectedAutistaRoute><AutistaPreferiti /></ProtectedAutistaRoute>} />
             <Route path="/autista/notifiche" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Notifiche" /></ProtectedAutistaRoute>} />
             <Route path="/autista/veicolo" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Veicolo" /></ProtectedAutistaRoute>} />
             <Route path="/autista/comunicazioni" element={<ProtectedAutistaRoute><AutistaComunicazioni /></ProtectedAutistaRoute>} />

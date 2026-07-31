@@ -4,10 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { AutistaLayout } from "@/components/autista/AutistaLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Calendar, CalendarDays, CalendarClock, MessageSquare, CreditCard,
-  Fuel, Clock, Palmtree, ListChecks, Car, Star,
-} from "lucide-react";
+import { Car, Star } from "lucide-react";
+import { applyTilePrefs, TilePref } from "@/lib/autistaTiles";
 
 function todayISO(offset = 0) {
   const d = new Date();
@@ -22,6 +20,7 @@ export default function AutistaHome() {
   const [inizioTurno, setInizioTurno] = useState<string | null>(null);
   const [warn, setWarn] = useState<string | null>(null);
   const [counts, setCounts] = useState({ oggi: 0, domani: 0, dopodomani: 0 });
+  const [tilePrefs, setTilePrefs] = useState<TilePref[] | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -36,6 +35,14 @@ export default function AutistaHome() {
         const { data: aExt } = await supabase.from("autisti_esterni").select("id, nome").eq("auth_user_id", user.id).maybeSingle();
         if (aExt) { setNome(aExt.nome ?? ""); autistaId = aExt.id; }
       }
+
+      if (aInt) {
+        const { data: pref } = await supabase
+          .from("autisti_preferenze").select("tasti").eq("autista_id", aInt.id).maybeSingle();
+        setTilePrefs((pref?.tasti as unknown as TilePref[]) ?? null);
+      }
+
+
 
       // Stato presenza reale
       if (autistaId) {
@@ -85,18 +92,13 @@ export default function AutistaHome() {
   }, []);
 
 
-  const tiles: Array<{ label: string; icon: any; to: string; badge?: number }> = [
-    { label: "Servizi OGGI", icon: Calendar, to: "/autista/servizi/oggi", badge: counts.oggi },
-    { label: "Servizi DOMANI", icon: CalendarDays, to: "/autista/servizi/domani", badge: counts.domani },
-    { label: "Servizi D.DOMANI", icon: CalendarClock, to: "/autista/servizi/dopodomani", badge: counts.dopodomani },
-    { label: "Comunicazioni", icon: MessageSquare, to: "/autista/comunicazioni" },
-    { label: "Carta di Credito", icon: CreditCard, to: "/autista/carta" },
-    { label: "Carburante", icon: Fuel, to: "/autista/carburante" },
-    { label: "Presenza", icon: Clock, to: "/autista/presenza" },
-    { label: "Ore", icon: ListChecks, to: "/autista/ore" },
-    { label: "Feedback", icon: MessageSquare, to: "/autista/feedback" },
-    { label: "Lista", icon: ListChecks, to: "/autista/lista" },
-  ];
+  const badges: Record<string, number> = {
+    oggi: counts.oggi, domani: counts.domani, dopodomani: counts.dopodomani,
+  };
+  const tiles = applyTilePrefs(tilePrefs).map((t) => ({
+    label: t.label, icon: t.icon, to: t.to,
+    badge: t.badgeKey ? badges[t.badgeKey] : undefined,
+  }));
 
   return (
     <AutistaLayout>
@@ -170,7 +172,10 @@ export default function AutistaHome() {
           ))}
         </div>
 
-        <button className="w-full mt-2 py-3 rounded-xl border-dashed border-2 text-xs text-muted-foreground flex items-center justify-center gap-2">
+        <button
+          onClick={() => navigate("/autista/preferiti")}
+          className="w-full mt-2 py-3 rounded-xl border-dashed border-2 text-xs text-muted-foreground flex items-center justify-center gap-2"
+        >
           <Star className="h-4 w-4" /> Modifica tasti preferiti
         </button>
       </div>

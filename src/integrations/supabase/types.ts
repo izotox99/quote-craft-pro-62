@@ -194,6 +194,7 @@ export type Database = {
           cognome: string
           created_at: string
           email: string | null
+          foto_consenso: boolean
           foto_url: string | null
           id: string
           mansione: string | null
@@ -228,6 +229,7 @@ export type Database = {
           cognome: string
           created_at?: string
           email?: string | null
+          foto_consenso?: boolean
           foto_url?: string | null
           id?: string
           mansione?: string | null
@@ -262,6 +264,7 @@ export type Database = {
           cognome?: string
           created_at?: string
           email?: string | null
+          foto_consenso?: boolean
           foto_url?: string | null
           id?: string
           mansione?: string | null
@@ -694,6 +697,48 @@ export type Database = {
             columns: ["ore_id"]
             isOneToOne: false
             referencedRelation: "autisti_ore"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      autisti_preferenze: {
+        Row: {
+          autista_id: string
+          created_at: string
+          notifiche: Json
+          org_id: string
+          tasti: Json
+          updated_at: string
+        }
+        Insert: {
+          autista_id: string
+          created_at?: string
+          notifiche?: Json
+          org_id: string
+          tasti?: Json
+          updated_at?: string
+        }
+        Update: {
+          autista_id?: string
+          created_at?: string
+          notifiche?: Json
+          org_id?: string
+          tasti?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autisti_preferenze_autista_id_fkey"
+            columns: ["autista_id"]
+            isOneToOne: true
+            referencedRelation: "autisti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_preferenze_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
@@ -1366,6 +1411,53 @@ export type Database = {
             columns: ["proposal_id"]
             isOneToOne: false
             referencedRelation: "proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      link_utili: {
+        Row: {
+          attivo: boolean
+          created_at: string
+          etichetta: string
+          evidenza: boolean
+          icona: string | null
+          id: string
+          ordine: number
+          org_id: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          attivo?: boolean
+          created_at?: string
+          etichetta: string
+          evidenza?: boolean
+          icona?: string | null
+          id?: string
+          ordine?: number
+          org_id: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          attivo?: boolean
+          created_at?: string
+          etichetta?: string
+          evidenza?: boolean
+          icona?: string | null
+          id?: string
+          ordine?: number
+          org_id?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "link_utili_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
         ]
