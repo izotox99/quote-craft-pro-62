@@ -119,7 +119,7 @@ type Props = {
   fornitori: Fornitore[];
   isAdmin: boolean;
   userId?: string;
-  onSaved: () => void;
+  onSaved: (info?: { data_servizio?: string | null }) => void;
 };
 
 const emptyForm = (): Required<Omit<ServizioFormInitial, "id">> => ({
@@ -316,7 +316,7 @@ export function ServizioFormDialog({
     if (error) { toast.error(error.message); return; }
     toast.success(mode === "edit" ? "Servizio aggiornato" : "Servizio creato");
     onOpenChange(false);
-    onSaved();
+    onSaved({ data_servizio: (payload as any).data_servizio ?? null });
   };
 
 
