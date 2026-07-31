@@ -136,7 +136,7 @@ const App = () => (
             <Route path="/autista/link" element={<ProtectedAutistaRoute><AutistaLink /></ProtectedAutistaRoute>} />
             <Route path="/autista/preferiti" element={<ProtectedAutistaRoute><AutistaPreferiti /></ProtectedAutistaRoute>} />
             <Route path="/autista/notifiche" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Notifiche" /></ProtectedAutistaRoute>} />
-            <Route path="/autista/veicolo" element={<ProtectedAutistaRoute><AutistaPlaceholder title="Veicolo" /></ProtectedAutistaRoute>} />
+            <Route path="/autista/veicolo" element={<ProtectedAutistaRoute><AutistaVeicolo /></ProtectedAutistaRoute>} />
             <Route path="/autista/comunicazioni" element={<ProtectedAutistaRoute><AutistaComunicazioni /></ProtectedAutistaRoute>} />
             <Route path="/autista/feedback" element={<ProtectedAutistaRoute><AutistaFeedback /></ProtectedAutistaRoute>} />
             <Route path="/autista/carta" element={<ProtectedAutistaRoute><AutistaCarta /></ProtectedAutistaRoute>} />
