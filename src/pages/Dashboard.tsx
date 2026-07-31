@@ -16,6 +16,7 @@ import { format, addDays, differenceInDays, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
 import { toast } from "sonner";
+import { romeToday } from "@/lib/romeDate";
 
 type Servizio = {
   id: string;
@@ -98,7 +99,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const [servizi, setServizi] = useState<Servizio[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dal, setDal] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [dal, setDal] = useState(romeToday());
   const [al, setAl] = useState(format(addDays(new Date(), 30), "yyyy-MM-dd"));
   const [statoFilter, setStatoFilter] = useState<string>("tutti");
   const [search, setSearch] = useState("");
