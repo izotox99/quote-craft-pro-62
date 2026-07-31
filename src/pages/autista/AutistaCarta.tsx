@@ -114,6 +114,7 @@ export default function AutistaCarta() {
         importo_spese: importo,
         totale_fattura: importo,
         servizio_id: form.servizio_id || null,
+        veicolo_id: (await getSessioneVeicoloAttiva())?.veicolo_id ?? null,
         note: form.note || null,
         foto_path: path,
         origine: "autista",
