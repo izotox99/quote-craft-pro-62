@@ -20,6 +20,8 @@ type Row = {
   prezzo_unitario: number | null;
   prezzo_totale: number;
   luogo: string | null;
+  foto_path?: string | null;
+  distributore?: string | null;
 };
 
 export function SectionGasolio({ veicoloId }: { veicoloId: string }) {
