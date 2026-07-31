@@ -35,6 +35,8 @@ import Settings from "./pages/Settings";
 import Agenda from "./pages/Agenda";
 import AutistiAssenze from "./pages/AutistiAssenze";
 import AutistiComunicazioni from "./pages/AutistiComunicazioni";
+import AutistiNuovaNota from "./pages/AutistiNuovaNota";
+import AutistiNote from "./pages/AutistiNote";
 import NotFound from "./pages/NotFound";
 
 // Client portal
@@ -108,6 +110,8 @@ const App = () => (
             <Route path="/autisti/ore" element={<ProtectedRoute><AutistiOre /></ProtectedRoute>} />
             <Route path="/autisti/assenze" element={<ProtectedRoute><AutistiAssenze /></ProtectedRoute>} />
             <Route path="/autisti/comunicazioni" element={<ProtectedRoute><AutistiComunicazioni /></ProtectedRoute>} />
+            <Route path="/autisti/nuova-nota" element={<ProtectedRoute><AutistiNuovaNota /></ProtectedRoute>} />
+            <Route path="/autisti/note" element={<ProtectedRoute><AutistiNote /></ProtectedRoute>} />
             <Route path="/link-utili" element={<ProtectedRoute><LinkUtili /></ProtectedRoute>} />
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
             <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
