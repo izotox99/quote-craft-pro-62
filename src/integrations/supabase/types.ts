@@ -2512,6 +2512,7 @@ export type Database = {
           data_ultima_quota_credito: string | null
           dati_tecnici: string | null
           id: string
+          intervallo_tagliando_km: number
           km_attuale: number | null
           km_iniziale: number | null
           km_prima_scadenza: number | null
@@ -2525,6 +2526,10 @@ export type Database = {
           posti: number | null
           prezzo_acquisto: number | null
           quota_mensile_credito: number | null
+          tagliando_alert_at: string | null
+          tagliando_alert_stato: string
+          tagliando_ultimo_at: string | null
+          tagliando_ultimo_km: number | null
           targa: string
           telaio: string | null
           tipo_macchina: string | null
@@ -2542,6 +2547,7 @@ export type Database = {
           data_ultima_quota_credito?: string | null
           dati_tecnici?: string | null
           id?: string
+          intervallo_tagliando_km?: number
           km_attuale?: number | null
           km_iniziale?: number | null
           km_prima_scadenza?: number | null
@@ -2555,6 +2561,10 @@ export type Database = {
           posti?: number | null
           prezzo_acquisto?: number | null
           quota_mensile_credito?: number | null
+          tagliando_alert_at?: string | null
+          tagliando_alert_stato?: string
+          tagliando_ultimo_at?: string | null
+          tagliando_ultimo_km?: number | null
           targa: string
           telaio?: string | null
           tipo_macchina?: string | null
@@ -2572,6 +2582,7 @@ export type Database = {
           data_ultima_quota_credito?: string | null
           dati_tecnici?: string | null
           id?: string
+          intervallo_tagliando_km?: number
           km_attuale?: number | null
           km_iniziale?: number | null
           km_prima_scadenza?: number | null
@@ -2585,6 +2596,10 @@ export type Database = {
           posti?: number | null
           prezzo_acquisto?: number | null
           quota_mensile_credito?: number | null
+          tagliando_alert_at?: string | null
+          tagliando_alert_stato?: string
+          tagliando_ultimo_at?: string | null
+          tagliando_ultimo_km?: number | null
           targa?: string
           telaio?: string | null
           tipo_macchina?: string | null
@@ -3696,6 +3711,55 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      veicoli_check_tagliandi: { Args: never; Returns: undefined }
+      veicolo_tagliando_eseguito: {
+        Args: { _intervallo?: number; _km?: number; _veicolo_id: string }
+        Returns: {
+          attivo: boolean
+          colore: string | null
+          consumo_km_litro: number | null
+          created_at: string
+          data_immatricolazione: string | null
+          data_inizio_credito: string | null
+          data_ultima_quota_credito: string | null
+          dati_tecnici: string | null
+          id: string
+          intervallo_tagliando_km: number
+          km_attuale: number | null
+          km_iniziale: number | null
+          km_prima_scadenza: number | null
+          km_voucher: number | null
+          manutenzione_ordinaria: string | null
+          marca: string | null
+          modello: string | null
+          note: string | null
+          org_id: string
+          photo_url: string | null
+          posti: number | null
+          prezzo_acquisto: number | null
+          quota_mensile_credito: number | null
+          tagliando_alert_at: string | null
+          tagliando_alert_stato: string
+          tagliando_ultimo_at: string | null
+          tagliando_ultimo_km: number | null
+          targa: string
+          telaio: string | null
+          tipo_macchina: string | null
+          updated_at: string
+          visibile_magazzino: boolean
+          visibile_servizi: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "veicoli"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      veicolo_valuta_tagliando: {
+        Args: { _veicolo_id: string }
+        Returns: string
       }
       verify_share_password: {
         Args: { _password: string; _share_id: string }

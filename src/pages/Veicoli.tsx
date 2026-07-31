@@ -23,7 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   PlusCircle, Pencil, Power, PowerOff, Search, Car as CarIcon, Trash2,
-  Image as ImageIcon, FileText, Ticket, StickyNote,
+  Image as ImageIcon, FileText, Ticket, StickyNote, AlertTriangle, Wrench,
 } from "lucide-react";
 import { VoucherDialog } from "@/components/veicoli/VoucherDialog";
 
@@ -36,6 +36,8 @@ type Veicolo = {
   id: string; targa: string; tipo_macchina: string | null; marca: string | null; modello: string | null;
   colore: string | null; posti: number | null; note: string | null; attivo: boolean;
   dati_tecnici: string | null; km_attuale: number | null; km_prima_scadenza: number | null;
+  intervallo_tagliando_km: number | null; tagliando_alert_stato: string | null;
+  tagliando_ultimo_km: number | null; tagliando_ultimo_at: string | null;
   data_immatricolazione: string | null; telaio: string | null; consumo_km_litro: number | null;
   manutenzione_ordinaria: string | null; visibile_servizi: boolean; visibile_magazzino: boolean;
   km_voucher: number | null; km_iniziale: number | null; prezzo_acquisto: number | null;
@@ -52,7 +54,8 @@ const emptyForm = {
   km_voucher: "" as string | number, prezzo_acquisto: "" as string | number,
   quota_mensile_credito: "" as string | number, data_inizio_credito: "", data_ultima_quota_credito: "",
   marca: "", colore: "", posti: 4, telaio: "", data_immatricolazione: "",
-  km_attuale: "" as string | number, km_prima_scadenza: "" as string | number, note: "",
+  km_attuale: "" as string | number, km_prima_scadenza: "" as string | number,
+  intervallo_tagliando_km: 20000 as string | number, note: "",
 };
 
 const eur = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
@@ -130,7 +133,8 @@ export default function Veicoli() {
       data_inizio_credito: v.data_inizio_credito ?? "", data_ultima_quota_credito: v.data_ultima_quota_credito ?? "",
       marca: v.marca ?? "", colore: v.colore ?? "", posti: v.posti ?? 4, telaio: v.telaio ?? "",
       data_immatricolazione: v.data_immatricolazione ?? "",
-      km_attuale: v.km_attuale ?? "", km_prima_scadenza: v.km_prima_scadenza ?? "", note: v.note ?? "",
+      km_attuale: v.km_attuale ?? "", km_prima_scadenza: v.km_prima_scadenza ?? "",
+      intervallo_tagliando_km: v.intervallo_tagliando_km ?? 20000, note: v.note ?? "",
     });
     setPhotoFile(null); setDialogOpen(true);
   };
@@ -153,7 +157,8 @@ export default function Veicoli() {
         marca: form.marca || null, colore: form.colore || null,
         posti: Number(form.posti) || null, telaio: form.telaio || null,
         data_immatricolazione: form.data_immatricolazione || null,
-        km_attuale: num(form.km_attuale), km_prima_scadenza: num(form.km_prima_scadenza), note: form.note || null,
+        km_attuale: num(form.km_attuale), km_prima_scadenza: num(form.km_prima_scadenza),
+        intervallo_tagliando_km: num(form.intervallo_tagliando_km) ?? 20000, note: form.note || null,
       };
       let id = editing?.id;
       if (editing) {
@@ -195,6 +200,16 @@ export default function Veicoli() {
   };
 
   const goTab = (id: string, tab: string) => navigate(`/veicoli/${id}?tab=${tab}`);
+
+  const tagliandoEseguito = async (v: Veicolo) => {
+    const { data, error } = await supabase.rpc("veicolo_tagliando_eseguito", {
+      _veicolo_id: v.id, _km: v.km_attuale ?? null, _intervallo: v.intervallo_tagliando_km ?? null,
+    });
+    if (error) return toast.error(error.message);
+    const nuovo = (data as any)?.km_prima_scadenza;
+    toast.success(`Tagliando registrato. Nuova soglia: ${nuovo?.toLocaleString("it-IT") ?? "—"} km`);
+    load();
+  };
 
   return (
     <DashboardLayout>
@@ -264,12 +279,31 @@ export default function Veicoli() {
                     const t = totals[v.id] ?? { ord: 0, straord: 0, gasolio: 0, spese: 0 };
                     const kmDiff = v.km_attuale != null && v.km_prima_scadenza != null
                       ? v.km_prima_scadenza - v.km_attuale : null;
-                    const scadenzaWarn = kmDiff !== null && kmDiff < 5000;
+                    const stato = kmDiff === null ? "ok" : kmDiff <= 0 ? "scaduto" : kmDiff <= 5000 ? "avviso" : "ok";
                     return (
-                      <TableRow key={v.id} className="group">
+                      <TableRow
+                        key={v.id}
+                        className={
+                          stato === "scaduto"
+                            ? "group bg-destructive/10 hover:bg-destructive/15"
+                            : stato === "avviso"
+                              ? "group bg-amber-500/10 hover:bg-amber-500/15"
+                              : "group"
+                        }
+                      >
                         <TableCell>
                           <div className="font-semibold">{v.targa}</div>
                           {v.tipo_macchina && <div className="text-xs text-muted-foreground">{v.tipo_macchina}</div>}
+                          {stato === "scaduto" && (
+                            <Badge variant="destructive" className="mt-1 gap-1 text-[10px]">
+                              <AlertTriangle className="h-3 w-3" /> Tagliando da eseguire: soglia superata
+                            </Badge>
+                          )}
+                          {stato === "avviso" && (
+                            <Badge className="mt-1 gap-1 text-[10px] bg-amber-500 text-white hover:bg-amber-500">
+                              <AlertTriangle className="h-3 w-3" /> Tagliando in avvicinamento: mancano {kmDiff!.toLocaleString("it-IT")} km
+                            </Badge>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="font-medium">{[v.marca, v.modello].filter(Boolean).join(" ") || "—"}</div>
@@ -285,9 +319,16 @@ export default function Veicoli() {
                         </TableCell>
                         <TableCell className="hidden lg:table-cell text-right tabular-nums">
                           {v.km_prima_scadenza != null ? (
-                            <span className={scadenzaWarn ? "text-destructive font-semibold" : ""}>
-                              {v.km_prima_scadenza.toLocaleString("it-IT")}
-                            </span>
+                            <div>
+                              <span className={stato === "scaduto" ? "text-destructive font-semibold" : stato === "avviso" ? "text-amber-600 font-semibold" : ""}>
+                                {v.km_prima_scadenza.toLocaleString("it-IT")}
+                              </span>
+                              {kmDiff !== null && (
+                                <div className="text-[10px] text-muted-foreground">
+                                  {kmDiff > 0 ? `mancano ${kmDiff.toLocaleString("it-IT")} km` : `superata di ${Math.abs(kmDiff).toLocaleString("it-IT")} km`}
+                                </div>
+                              )}
+                            </div>
                           ) : "—"}
                         </TableCell>
                         <TableCell className="text-right hidden sm:table-cell">
@@ -329,6 +370,15 @@ export default function Veicoli() {
                                 <Pencil className="h-4 w-4" />
                               </Button>
                             </TooltipTrigger><TooltipContent>Modifica info</TooltipContent></Tooltip>
+
+                            <Tooltip><TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" onClick={() => tagliandoEseguito(v)}>
+                                <Wrench className="h-4 w-4 text-emerald-600" />
+                              </Button>
+                            </TooltipTrigger><TooltipContent>
+                              Tagliando eseguito (sposta la soglia di {(v.intervallo_tagliando_km ?? 20000).toLocaleString("it-IT")} km)
+                            </TooltipContent></Tooltip>
+
 
                             <Tooltip><TooltipTrigger asChild>
                               <Button variant="ghost" size="icon" onClick={() => toggleAttivo(v)}>
@@ -387,7 +437,8 @@ export default function Veicoli() {
               <VField label="Dati tecnici"><Input value={form.dati_tecnici} onChange={(e) => setForm({ ...form, dati_tecnici: e.target.value })} /></VField>
               <VField label="Km iniziale"><Input inputMode="decimal" value={form.km_iniziale} onChange={(e) => setForm({ ...form, km_iniziale: e.target.value })} /></VField>
               <VField label="Km attuale"><Input inputMode="decimal" value={form.km_attuale} onChange={(e) => setForm({ ...form, km_attuale: e.target.value })} /></VField>
-              <VField label="Km prima scadenza"><Input inputMode="decimal" value={form.km_prima_scadenza} onChange={(e) => setForm({ ...form, km_prima_scadenza: e.target.value })} /></VField>
+              <VField label="Km prima scadenza (soglia tagliando)"><Input inputMode="decimal" value={form.km_prima_scadenza} onChange={(e) => setForm({ ...form, km_prima_scadenza: e.target.value })} /></VField>
+              <VField label="Intervallo tagliando (km)"><Input inputMode="decimal" value={form.intervallo_tagliando_km} onChange={(e) => setForm({ ...form, intervallo_tagliando_km: e.target.value })} /></VField>
               <VField label="Consumo km / 1L"><Input inputMode="decimal" value={form.consumo_km_litro} onChange={(e) => setForm({ ...form, consumo_km_litro: e.target.value })} /></VField>
               <VField label="Manutenzione ordinaria"><Input value={form.manutenzione_ordinaria} onChange={(e) => setForm({ ...form, manutenzione_ordinaria: e.target.value })} /></VField>
               <VField label="Visibile in servizi">
