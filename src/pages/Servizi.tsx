@@ -419,10 +419,11 @@ export default function Servizi() {
     await loadServizi();
   };
 
-  const loadServizi = async (override?: { dal?: string; al?: string }) => {
+  const loadServizi = async (override?: { dal?: string; al?: string; stato?: string }) => {
     setLoading(true);
     const dal = override?.dal ?? filterDal;
     const al = override?.al ?? filterAl;
+    const stato = override?.stato ?? filterStato;
     let query = supabase
       .from("servizi")
       .select("*, clients(name, company), autisti(nome, cognome, cellulare), autisti_esterni(nome, cellulare, targa), veicoli(targa, tipo_macchina), fornitori_cs(nome, telefono)")
@@ -434,8 +435,8 @@ export default function Servizi() {
     if (filterArchiviati) query = query.eq("archiviato", true);
     else query = query.eq("archiviato", false);
 
-    if (filterStato === "all") query = query.neq("stato", "annullato");
-    else query = query.eq("stato", filterStato as any);
+    if (stato === "all") query = query.neq("stato", "annullato");
+    else query = query.eq("stato", stato as any);
     if (filterTipologia !== "all") query = query.eq("tipologia", filterTipologia as any);
     if (filterTarga) query = query.ilike("veicoli.targa", `%${filterTarga}%`);
     if (filterContatto) query = query.ilike("contatto", `%${filterContatto}%`);
