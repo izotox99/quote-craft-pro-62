@@ -851,6 +851,7 @@ export type Database = {
           tipo: string
           totale_fattura: number | null
           updated_at: string
+          veicolo_id: string | null
         }
         Insert: {
           autista_id: string
@@ -868,6 +869,7 @@ export type Database = {
           tipo: string
           totale_fattura?: number | null
           updated_at?: string
+          veicolo_id?: string | null
         }
         Update: {
           autista_id?: string
@@ -885,6 +887,7 @@ export type Database = {
           tipo?: string
           totale_fattura?: number | null
           updated_at?: string
+          veicolo_id?: string | null
         }
         Relationships: [
           {
@@ -906,6 +909,13 @@ export type Database = {
             columns: ["servizio_id"]
             isOneToOne: false
             referencedRelation: "servizi_autista_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "autisti_spese_veicolo_id_fkey"
+            columns: ["veicolo_id"]
+            isOneToOne: false
+            referencedRelation: "veicoli"
             referencedColumns: ["id"]
           },
         ]
