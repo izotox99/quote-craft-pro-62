@@ -1584,7 +1584,7 @@ export default function Servizi() {
           fornitori={fornitori}
           isAdmin={isAdmin}
           userId={user?.id}
-          onSaved={loadServizi}
+          onSaved={handleServizioSaved}
         />
 
         {/* Modifica servizio */}
@@ -1599,7 +1599,7 @@ export default function Servizi() {
           fornitori={fornitori}
           isAdmin={isAdmin}
           userId={user?.id}
-          onSaved={loadServizi}
+          onSaved={handleServizioSaved}
         />
 
         <NetworkDispatchDialog
