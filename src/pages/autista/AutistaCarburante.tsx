@@ -11,6 +11,7 @@ import {
   ArrowLeft, Camera, Car, CheckCircle2, AlertTriangle, ImageUp, RefreshCw, Loader2, XCircle,
 } from "lucide-react";
 import { romeToday } from "@/lib/romeDate";
+import { getSessioneVeicoloAttiva } from "@/lib/veicoloSessione";
 
 type Ocr = {
   data: string | null;
