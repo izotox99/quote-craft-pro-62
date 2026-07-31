@@ -1,0 +1,2 @@
+ALTER TABLE public.autisti_spese ADD COLUMN IF NOT EXISTS veicolo_id uuid REFERENCES public.veicoli(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_autisti_spese_veicolo ON public.autisti_spese(veicolo_id);

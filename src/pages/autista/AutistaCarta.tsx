@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { toast } from "sonner";
 import { ArrowLeft, CreditCard, PlusCircle, Camera, Receipt, Loader2, ImageUp } from "lucide-react";
 import { romeToday } from "@/lib/romeDate";
+import { getSessioneVeicoloAttiva } from "@/lib/veicoloSessione";
 
 type Carta = {
   id: string; intestazione: string; ultime_quattro: string | null;
@@ -114,6 +115,7 @@ export default function AutistaCarta() {
         importo_spese: importo,
         totale_fattura: importo,
         servizio_id: form.servizio_id || null,
+        veicolo_id: (await getSessioneVeicoloAttiva())?.veicolo_id ?? null,
         note: form.note || null,
         foto_path: path,
         origine: "autista",
