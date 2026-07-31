@@ -70,7 +70,6 @@ export default function AutistiNote() {
 
   const elimina = async (id: string) => {
     if (!confirm("Eliminare definitivamente questa nota?")) return;
-    await supabase.from("comunicazioni_letture").delete().eq("comunicazione_id", id);
     const { error } = await supabase.from("comunicazioni").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Nota eliminata");
