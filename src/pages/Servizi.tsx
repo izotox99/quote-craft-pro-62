@@ -851,7 +851,21 @@ export default function Servizi() {
 
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const hasActiveFilters = filterTipologia !== "all" || filterTarga || filterContatto || filterCliente !== "all" || filterAutista !== "all" || filterFornitore !== "all" || filterCodice;
+  const activeFiltersCount = useMemo(() => {
+    let n = 0;
+    if (filterDal !== defaultDal() || filterAl !== defaultAl()) n++;
+    if (filterStato !== "all") n++;
+    if (filterTipologia !== "all") n++;
+    if (filterTarga.trim()) n++;
+    if (filterContatto.trim()) n++;
+    if (filterCliente !== "all") n++;
+    if (filterAutista !== "all") n++;
+    if (filterFornitore !== "all") n++;
+    if (filterCodice.trim()) n++;
+    return n;
+  }, [filterDal, filterAl, filterStato, filterTipologia, filterTarga, filterContatto, filterCliente, filterAutista, filterFornitore, filterCodice]);
+
+  const hasActiveFilters = activeFiltersCount > 0;
 
   const resetAllFilters = () => {
     setQuickDay(null);
@@ -867,6 +881,12 @@ export default function Servizi() {
     setFilterFornitore("all");
     setFilterCodice("");
   };
+
+  const handleResetFilters = async () => {
+    resetAllFilters();
+    await loadServizi({ dal: defaultDal(), al: defaultAl(), stato: "all" });
+  };
+
 
   return (
     <DashboardLayout>
