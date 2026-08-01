@@ -61,7 +61,7 @@ const emptyForm = {
 const eur = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
 
 export default function Veicoli() {
-  const { user } = useAuth();
+  const { user, canWrite } = useAuth();
   const navigate = useNavigate();
   const [veicoli, setVeicoli] = useState<Veicolo[]>([]);
   const [totals, setTotals] = useState<Record<string, Totals>>({});
@@ -225,9 +225,11 @@ export default function Veicoli() {
                 Gestisci la flotta: documenti, manutenzioni, carburante, spese e voucher giornalieri.
               </p>
             </div>
-            <Button onClick={openCreate} className="gap-2">
-              <PlusCircle className="h-4 w-4" /> Aggiungi mezzo
-            </Button>
+            {canWrite && (
+              <Button onClick={openCreate} className="gap-2">
+                <PlusCircle className="h-4 w-4" /> Aggiungi mezzo
+              </Button>
+            )}
           </div>
 
           {/* Filters */}

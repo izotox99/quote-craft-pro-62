@@ -50,7 +50,7 @@ const emptySpesa = {
 };
 
 export default function Autisti() {
-  const { user } = useAuth();
+  const { user, canWrite } = useAuth();
   const [autisti, setAutisti] = useState<Autista[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDisattivati, setShowDisattivati] = useState(false);
@@ -197,9 +197,11 @@ export default function Autisti() {
             <Button variant="outline" onClick={() => setShowDisattivati(v => !v)}>
               {showDisattivati ? "Autisti attivi" : "Autisti disattivati"}
             </Button>
-            <Button className="gap-2" onClick={openNuovo}>
-              <PlusCircle className="h-4 w-4" /> Aggiungi autista
-            </Button>
+            {canWrite && (
+              <Button className="gap-2" onClick={openNuovo}>
+                <PlusCircle className="h-4 w-4" /> Aggiungi autista
+              </Button>
+            )}
           </div>
         </div>
 

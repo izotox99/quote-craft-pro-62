@@ -224,7 +224,7 @@ export default function Clients() {
                 <ArchiveRestore className="h-4 w-4" />
                 {showDisattivati ? "Torna agli attivi" : "Clienti disattivati"}
               </Button>
-              {!showDisattivati && (
+              {!showDisattivati && canWrite && (
                 <Button className="gap-2 rounded-lg" onClick={openCreate}>
                   <PlusCircle className="h-4 w-4" /> Aggiungere cliente
                 </Button>
@@ -253,7 +253,7 @@ export default function Clients() {
                         ? "Nessun cliente disattivato"
                         : "Nessun cliente"}
                   </p>
-                  {!search && !showDisattivati && (
+                  {!search && !showDisattivati && canWrite && (
                     <Button size="sm" className="mt-4 gap-2 rounded-lg" onClick={openCreate}>
                       <PlusCircle className="h-4 w-4" /> Aggiungi il primo cliente
                     </Button>
