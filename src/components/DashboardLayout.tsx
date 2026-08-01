@@ -385,8 +385,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </Sheet>
 
       <main className="w-full px-3 py-3 lg:px-4">
+        {!canWrite && (
+          <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
+            <Eye className="h-4 w-4 shrink-0" />
+            Accesso in sola lettura: puoi consultare i dati ma non modificarli.
+          </div>
+        )}
         {children}
       </main>
+
     </div>
   );
 }
