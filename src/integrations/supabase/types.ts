@@ -1699,6 +1699,7 @@ export type Database = {
           industry: string | null
           logo_url: string | null
           name: string
+          owner_user_id: string | null
           p_iva: string | null
           phone: string | null
           sede_legale: string | null
@@ -1715,6 +1716,7 @@ export type Database = {
           industry?: string | null
           logo_url?: string | null
           name?: string
+          owner_user_id?: string | null
           p_iva?: string | null
           phone?: string | null
           sede_legale?: string | null
@@ -1731,6 +1733,7 @@ export type Database = {
           industry?: string | null
           logo_url?: string | null
           name?: string
+          owner_user_id?: string | null
           p_iva?: string | null
           phone?: string | null
           sede_legale?: string | null
@@ -3894,7 +3897,7 @@ export type Database = {
     Enums: {
       agenda_categoria: "appuntamento" | "scadenza" | "nota" | "altro"
       agenda_visibilita: "personale" | "organizzazione"
-      app_role: "admin" | "manager" | "agent"
+      app_role: "admin" | "manager" | "agent" | "viewer"
       assenza_stato: "richiesta" | "approvata" | "rifiutata" | "annullata"
       assenza_tipo: "ferie" | "riposo" | "permesso" | "malattia"
       network_dispatch_stato:
@@ -4059,7 +4062,7 @@ export const Constants = {
     Enums: {
       agenda_categoria: ["appuntamento", "scadenza", "nota", "altro"],
       agenda_visibilita: ["personale", "organizzazione"],
-      app_role: ["admin", "manager", "agent"],
+      app_role: ["admin", "manager", "agent", "viewer"],
       assenza_stato: ["richiesta", "approvata", "rifiutata", "annullata"],
       assenza_tipo: ["ferie", "riposo", "permesso", "malattia"],
       network_dispatch_stato: [
