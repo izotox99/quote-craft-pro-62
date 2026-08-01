@@ -233,7 +233,7 @@ function printFoglioServizio(s: Servizio, org: { name: string; logo_url: string 
 
 
 export default function Servizi() {
-  const { user, role, organization } = useAuth();
+  const { user, role, organization, canWrite } = useAuth();
   const isAdmin = role === "admin";
   const [servizi, setServizi] = useState<Servizio[]>([]);
   const [accessoriMap, setAccessoriMap] = useState<Record<string, string>>({});
@@ -858,9 +858,11 @@ export default function Servizi() {
                 <Columns3 className="h-3.5 w-3.5" /> Colonne
               </Button>
             </div>
-            <Button className="gap-2" onClick={() => setDialogOpen(true)}>
-              <PlusCircle className="h-4 w-4" /> Nuovo Servizio
-            </Button>
+            {canWrite && (
+              <Button className="gap-2" onClick={() => setDialogOpen(true)}>
+                <PlusCircle className="h-4 w-4" /> Nuovo Servizio
+              </Button>
+            )}
           </div>
 
         </div>

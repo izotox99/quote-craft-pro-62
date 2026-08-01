@@ -13,7 +13,7 @@ import {
   FileText, LayoutDashboard, Users, Car, UserCheck, Truck, Settings, LogOut, User, Menu,
   ChevronDown, List, Receipt, Star, Package, UserPlus, StickyNote, Clock, FileSpreadsheet,
   Users2, Fuel, ClipboardCheck, ClipboardList, TrendingUp, FilePlus, FileText as FileTextIcon, CalendarDays,
-  AlertTriangle, Wrench, Droplet, PlusCircle, Calendar, Megaphone, Link2,
+  AlertTriangle, Wrench, Droplet, PlusCircle, Calendar, Megaphone, Link2, Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificheBell } from "@/components/NotificheBell";
@@ -64,7 +64,7 @@ const mainNavItems = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
-  const { user, signOut, organization } = useAuth();
+  const { user, signOut, organization, canWrite } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [clientsExpanded, setClientsExpanded] = useState(false);
@@ -385,8 +385,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </Sheet>
 
       <main className="w-full px-3 py-3 lg:px-4">
+        {!canWrite && (
+          <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
+            <Eye className="h-4 w-4 shrink-0" />
+            Accesso in sola lettura: puoi consultare i dati ma non modificarli.
+          </div>
+        )}
         {children}
       </main>
+
     </div>
   );
 }

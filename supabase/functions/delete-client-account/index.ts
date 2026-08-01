@@ -39,6 +39,11 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "client_id obbligatorio", code: "missing_fields" }, 400);
     }
 
+
+    const { data: canWrite } = await admin.rpc("can_write", { _user_id: callingUser.id });
+    if (!canWrite) {
+      return jsonResponse({ error: "Account in sola lettura: operazione non consentita", code: "read_only" }, 403);
+    }
     const { data: callerProfile } = await admin
       .from("profiles")
       .select("org_id")

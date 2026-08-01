@@ -1699,6 +1699,7 @@ export type Database = {
           industry: string | null
           logo_url: string | null
           name: string
+          owner_user_id: string | null
           p_iva: string | null
           phone: string | null
           sede_legale: string | null
@@ -1715,6 +1716,7 @@ export type Database = {
           industry?: string | null
           logo_url?: string | null
           name?: string
+          owner_user_id?: string | null
           p_iva?: string | null
           phone?: string | null
           sede_legale?: string | null
@@ -1731,6 +1733,7 @@ export type Database = {
           industry?: string | null
           logo_url?: string | null
           name?: string
+          owner_user_id?: string | null
           p_iva?: string | null
           phone?: string | null
           sede_legale?: string | null
@@ -3396,6 +3399,7 @@ export type Database = {
         Args: { _autista_id: string; _from: string; _to: string }
         Returns: Json
       }
+      can_write: { Args: { _user_id: string }; Returns: boolean }
       cleanup_servizi_annullati: { Args: never; Returns: undefined }
       client_portal_update_servizio: {
         Args: {
@@ -3558,6 +3562,7 @@ export type Database = {
       }
       is_autista_user: { Args: { _user_id: string }; Returns: boolean }
       is_client_user: { Args: { _user_id: string }; Returns: boolean }
+      is_org_owner: { Args: { _user_id: string }; Returns: boolean }
       network_dispatch_servizio: {
         Args: {
           _partner_org_id: string
@@ -3691,6 +3696,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      owner_can_manage_user: {
+        Args: { _target_user: string }
+        Returns: boolean
       }
       presenza_apri_turno: {
         Args: { _note?: string }
@@ -3894,7 +3903,7 @@ export type Database = {
     Enums: {
       agenda_categoria: "appuntamento" | "scadenza" | "nota" | "altro"
       agenda_visibilita: "personale" | "organizzazione"
-      app_role: "admin" | "manager" | "agent"
+      app_role: "admin" | "manager" | "agent" | "viewer"
       assenza_stato: "richiesta" | "approvata" | "rifiutata" | "annullata"
       assenza_tipo: "ferie" | "riposo" | "permesso" | "malattia"
       network_dispatch_stato:
@@ -4059,7 +4068,7 @@ export const Constants = {
     Enums: {
       agenda_categoria: ["appuntamento", "scadenza", "nota", "altro"],
       agenda_visibilita: ["personale", "organizzazione"],
-      app_role: ["admin", "manager", "agent"],
+      app_role: ["admin", "manager", "agent", "viewer"],
       assenza_stato: ["richiesta", "approvata", "rifiutata", "annullata"],
       assenza_tipo: ["ferie", "riposo", "permesso", "malattia"],
       network_dispatch_stato: [
