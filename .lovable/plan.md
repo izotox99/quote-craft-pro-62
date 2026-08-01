@@ -1,140 +1,59 @@
-# Fase 4 — Assenze, ferie e calendario condiviso
+# Accesso multi-utente alla tua organizzazione NCC
 
-Sistema per gestire ferie/riposi/permessi/malattia degli autisti con controlli di copertura server-side, calendario condiviso a privacy minima e workflow di approvazione dal titolare.
+Obiettivo: invitare altre persone (socio, collaboratore) nella TUA organizzazione con un ruolo, senza condividere credenziali. Ogni loro modifica è visibile a te perché lavorano sugli stessi dati dell'org. Nessun accesso ad altre organizzazioni.
 
-## 1. Database
+## Ruoli
 
-### Nuove tabelle
+| Ruolo | Legge | Scrive | Gestisce membri |
+|---|---|---|---|
+| Titolare (owner) | tutto della sua org | sì | sì (unico) |
+| Admin invitato | tutto della sua org | sì | no |
+| Visualizzatore (viewer) | tutto della sua org | no | no |
 
-**`public.config_assenze`** (una riga per org)
-- `org_id uuid PK` → `organizations.id`
-- `max_riposi_mese int NOT NULL DEFAULT 4`
-- `max_ferie_mese int NOT NULL DEFAULT 10`
-- `max_permessi_mese int NOT NULL DEFAULT 2`
-- `min_autisti_disponibili_giorno int NOT NULL DEFAULT 1`
-- `created_at`, `updated_at`
-- RLS: SELECT/UPDATE per membri org; INSERT solo admin/manager.
+Il titolare è l'utente che ha creato l'organizzazione: non è rimovibile e non può essere declassato.
 
-**`public.autisti_assenze`**
-- `id uuid PK`, `org_id uuid NOT NULL`, `autista_id uuid NOT NULL` → `autisti.id`
-- `tipo` enum `assenza_tipo` = (`ferie`, `riposo`, `permesso`, `malattia`)
-- `data_inizio date NOT NULL`, `data_fine date NOT NULL` (CHECK `data_fine >= data_inizio` — costante, ok)
-- `motivazione text`, `note_ufficio text`
-- `stato` enum `assenza_stato` = (`richiesta`, `approvata`, `rifiutata`, `annullata`) DEFAULT `richiesta`
-- `richiesta_da uuid` (auth.uid dell'autista o dell'ufficio se inserita manualmente)
-- `deciso_da uuid`, `deciso_at timestamptz`
-- `origine` text ('autista' | 'ufficio')
-- Timestamps + trigger `updated_at`.
-- Indici su `(org_id, data_inizio, data_fine)`, `(autista_id, stato)`.
+## 1. Migrazioni database (in due passaggi)
 
-**Estensioni su `autisti`** (override per singolo autista, nullable)
-- `max_riposi_mese int`, `max_ferie_mese int`, `max_permessi_mese int`.
-  Se NULL → vale il default di `config_assenze`.
+Migrazione A (isolata, obbligatoria per Postgres):
+- `ALTER TYPE app_role ADD VALUE 'viewer'`.
 
-### Enum
+Migrazione B:
+- Funzione `public.can_write(_user uuid)` (SECURITY DEFINER, STABLE): vero se l'utente ha ruolo `admin` o `manager` nella propria org; falso per `viewer`.
+- Funzione `public.is_org_owner(_user uuid)`: vero solo per il creatore dell'organizzazione (nuova colonna `organizations.owner_user_id`, valorizzata retroattivamente con il primo profilo/admin dell'org).
+- Riscrittura delle policy di scrittura elencate sotto: si aggiunge `AND public.can_write(auth.uid())` a USING e WITH CHECK. Le policy di SELECT restano invariate (tutti i membri leggono).
 
-```sql
-CREATE TYPE assenza_tipo AS ENUM ('ferie','riposo','permesso','malattia');
-CREATE TYPE assenza_stato AS ENUM ('richiesta','approvata','rifiutata','annullata');
-```
+### Tabelle e policy di scrittura da modificare (lato ufficio/org)
 
-### GRANT + RLS
+accessori_catalogo, agenda_eventi, autisti, autisti_carte, autisti_esterni, autisti_feedback (policy ufficio), autisti_ore (ramo ufficio), autisti_presenze (ramo ufficio), autisti_spese (policy org), clients, client_utenze (policy org), comunicazioni, config_assenze, departments, fornitori_cs, link_utili, notifiche (update/delete), organizations (update), passeggeri_rubrica (policy org), servizi, servizi_accessori, templates, veicoli, veicoli_documenti, veicoli_gasolio, veicoli_manutenzione_ord, veicoli_manutenzione_straord, veicoli_spese.
 
-- `config_assenze`: SELECT a `authenticated` con USING org membership (NCC) OR autista dell'org (per leggere la soglia). UPDATE/INSERT solo admin/manager della stessa org.
-- `autisti_assenze`:
-  - SELECT: membri NCC dell'org **OR** autista dell'org (per il calendario condiviso — restituisce solo righe della propria org).
-  - INSERT/UPDATE lato client bloccati: tutte le mutazioni passano dalle funzioni SECURITY DEFINER sotto.
-  - Nessuna DELETE diretta (soft state `annullata`).
+Non toccate (non appartengono al perimetro ufficio): policy degli autisti su sé stessi, portale clienti/utenze, `autisti_preferenze`, `autisti_veicolo_sessioni`, `comunicazioni_letture`, `dashboard_viste` (preferenze personali, un viewer può salvarsi le proprie viste), proposals/line_items/templates personali, tabelle di log in sola lettura.
 
-## 2. Funzioni SECURITY DEFINER
+### RPC ed edge function
 
-Tutte con `SET search_path = public`, revocate a `PUBLIC` e concesse solo ad `authenticated`.
+Tutte le funzioni SECURITY DEFINER che scrivono per conto dell'ufficio ricevono un controllo iniziale `if not public.can_write(auth.uid()) then raise exception 'Permesso negato: sola lettura'`. In elenco: `approva_assenza`, `rifiuta_assenza`, `annulla_assenza`, `inserisci_assenza_ufficio`, `network_dispatch_servizio`, `network_withdraw_servizio`, `network_invite_partner`, `network_respond_invite`, `network_revoke_partnership`, `veicolo_tagliando_eseguito`, `client_portal_update_servizio` (solo ramo ufficio se presente).
 
-### `assenze_get_effective_limits(_autista_id uuid) → jsonb`
-Restituisce `{max_riposi, max_ferie, max_permessi, min_disponibili}` risolvendo override → default org.
+Le edge function che scrivono con privilegi elevati (`create-client-account`, `delete-client-account`, `create-artista-account`, invito membri) verificano il JWT del chiamante e negano se non `can_write` (per l'invito membri: solo owner).
 
-### `assenze_conteggia_mese(_autista_id uuid, _tipo assenza_tipo, _anno int, _mese int) → int`
-Conta giorni **effettivi** (somma `data_fine - data_inizio + 1` intersecati col mese) per stato in (`richiesta`,`approvata`) escludendo un eventuale `_exclude_id`.
+## 2. Invito dei membri
 
-### `assenze_copertura_giorno(_org uuid, _giorno date) → jsonb`
-Restituisce:
-- `autisti_attivi` = COUNT autisti attivi dell'org
-- `assenti_approvati` = distinct autisti con assenza approvata che copre il giorno
-- `assenti_in_attesa` = distinct autisti con richiesta pendente
-- `disponibili` = attivi - approvati
-- `min_richiesto` da config
-- `pieno` boolean
+Nuova edge function `invite-org-member` (stesso pattern di `create-client-account`):
+1. Valida il JWT del chiamante e verifica che sia il titolare dell'org.
+2. Rifiuta se l'email è già usata da un cliente, un'utenza cliente, un autista o da un membro di un'altra org (errore chiaro e specifico).
+3. Se l'email non esiste: crea l'utente con password casuale non mostrata e invia un'email di invito/reset per impostarla. Se esiste già come utente NCC senza org: lo collega.
+4. Crea `profiles` con il TUO `org_id` e una riga in `user_roles` con il ruolo scelto (`admin` o `viewer`).
 
-### `richiedi_assenza(_tipo, _data_inizio, _data_fine, _motivazione) → autisti_assenze`
-Chiamata dall'autista.
-Controlli:
-- (a) plafond mensile per tipo (ferie e riposi separati; permesso separato; malattia esente).
-- (b) per ogni giorno del range, verifica che approvate + questa nuova non porti `disponibili` < `min`. Se sì → EXCEPTION con messaggio `Giorno YYYY-MM-DD pieno. Assenti: <elenco nome + tipo>` (nomi dei colleghi già prenotati approvati/in_attesa).
-- Malattia: bypassa (a) e (b), viene creata direttamente **approvata** e genera notifica `assenza_malattia` al titolare.
-- Altrimenti inserisce `stato='richiesta'` e notifica il titolare (`assenza_richiesta`).
+Altre funzioni della stessa edge function (solo owner): cambio ruolo, revoca accesso (rimozione da `profiles`/`user_roles`; il titolare non è mai rimovibile).
 
-### `approva_assenza(_id, _note_ufficio)` / `rifiuta_assenza(_id, _note_ufficio)`
-Solo admin/manager dell'org. All'approvazione rifà il controllo (b) sui giorni residui (situazione può essere cambiata). Se non passa → EXCEPTION esplicativa. Notifica autista. Alla transizione ad `approvata`, se un giorno raggiunge esattamente il limite (`disponibili == min_richiesto`), genera `assenza_giorno_pieno` al titolare.
+## 3. UI — Impostazioni > Team
 
-### `inserisci_assenza_ufficio(_autista_id, _tipo, ...)` 
-Solo admin/manager. Crea direttamente `approvata` (con stessi controlli hard, ma con parametro `_force boolean` opzionale per override esplicito del min copertura, tracciato in `note_ufficio`).
+Nuova pagina `/impostazioni/team`, visibile solo al titolare: elenco membri (nome, email, ruolo, ultimo accesso), invito per email con scelta ruolo, cambio ruolo inline, revoca con conferma.
 
-### `annulla_assenza(_id)`
-Autista può annullare le proprie `richiesta`. Ufficio può annullare qualsiasi assenza della propria org (soft → `annullata`).
+Per i viewer: hook `usePermessi()` che espone `canWrite`. I pulsanti di creazione/modifica/eliminazione (Nuovo servizio, assegnazioni autista/veicolo, elimina, azioni bulk, moduli veicoli/clienti/autisti) vengono nascosti o disabilitati con badge "Sola lettura". La barriera reale resta comunque la RLS.
 
-## 3. UI
+## 4. Verifica
 
-### Dashboard NCC — Configurazione (`/impostazioni` o sezione dedicata)
-- Blocco "Assenze e copertura": max ferie/mese, max riposi/mese, max permessi/mese, min autisti disponibili/giorno.
-- Nel form autista (`NuovoAutistaDialog`) aggiungere sezione "Limiti personali (opzionali)" con i 3 override.
-
-### Dashboard NCC — nuova pagina `/autisti/assenze`
-- Tab **Richieste in attesa**: lista con autista, tipo, range, motivazione, azioni Approva/Rifiuta (+ textarea nota).
-- Tab **Calendario copertura**: vista mensile con per ogni giorno badge `assenti/attivi` e evidenza giorni al limite/pieni. Click → dialog con elenco assenti (nome, tipo, stato) e pulsante "Inserisci assenza manuale".
-- Tab **Storico**: filtrabile per autista/tipo/stato.
-
-### Agenda NCC esistente
-- Nuovo livello "Assenze autisti" (checkbox layer): eventi generati dalle `autisti_assenze` approvate, colore per tipo, titolo `NomeAutista — Tipo`.
-
-### App autista — nuova sezione `/autista/ferie`
-Layout mobile-first:
-- **Calendario mensile** (griglia semplice, no libreria pesante): ogni cella mostra `n/N` (assenti/disponibili). Codifica:
-  - verde: disponibile
-  - giallo: quasi al limite (disponibili = min)
-  - rosso: pieno
-  - grigio: passato
-- Tap su un giorno → sheet con lista `Nome — Tipo` (solo questo, nessun altro dato) e, se giorno non pieno, pulsante "Richiedi assenza da questo giorno".
-- Form richiesta: tipo, data_inizio, data_fine (default giorno tappato), motivazione. Invio → `richiedi_assenza`. Errori server mostrati nel toast.
-- Sotto: **Le mie richieste** (lista con stato colorato, possibilità di annullare le pendenti).
-- **Contatori personali del mese corrente**: "Riposi: X di Y — Ferie: X di Y — Permessi: X di Y" via `assenze_get_effective_limits` + `assenze_conteggia_mese`.
-
-### Voce menu app autista
-Aggiungere "Ferie" nel `AutistaLayout` (sostituendo o affiancando il placeholder Opzioni al bisogno).
-
-## 4. Notifiche (usano `public.notifiche` esistente)
-
-| Evento | Destinatario | tipo |
-|---|---|---|
-| Richiesta creata | org (titolare) | `assenza_richiesta` |
-| Approvata | autista (via notifica org + client filter, oppure canale futuro) | `assenza_approvata` |
-| Rifiutata | autista | `assenza_rifiutata` |
-| Giorno raggiunge limite | org | `assenza_giorno_pieno` |
-| Malattia registrata | org | `assenza_malattia` |
-
-Le notifiche destinate all'autista useranno `autista_id` in un nuovo campo o passeranno via `notifiche.utenza_id`; per non allargare lo schema di `notifiche`, aggiungiamo colonna nullable `autista_id uuid` a `notifiche` (piccola migration) e la `NotificheBell` dell'app autista già interroga per `autista_id = get_autista_id(auth.uid())`.
-
-## 5. Sicurezza / privacy
-
-- Calendario condiviso: l'autista chiama una funzione dedicata `assenze_calendario_mese(_anno, _mese)` (SECURITY DEFINER) che ritorna **solo** `giorno`, `autista_nome`, `tipo`, `stato in (approvata, richiesta)` per la propria org. Nessun `id`, nessun contatto, nessun dato economico.
-- Le policy RLS su `autisti_assenze` per il ruolo autista sono più permissive di quanto serve → per sicurezza il client autista **non** interroga la tabella direttamente; usa esclusivamente le funzioni. Le policy SELECT per autista possono comunque essere strette a `autista_id = get_autista_id(auth.uid())` (solo le proprie righe) e il calendario condiviso passa dalla funzione.
-- Tutte le funzioni: `REVOKE EXECUTE ... FROM PUBLIC; GRANT EXECUTE TO authenticated;` e controllo esplicito ruolo/appartenenza autista all'inizio.
-
-## 6. Piano di rollout
-
-1. Migration: enum, tabelle, override su `autisti`, colonna `autista_id` su `notifiche`, GRANT, RLS, funzioni, trigger `updated_at`.
-2. Seed: riga `config_assenze` per ogni org esistente con i default (Fabio: `min = 7`).
-3. UI dashboard NCC: sezione Configurazione + pagina `/autisti/assenze` + hook agenda.
-4. UI app autista: pagina `/autista/ferie` + voce menu + integrazione notifiche.
-5. Verifica end-to-end: richiesta → limite plafond → limite copertura → approvazione con ricontrollo → malattia diretta → visualizzazione calendario condiviso a privacy minima.
-
-Confermi il piano così com'è o vuoi cambiare qualcosa (es. nomi enum, gestione permessi, comportamento del force-override lato ufficio)?
+- Test SQL con `set local role authenticated` e JWT simulato di un viewer: INSERT/UPDATE/DELETE su `servizi`, `clients`, `veicoli`, `autisti` devono fallire con errore RLS; SELECT deve funzionare.
+- Chiamata diretta alle RPC (`approva_assenza`, `network_dispatch_servizio`) come viewer: errore "Permesso negato".
+- Chiamata diretta all'edge function `create-client-account` come viewer: 403.
+- Test browser: login viewer → tabella servizi visibile, pulsanti di scrittura assenti; login admin invitato → può modificare e la modifica è visibile al titolare.
+- Un membro invitato non vede dati di altre organizzazioni (query di controllo cross-org a risultato vuoto).
