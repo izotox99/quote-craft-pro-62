@@ -793,14 +793,14 @@ export default function Servizi() {
       setFilterDal(dal);
       setFilterAl(al);
       setFilterStato("all");
-      await loadServizi({ dal, al, stato: "all" });
+      await loadServizi({ dal, al, stato: "all", reset: true });
       return;
     }
     setQuickDay(key);
     setFilterDal(opt.date);
     setFilterAl(opt.date);
     setFilterStato("nuovo");
-    await loadServizi({ dal: opt.date, al: opt.date, stato: "nuovo" });
+    await loadServizi({ dal: opt.date, al: opt.date, stato: "nuovo", reset: true });
   };
 
   // Quick day filters for "Confermati" services
@@ -847,14 +847,14 @@ export default function Servizi() {
       setFilterDal(dal);
       setFilterAl(al);
       setFilterStato("all");
-      await loadServizi({ dal, al, stato: "all" });
+      await loadServizi({ dal, al, stato: "all", reset: true });
       return;
     }
     setQuickConf(key);
     setFilterDal(opt.date);
     setFilterAl(opt.date);
     setFilterStato("confermato");
-    await loadServizi({ dal: opt.date, al: opt.date, stato: "confermato" });
+    await loadServizi({ dal: opt.date, al: opt.date, stato: "confermato", reset: true });
   };
 
 
@@ -893,7 +893,7 @@ export default function Servizi() {
 
   const handleResetFilters = async () => {
     resetAllFilters();
-    await loadServizi({ dal: defaultDal(), al: defaultAl(), stato: "all" });
+    await loadServizi({ dal: defaultDal(), al: defaultAl(), stato: "all", reset: true });
   };
 
 
@@ -1002,7 +1002,7 @@ export default function Servizi() {
 
               <div className="ml-auto flex items-center gap-2">
                 {(quickDay || quickConf || hasActiveFilters) && (
-                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground" onClick={() => { resetAllFilters(); setTimeout(() => loadServizi(), 0); }}>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground" onClick={handleResetFilters}>
                     <X className="h-3 w-3" /> Reset
                   </Button>
                 )}
