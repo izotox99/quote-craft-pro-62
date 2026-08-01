@@ -93,7 +93,7 @@ type Servizio = {
   clients: { name: string; company: string | null } | null;
   autisti: { nome: string; cognome: string; cellulare: string | null } | null;
   autisti_esterni: { nome: string; cellulare: string | null; targa: string | null } | null;
-  veicoli: { targa: string; tipo_macchina: string | null } | null;
+  veicoli: { targa: string; tipo_macchina: string | null; marca: string | null; modello: string | null } | null;
   fornitori_cs: { nome: string; telefono: string | null } | null;
 };
 
@@ -427,7 +427,7 @@ export default function Servizi() {
     const stato = override?.stato ?? filterStato;
     let query = supabase
       .from("servizi")
-      .select("*, clients(name, company), autisti(nome, cognome, cellulare), autisti_esterni(nome, cellulare, targa), veicoli(targa, tipo_macchina), fornitori_cs(nome, telefono)")
+      .select("*, clients(name, company), autisti(nome, cognome, cellulare), autisti_esterni(nome, cellulare, targa), veicoli(targa, tipo_macchina, marca, modello), fornitori_cs(nome, telefono)")
       .gte("data_servizio", dal)
       .lte("data_servizio", al)
       .order("data_servizio", { ascending: true });
@@ -574,6 +574,16 @@ export default function Servizi() {
     }
 
     toast.success(driver ? "Autista assegnato" : "Assegnazione rimossa");
+    await loadServizi();
+  };
+
+  const handleAssignVeicolo = async (servizioId: string, veicolo: { id: string; targa: string } | null) => {
+    const { error } = await supabase
+      .from("servizi")
+      .update({ veicolo_id: veicolo ? veicolo.id : null } as any)
+      .eq("id", servizioId);
+    if (error) { toast.error(error.message); return; }
+    toast.success(veicolo ? `Veicolo ${veicolo.targa} assegnato` : "Veicolo rimosso");
     await loadServizi();
   };
 
@@ -1113,7 +1123,39 @@ export default function Servizi() {
               case "luogo_fine": return s.luogo_fine || "—";
               case "info_autista": return s.info_autista || "—";
               case "accessori": return accessoriMap[s.id] || s.accessori || "—";
-              case "veicolo": return s.veicoli ? `${s.veicoli.tipo_macchina || ""} ${s.veicoli.targa}` : (s.veicolo_tipo || "—");
+              case "veicolo": return (
+                <AssignDriverPopover
+                  currentInternoId={s.autista_id}
+                  currentEsternoId={s.autista_esterno_id}
+                  onAssign={(driver) => handleAssignDriver(s.id, driver)}
+                  requestedVeicoloTipo={s.veicolo_tipo}
+                  currentVeicoloId={s.veicolo_id}
+                  onAssignVeicolo={(v) => handleAssignVeicolo(s.id, v)}
+                  initialTab="veicolo"
+                  trigger={
+                    <button
+                      type="button"
+                      onClick={(e) => e.stopPropagation()}
+                      title={s.veicoli ? "Cambia veicolo assegnato" : "Assegna veicolo specifico"}
+                      className="inline-flex w-full min-w-0 max-w-full flex-col items-center text-center gap-0 overflow-hidden rounded-sm px-0.5 py-0 leading-[1.05] hover:bg-accent"
+                    >
+                      {s.veicoli ? (
+                        <>
+                          <span className="truncate font-mono font-medium">{s.veicoli.targa}</span>
+                          <span className="truncate text-muted-foreground text-[7.5px]">
+                            {[s.veicoli.marca, s.veicoli.modello].filter(Boolean).join(" ") || s.veicoli.tipo_macchina || ""}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="truncate">{s.veicolo_tipo || "—"}</span>
+                          <span className="truncate text-[7.5px] text-amber-600">da assegnare</span>
+                        </>
+                      )}
+                    </button>
+                  }
+                />
+              );
               case "tp": return s.tipo_pagamento || "—";
               case "non_incassato": return s.non_incassato != null ? s.non_incassato : "—";
               case "incasso": return s.incasso ?? 0;
@@ -1161,6 +1203,9 @@ export default function Servizi() {
                         currentEsternoId={s.autista_esterno_id}
                         currentLabel={driverLabel}
                         onAssign={(driver) => handleAssignDriver(s.id, driver)}
+                        requestedVeicoloTipo={s.veicolo_tipo}
+                        currentVeicoloId={s.veicolo_id}
+                        onAssignVeicolo={(v) => handleAssignVeicolo(s.id, v)}
                         trigger={
                           <button
                             type="button"
@@ -1195,6 +1240,9 @@ export default function Servizi() {
                     currentEsternoId={s.autista_esterno_id}
                     currentLabel={driverLabel}
                     onAssign={(driver) => handleAssignDriver(s.id, driver)}
+                        requestedVeicoloTipo={s.veicolo_tipo}
+                        currentVeicoloId={s.veicolo_id}
+                        onAssignVeicolo={(v) => handleAssignVeicolo(s.id, v)}
                     trigger={
                       <button
                         type="button"
@@ -1283,6 +1331,9 @@ export default function Servizi() {
                     <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
                       <AssignDriverPopover
                         onAssign={(driver) => handleAssignDriver(s.id, driver)}
+                        requestedVeicoloTipo={s.veicolo_tipo}
+                        currentVeicoloId={s.veicolo_id}
+                        onAssignVeicolo={(v) => handleAssignVeicolo(s.id, v)}
                         trigger={
                           <button
                             type="button"
@@ -1558,7 +1609,9 @@ export default function Servizi() {
                     <DetailRow icon={Info} label="Info Autista" value={s.info_autista} />
                     <DetailRow icon={Luggage} label="Accessori" value={s.accessori} />
                     <DetailRow icon={Car} label="Veicolo" value={
-                      s.veicoli ? `${s.veicoli.tipo_macchina || ""} — ${s.veicoli.targa}` : (s.veicolo_tipo || null)
+                      s.veicoli
+                        ? `${[s.veicoli.marca, s.veicoli.modello].filter(Boolean).join(" ") || s.veicoli.tipo_macchina || ""} — ${s.veicoli.targa}`
+                        : (s.veicolo_tipo ? `${s.veicolo_tipo} (da assegnare)` : null)
                     } />
                     <DetailRow icon={Users} label="Autista" value={s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : (s.autisti_esterni?.nome || null)} />
                     <DetailRow icon={Users} label="Fornitore CS" value={s.fornitori_cs?.nome} />
