@@ -1131,6 +1131,7 @@ export default function Servizi() {
                   requestedVeicoloTipo={s.veicolo_tipo}
                   currentVeicoloId={s.veicolo_id}
                   onAssignVeicolo={(v) => handleAssignVeicolo(s.id, v)}
+                  initialTab="veicolo"
                   trigger={
                     <button
                       type="button"

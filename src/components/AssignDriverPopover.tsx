@@ -34,6 +34,7 @@ type Props = {
   currentVeicoloId?: string | null;
   /** Se presente, mostra la sezione di assegnazione del veicolo specifico */
   onAssignVeicolo?: (veicolo: VeicoloOption | null) => Promise<void> | void;
+  initialTab?: "autista" | "veicolo";
 };
 
 const normalize = (v?: string | null) => (v ?? "").trim().toLowerCase();
@@ -48,12 +49,13 @@ export function AssignDriverPopover({
   requestedVeicoloTipo,
   currentVeicoloId,
   onAssignVeicolo,
+  initialTab = "autista",
 }: Props) {
   const [open, setOpen] = useState(false);
   const [interni, setInterni] = useState<DriverOption[]>([]);
   const [esterni, setEsterni] = useState<DriverOption[]>([]);
   const [veicoli, setVeicoli] = useState<VeicoloOption[]>([]);
-  const [tab, setTab] = useState<"autista" | "veicolo">("autista");
+  const [tab, setTab] = useState<"autista" | "veicolo">(initialTab);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
