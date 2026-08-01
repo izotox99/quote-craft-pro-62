@@ -1162,9 +1162,20 @@ export default function Servizi() {
                       <Input value={filterCodice} onChange={e => setFilterCodice(e.target.value)} className="h-9" />
                     </div>
                   </div>
-                  <Button onClick={handleSearch} size="sm" className="gap-2">
-                    <Search className="h-3.5 w-3.5" /> Cerca
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button onClick={handleSearch} size="sm" className="gap-2">
+                      <Search className="h-3.5 w-3.5" /> Cerca
+                    </Button>
+                    <Button onClick={handleResetFilters} size="sm" variant="outline" className="gap-2">
+                      Azzera filtri
+                    </Button>
+                    {activeFiltersCount > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {activeFiltersCount} {activeFiltersCount === 1 ? "filtro attivo" : "filtri attivi"}
+                      </span>
+                    )}
+                  </div>
+
                 </div>
               </CollapsibleContent>
             </Collapsible>
