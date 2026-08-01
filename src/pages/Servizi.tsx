@@ -395,17 +395,20 @@ export default function Servizi() {
 
 
   const loadLookups = async () => {
-    const [c, a, v, f] = await Promise.all([
+    const [c, a, ae, v, f] = await Promise.all([
       supabase.from("clients").select("id, name, company, phone").order("name"),
       supabase.from("autisti").select("id, nome, cognome").order("cognome"),
+      supabase.from("autisti_esterni").select("id, nome").order("nome"),
       supabase.from("veicoli").select("id, targa, tipo_macchina").order("targa"),
       supabase.from("fornitori_cs").select("id, nome").order("nome"),
     ]);
     setClients(c.data ?? []);
     setAutisti(a.data ?? []);
+    setAutistiEsterni(ae.data ?? []);
     setVeicoli(v.data ?? []);
     setFornitori(f.data ?? []);
   };
+
 
   const handleServizioSaved = async (info?: { data_servizio?: string | null }) => {
     const d = info?.data_servizio;
