@@ -143,7 +143,16 @@ export default function AutistaServizioDetail() {
         <Card className="p-3 grid grid-cols-2 gap-2 text-xs">
           <Info label="Passeggeri" value={s.n_passeggeri} />
           <Info label="Bagagli" value={s.n_bagagli} />
-          <Info label="Veicolo" value={veicolo?.modello ?? s.veicolo_tipo} />
+          <Info
+            label="Veicolo"
+            value={
+              veicolo
+                ? `${[veicolo.marca, veicolo.modello].filter(Boolean).join(" ") || veicolo.tipo_macchina || ""} — ${veicolo.targa}`.trim()
+                : s.veicolo_tipo
+                  ? `${s.veicolo_tipo} · Veicolo da assegnare`
+                  : null
+            }
+          />
           <Info label="Tipologia" value={s.tipologia} />
           {s.transfer_tipo && <Info label="Transfer" value={s.transfer_tipo} />}
           {s.disposizione_oraria && <Info label="Disposizione" value={s.disposizione_oraria} />}

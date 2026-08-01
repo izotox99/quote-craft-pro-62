@@ -96,10 +96,10 @@ export default function AutistaServizi() {
 }
 
 function CardServizio({ s, onOpen }: { s: any; onOpen: () => void }) {
-  const [veicolo, setVeicolo] = useState<{ modello?: string; targa?: string; foto_url?: string } | null>(null);
+  const [veicolo, setVeicolo] = useState<{ marca?: string; modello?: string; targa?: string; foto_url?: string } | null>(null);
   useEffect(() => {
-    if (!s.veicolo_id) return;
-    supabase.from("veicoli").select("modello,targa,foto_url").eq("id", s.veicolo_id).maybeSingle()
+    if (!s.veicolo_id) { setVeicolo(null); return; }
+    supabase.from("veicoli").select("marca,modello,targa,foto_url").eq("id", s.veicolo_id).maybeSingle()
       .then(({ data }) => setVeicolo(data as any));
   }, [s.veicolo_id]);
 
@@ -113,14 +113,21 @@ function CardServizio({ s, onOpen }: { s: any; onOpen: () => void }) {
         {veicolo ? (
           <div className="text-right">
             {veicolo.foto_url && <img src={veicolo.foto_url} className="h-10 w-16 object-cover rounded ml-auto" alt="" />}
-            <div className="text-[11px] font-medium mt-1">{veicolo.modello}</div>
+            <div className="text-[11px] font-medium mt-1">{[veicolo.marca, veicolo.modello].filter(Boolean).join(" ")}</div>
             {veicolo.targa && (
               <div className="inline-block text-[10px] font-mono border rounded px-1.5 py-0.5 bg-yellow-50 border-slate-400">{veicolo.targa}</div>
             )}
           </div>
         ) : (
-          <div className="text-right text-[11px] text-muted-foreground italic max-w-[120px]">
-            Veicolo non assegnato
+          <div className="text-right text-[11px] max-w-[130px]">
+            {s.veicolo_tipo ? (
+              <>
+                <div className="font-medium">{s.veicolo_tipo}</div>
+                <div className="text-amber-600 text-[10px]">Veicolo da assegnare</div>
+              </>
+            ) : (
+              <span className="text-muted-foreground italic">Veicolo non assegnato</span>
+            )}
           </div>
         )}
       </div>

@@ -1609,7 +1609,9 @@ export default function Servizi() {
                     <DetailRow icon={Info} label="Info Autista" value={s.info_autista} />
                     <DetailRow icon={Luggage} label="Accessori" value={s.accessori} />
                     <DetailRow icon={Car} label="Veicolo" value={
-                      s.veicoli ? `${s.veicoli.tipo_macchina || ""} — ${s.veicoli.targa}` : (s.veicolo_tipo || null)
+                      s.veicoli
+                        ? `${[s.veicoli.marca, s.veicoli.modello].filter(Boolean).join(" ") || s.veicoli.tipo_macchina || ""} — ${s.veicoli.targa}`
+                        : (s.veicolo_tipo ? `${s.veicolo_tipo} (da assegnare)` : null)
                     } />
                     <DetailRow icon={Users} label="Autista" value={s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : (s.autisti_esterni?.nome || null)} />
                     <DetailRow icon={Users} label="Fornitore CS" value={s.fornitori_cs?.nome} />
