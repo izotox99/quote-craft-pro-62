@@ -837,6 +837,7 @@ export default function Servizi() {
 
   const resetAllFilters = () => {
     setQuickDay(null);
+    setQuickConf(null);
     setFilterDal(romeMonthRange(romeYearMonth()).from);
     setFilterAl(romeMonthRange(romeYearMonth()).to);
     setFilterStato("all");
@@ -953,7 +954,7 @@ export default function Servizi() {
               ))}
 
               <div className="ml-auto flex items-center gap-2">
-                {(quickDay || hasActiveFilters) && (
+                {(quickDay || quickConf || hasActiveFilters) && (
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground" onClick={() => { resetAllFilters(); setTimeout(() => loadServizi(), 0); }}>
                     <X className="h-3 w-3" /> Reset
                   </Button>
