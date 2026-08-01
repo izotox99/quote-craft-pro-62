@@ -1136,8 +1136,12 @@ export default function Servizi() {
                         <SelectContent>
                           <SelectItem value="all">Tutti</SelectItem>
                           {autisti.map(a => (
-                            <SelectItem key={a.id} value={a.id}>{a.cognome} {a.nome}</SelectItem>
+                            <SelectItem key={a.id} value={`int:${a.id}`}>{a.cognome} {a.nome}</SelectItem>
                           ))}
+                          {autistiEsterni.map(a => (
+                            <SelectItem key={a.id} value={`est:${a.id}`}>{a.nome} (esterno)</SelectItem>
+                          ))}
+
                         </SelectContent>
                       </Select>
                     </div>
