@@ -10,10 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { TeamMembers } from "@/components/TeamMembers";
 import { Building2, User, Users, Layers, ShieldCheck, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
 export default function Settings() {
-  const { user, role, organization, refreshOrg } = useAuth();
+  const { user, role, organization, refreshOrg, isOwner } = useAuth();
   const isAdmin = role === "admin";
 
   const [fullName, setFullName] = useState("");
@@ -136,7 +137,7 @@ export default function Settings() {
           <TabsList className="flex-wrap h-auto">
             <TabsTrigger value="profile" className="gap-2"><User className="h-4 w-4" /> Profilo</TabsTrigger>
             {isAdmin && <TabsTrigger value="organization" className="gap-2"><Building2 className="h-4 w-4" /> Organizzazione</TabsTrigger>}
-            {isAdmin && <TabsTrigger value="team" className="gap-2"><Users className="h-4 w-4" /> Team</TabsTrigger>}
+            {isOwner && <TabsTrigger value="team" className="gap-2"><Users className="h-4 w-4" /> Team</TabsTrigger>}
             {isAdmin && <TabsTrigger value="departments" className="gap-2"><Layers className="h-4 w-4" /> Reparti</TabsTrigger>}
             {isAdmin && <TabsTrigger value="security" className="gap-2"><ShieldCheck className="h-4 w-4" /> Sicurezza</TabsTrigger>}
           </TabsList>
@@ -207,42 +208,9 @@ export default function Settings() {
             </TabsContent>
           )}
 
-          {isAdmin && (
+          {isOwner && (
             <TabsContent value="team" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Membri del team</CardTitle>
-                  <CardDescription>Visualizza e gestisci i membri del team</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {members.length === 0 ? (
-                    <p className="text-sm text-muted-foreground text-center py-8">Nessun membro trovato</p>
-                  ) : (
-                    <div className="overflow-x-auto"><Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Nome</TableHead>
-                          <TableHead>ID Utente</TableHead>
-                          <TableHead>Ruoli</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {members.map((m) => (
-                          <TableRow key={m.user_id}>
-                            <TableCell className="font-medium">{m.full_name || "—"}</TableCell>
-                            <TableCell className="text-xs text-muted-foreground font-mono">{m.user_id.slice(0, 8)}...</TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                {m.roles.map((r: string) => <Badge key={r} variant="outline">{r}</Badge>)}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table></div>
-                  )}
-                </CardContent>
-              </Card>
+              <TeamMembers />
             </TabsContent>
           )}
 
