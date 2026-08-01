@@ -3697,6 +3697,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      owner_can_manage_user: {
+        Args: { _target_user: string }
+        Returns: boolean
+      }
       presenza_apri_turno: {
         Args: { _note?: string }
         Returns: {
