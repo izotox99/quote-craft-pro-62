@@ -36,6 +36,11 @@ Deno.serve(async (req) => {
       .from("profiles").select("org_id").eq("user_id", callingUser.id).maybeSingle();
     if (!callerProfile?.org_id) return jsonResponse({ error: "Org mancante" }, 403);
 
+    const { data: canWrite } = await admin.rpc("can_write", { _user_id: callingUser.id });
+    if (!canWrite) {
+      return jsonResponse({ error: "Account in sola lettura: operazione non consentita", code: "read_only" }, 403);
+    }
+
     const body = await req.json().catch(() => ({}));
     const autistaId: string | null = body?.autista_id ?? null;
     const tipoRaw: string = (body?.tipo ?? "interno").toString();

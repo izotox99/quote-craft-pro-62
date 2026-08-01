@@ -115,6 +115,11 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Account NCC non configurato", code: "missing_org" }, 403);
     }
 
+    const { data: canWrite } = await admin.rpc("can_write", { _user_id: callingUser.id });
+    if (!canWrite) {
+      return jsonResponse({ error: "Account in sola lettura: operazione non consentita", code: "read_only" }, 403);
+    }
+
     const body = await req.json().catch(() => ({}));
     const clientId: string | null = cleanString(body?.client_id);
     const clientInput = (body?.client && typeof body.client === "object" ? body.client : body) as Record<string, unknown>;
