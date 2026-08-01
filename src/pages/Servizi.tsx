@@ -1028,11 +1028,17 @@ export default function Servizi() {
                 </Button>
                 <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
                   <CollapsibleTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                    <Button variant={hasActiveFilters ? "default" : "outline"} size="sm" className="h-8 text-xs gap-1.5">
                       <SlidersHorizontal className="h-3.5 w-3.5" />
                       Filtri avanzati
+                      {activeFiltersCount > 0 && (
+                        <span className="rounded-full bg-primary-foreground/20 px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+                          {activeFiltersCount} {activeFiltersCount === 1 ? "filtro attivo" : "filtri attivi"}
+                        </span>
+                      )}
                       <ChevronDown className={`h-3 w-3 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
                     </Button>
+
                   </CollapsibleTrigger>
                 </Collapsible>
               </div>
