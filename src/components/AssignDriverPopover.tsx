@@ -288,6 +288,22 @@ function Row({ active, onClick, disabled, children }: { active?: boolean; onClic
   );
 }
 
+function VeicoloRow({
+  v, active, highlight, disabled, onClick,
+}: { v: VeicoloOption; active?: boolean; highlight?: boolean; disabled?: boolean; onClick: () => void }) {
+  const desc = [v.marca, v.modello].filter(Boolean).join(" ") || v.tipo_macchina || "";
+  return (
+    <Row active={active} onClick={onClick} disabled={disabled}>
+      <span className="flex min-w-0 items-center gap-1.5">
+        <span className="font-mono text-[10px] border rounded px-1 py-0.5 bg-yellow-50 border-slate-400 text-slate-900 shrink-0">{v.targa}</span>
+        <span className="truncate">{desc}</span>
+        {highlight && <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 border-primary text-primary shrink-0">TIPO OK</Badge>}
+      </span>
+      {active && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
+    </Row>
+  );
+}
+
 function Empty() {
   return <div className="px-3 py-2 text-[11px] text-muted-foreground italic">Nessun risultato</div>;
 }
