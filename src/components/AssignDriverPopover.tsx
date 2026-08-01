@@ -258,8 +258,6 @@ export function AssignDriverPopover({
             )}
       </PopoverContent>
     </Popover>
-      </PopoverContent>
-    </Popover>
   );
 }
 
