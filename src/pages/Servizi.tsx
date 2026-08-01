@@ -433,9 +433,11 @@ export default function Servizi() {
     const dal = override?.dal ?? filterDal;
     const al = override?.al ?? filterAl;
     const stato = override?.stato ?? filterStato;
+    const sel = (s: string): string => s;
+    const veicoliJoin = filterTarga ? "veicoli!inner(targa, tipo_macchina, marca, modello)" : "veicoli(targa, tipo_macchina, marca, modello)";
     let query = supabase
       .from("servizi")
-      .select("*, clients(name, company), autisti(nome, cognome, cellulare), autisti_esterni(nome, cellulare, targa), veicoli(targa, tipo_macchina, marca, modello), fornitori_cs(nome, telefono)")
+      .select(sel(`*, clients(name, company), autisti(nome, cognome, cellulare), autisti_esterni(nome, cellulare, targa), ${veicoliJoin}, fornitori_cs(nome, telefono)`))
       .gte("data_servizio", dal)
       .lte("data_servizio", al)
       .order("data_servizio", { ascending: true });
@@ -450,9 +452,14 @@ export default function Servizi() {
     if (filterTarga) query = query.ilike("veicoli.targa", `%${filterTarga}%`);
     if (filterContatto) query = query.ilike("contatto", `%${filterContatto}%`);
     if (filterCliente !== "all") query = query.eq("client_id", filterCliente);
-    if (filterAutista !== "all") query = query.eq("autista_id", filterAutista);
+    if (filterAutista !== "all") {
+      const [kind, id] = filterAutista.split(":");
+      if (kind === "est") query = query.eq("autista_esterno_id", id);
+      else query = query.eq("autista_id", id);
+    }
     if (filterFornitore !== "all") query = query.eq("fornitore_cs_id", filterFornitore);
     if (filterCodice) query = query.ilike("codice", `%${filterCodice}%`);
+
     if (globalSearch.trim()) {
       const q = globalSearch.trim().replace(/,/g, " ");
       query = query.or(`contatto.ilike.%${q}%,codice.ilike.%${q}%,luogo_inizio.ilike.%${q}%,luogo_fine.ilike.%${q}%`);
