@@ -991,6 +991,34 @@ export default function Servizi() {
               </div>
             </div>
 
+            {/* Confirmed day chips row */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Confermati:</span>
+              {quickConfOptions.map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => handleQuickConf(opt.key)}
+                  className={`
+                    inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all
+                    ${quickConf === opt.key
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                    }
+                  `}
+                >
+                  {opt.label}
+                  {quickConfCounts[opt.key] > 0 && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center ${
+                      quickConf === opt.key ? "bg-white/20" : "bg-emerald-600/10 text-emerald-700 dark:text-emerald-400"
+                    }`}>
+                      {quickConfCounts[opt.key]}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+
             {/* Collapsible advanced filters */}
             <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
               <CollapsibleContent>
