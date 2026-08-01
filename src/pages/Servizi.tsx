@@ -239,6 +239,8 @@ export default function Servizi() {
   const [accessoriMap, setAccessoriMap] = useState<Record<string, string>>({});
   const [clients, setClients] = useState<Client[]>([]);
   const [autisti, setAutisti] = useState<Autista[]>([]);
+  const [autistiEsterni, setAutistiEsterni] = useState<{ id: string; nome: string }[]>([]);
+
   const [veicoli, setVeicoli] = useState<Veicolo[]>([]);
   const [fornitori, setFornitori] = useState<Fornitore[]>([]);
   const [loading, setLoading] = useState(true);
@@ -395,17 +397,20 @@ export default function Servizi() {
 
 
   const loadLookups = async () => {
-    const [c, a, v, f] = await Promise.all([
+    const [c, a, ae, v, f] = await Promise.all([
       supabase.from("clients").select("id, name, company, phone").order("name"),
       supabase.from("autisti").select("id, nome, cognome").order("cognome"),
+      supabase.from("autisti_esterni").select("id, nome").order("nome"),
       supabase.from("veicoli").select("id, targa, tipo_macchina").order("targa"),
       supabase.from("fornitori_cs").select("id, nome").order("nome"),
     ]);
     setClients(c.data ?? []);
     setAutisti(a.data ?? []);
+    setAutistiEsterni(ae.data ?? []);
     setVeicoli(v.data ?? []);
     setFornitori(f.data ?? []);
   };
+
 
   const handleServizioSaved = async (info?: { data_servizio?: string | null }) => {
     const d = info?.data_servizio;
@@ -423,14 +428,24 @@ export default function Servizi() {
     await loadServizi();
   };
 
-  const loadServizi = async (override?: { dal?: string; al?: string; stato?: string }) => {
+  const loadServizi = async (override?: { dal?: string; al?: string; stato?: string; reset?: boolean }) => {
     setLoading(true);
     const dal = override?.dal ?? filterDal;
     const al = override?.al ?? filterAl;
     const stato = override?.stato ?? filterStato;
+    const r = override?.reset === true;
+    const fTipologia = r ? "all" : filterTipologia;
+    const fTarga = r ? "" : filterTarga.trim();
+    const fContatto = r ? "" : filterContatto.trim();
+    const fCliente = r ? "all" : filterCliente;
+    const fAutista = r ? "all" : filterAutista;
+    const fFornitore = r ? "all" : filterFornitore;
+    const fCodice = r ? "" : filterCodice.trim();
+    const sel = (s: string): string => s;
+    const veicoliJoin = fTarga ? "veicoli!inner(targa, tipo_macchina, marca, modello)" : "veicoli(targa, tipo_macchina, marca, modello)";
     let query = supabase
       .from("servizi")
-      .select("*, clients(name, company), autisti(nome, cognome, cellulare), autisti_esterni(nome, cellulare, targa), veicoli(targa, tipo_macchina, marca, modello), fornitori_cs(nome, telefono)")
+      .select(sel(`*, clients(name, company), autisti(nome, cognome, cellulare), autisti_esterni(nome, cellulare, targa), ${veicoliJoin}, fornitori_cs(nome, telefono)`))
       .gte("data_servizio", dal)
       .lte("data_servizio", al)
       .order("data_servizio", { ascending: true });
@@ -441,13 +456,19 @@ export default function Servizi() {
 
     if (stato === "all") query = query.neq("stato", "annullato");
     else query = query.eq("stato", stato as any);
-    if (filterTipologia !== "all") query = query.eq("tipologia", filterTipologia as any);
-    if (filterTarga) query = query.ilike("veicoli.targa", `%${filterTarga}%`);
-    if (filterContatto) query = query.ilike("contatto", `%${filterContatto}%`);
-    if (filterCliente !== "all") query = query.eq("client_id", filterCliente);
-    if (filterAutista !== "all") query = query.eq("autista_id", filterAutista);
-    if (filterFornitore !== "all") query = query.eq("fornitore_cs_id", filterFornitore);
-    if (filterCodice) query = query.ilike("codice", `%${filterCodice}%`);
+    if (fTipologia !== "all") query = query.eq("tipologia", fTipologia as any);
+    if (fTarga) query = query.ilike("veicoli.targa", `%${fTarga}%`);
+    if (fContatto) query = query.ilike("contatto", `%${fContatto}%`);
+    if (fCliente !== "all") query = query.eq("client_id", fCliente);
+    if (fAutista !== "all") {
+      const [kind, id] = fAutista.split(":");
+      if (kind === "est") query = query.eq("autista_esterno_id", id);
+      else query = query.eq("autista_id", id);
+    }
+    if (fFornitore !== "all") query = query.eq("fornitore_cs_id", fFornitore);
+    if (fCodice) query = query.ilike("codice", `%${fCodice}%`);
+
+
     if (globalSearch.trim()) {
       const q = globalSearch.trim().replace(/,/g, " ");
       query = query.or(`contatto.ilike.%${q}%,codice.ilike.%${q}%,luogo_inizio.ilike.%${q}%,luogo_fine.ilike.%${q}%`);
@@ -526,7 +547,13 @@ export default function Servizi() {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  const handleSearch = () => loadServizi();
+  const handleSearch = () => {
+    // I filtri avanzati sono esclusivi rispetto ai chip rapidi
+    setQuickDay(null);
+    setQuickConf(null);
+    return loadServizi();
+  };
+
 
   const openEditServizio = async (id: string) => {
     const { data, error } = await supabase.from("servizi").select("*").eq("id", id).single();
@@ -766,14 +793,14 @@ export default function Servizi() {
       setFilterDal(dal);
       setFilterAl(al);
       setFilterStato("all");
-      await loadServizi({ dal, al, stato: "all" });
+      await loadServizi({ dal, al, stato: "all", reset: true });
       return;
     }
     setQuickDay(key);
     setFilterDal(opt.date);
     setFilterAl(opt.date);
     setFilterStato("nuovo");
-    await loadServizi({ dal: opt.date, al: opt.date, stato: "nuovo" });
+    await loadServizi({ dal: opt.date, al: opt.date, stato: "nuovo", reset: true });
   };
 
   // Quick day filters for "Confermati" services
@@ -820,20 +847,34 @@ export default function Servizi() {
       setFilterDal(dal);
       setFilterAl(al);
       setFilterStato("all");
-      await loadServizi({ dal, al, stato: "all" });
+      await loadServizi({ dal, al, stato: "all", reset: true });
       return;
     }
     setQuickConf(key);
     setFilterDal(opt.date);
     setFilterAl(opt.date);
     setFilterStato("confermato");
-    await loadServizi({ dal: opt.date, al: opt.date, stato: "confermato" });
+    await loadServizi({ dal: opt.date, al: opt.date, stato: "confermato", reset: true });
   };
 
 
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const hasActiveFilters = filterTipologia !== "all" || filterTarga || filterContatto || filterCliente !== "all" || filterAutista !== "all" || filterFornitore !== "all" || filterCodice;
+  const activeFiltersCount = useMemo(() => {
+    let n = 0;
+    if (filterDal !== defaultDal() || filterAl !== defaultAl()) n++;
+    if (filterStato !== "all") n++;
+    if (filterTipologia !== "all") n++;
+    if (filterTarga.trim()) n++;
+    if (filterContatto.trim()) n++;
+    if (filterCliente !== "all") n++;
+    if (filterAutista !== "all") n++;
+    if (filterFornitore !== "all") n++;
+    if (filterCodice.trim()) n++;
+    return n;
+  }, [filterDal, filterAl, filterStato, filterTipologia, filterTarga, filterContatto, filterCliente, filterAutista, filterFornitore, filterCodice]);
+
+  const hasActiveFilters = activeFiltersCount > 0;
 
   const resetAllFilters = () => {
     setQuickDay(null);
@@ -849,6 +890,12 @@ export default function Servizi() {
     setFilterFornitore("all");
     setFilterCodice("");
   };
+
+  const handleResetFilters = async () => {
+    resetAllFilters();
+    await loadServizi({ dal: defaultDal(), al: defaultAl(), stato: "all", reset: true });
+  };
+
 
   return (
     <DashboardLayout>
@@ -955,7 +1002,7 @@ export default function Servizi() {
 
               <div className="ml-auto flex items-center gap-2">
                 {(quickDay || quickConf || hasActiveFilters) && (
-                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground" onClick={() => { resetAllFilters(); setTimeout(() => loadServizi(), 0); }}>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground" onClick={handleResetFilters}>
                     <X className="h-3 w-3" /> Reset
                   </Button>
                 )}
@@ -981,11 +1028,17 @@ export default function Servizi() {
                 </Button>
                 <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
                   <CollapsibleTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                    <Button variant={hasActiveFilters ? "default" : "outline"} size="sm" className="h-8 text-xs gap-1.5">
                       <SlidersHorizontal className="h-3.5 w-3.5" />
                       Filtri avanzati
+                      {activeFiltersCount > 0 && (
+                        <span className="rounded-full bg-primary-foreground/20 px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+                          {activeFiltersCount} {activeFiltersCount === 1 ? "filtro attivo" : "filtri attivi"}
+                        </span>
+                      )}
                       <ChevronDown className={`h-3 w-3 transition-transform ${filtersOpen ? "rotate-180" : ""}`} />
                     </Button>
+
                   </CollapsibleTrigger>
                 </Collapsible>
               </div>
@@ -1083,8 +1136,12 @@ export default function Servizi() {
                         <SelectContent>
                           <SelectItem value="all">Tutti</SelectItem>
                           {autisti.map(a => (
-                            <SelectItem key={a.id} value={a.id}>{a.cognome} {a.nome}</SelectItem>
+                            <SelectItem key={a.id} value={`int:${a.id}`}>{a.cognome} {a.nome}</SelectItem>
                           ))}
+                          {autistiEsterni.map(a => (
+                            <SelectItem key={a.id} value={`est:${a.id}`}>{a.nome} (esterno)</SelectItem>
+                          ))}
+
                         </SelectContent>
                       </Select>
                     </div>
@@ -1105,9 +1162,20 @@ export default function Servizi() {
                       <Input value={filterCodice} onChange={e => setFilterCodice(e.target.value)} className="h-9" />
                     </div>
                   </div>
-                  <Button onClick={handleSearch} size="sm" className="gap-2">
-                    <Search className="h-3.5 w-3.5" /> Cerca
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button onClick={handleSearch} size="sm" className="gap-2">
+                      <Search className="h-3.5 w-3.5" /> Cerca
+                    </Button>
+                    <Button onClick={handleResetFilters} size="sm" variant="outline" className="gap-2">
+                      Azzera filtri
+                    </Button>
+                    {activeFiltersCount > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {activeFiltersCount} {activeFiltersCount === 1 ? "filtro attivo" : "filtri attivi"}
+                      </span>
+                    )}
+                  </div>
+
                 </div>
               </CollapsibleContent>
             </Collapsible>
