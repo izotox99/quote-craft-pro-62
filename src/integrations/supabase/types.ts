@@ -3399,6 +3399,7 @@ export type Database = {
         Args: { _autista_id: string; _from: string; _to: string }
         Returns: Json
       }
+      can_write: { Args: { _user_id: string }; Returns: boolean }
       cleanup_servizi_annullati: { Args: never; Returns: undefined }
       client_portal_update_servizio: {
         Args: {
@@ -3561,6 +3562,7 @@ export type Database = {
       }
       is_autista_user: { Args: { _user_id: string }; Returns: boolean }
       is_client_user: { Args: { _user_id: string }; Returns: boolean }
+      is_org_owner: { Args: { _user_id: string }; Returns: boolean }
       network_dispatch_servizio: {
         Args: {
           _partner_org_id: string
