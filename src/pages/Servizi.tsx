@@ -566,6 +566,23 @@ export default function Servizi() {
         ? { autista_id: driver.id, autista_esterno_id: null }
         : { autista_id: null, autista_esterno_id: driver.id };
 
+    if (driver) {
+      const target = servizi.find(s => s.id === servizioId);
+      if (target) {
+        const conflitti = await trovaConflitti(target, {
+          tipo: driver.kind === "interno" ? "autista_interno" : "autista_esterno",
+          id: driver.id,
+        });
+        if (conflitti.length > 0) {
+          const ok = await chiediConferma({
+            risorsa: `l'autista ${driver.nome}${driver.cognome ? ` ${driver.cognome}` : ""}`,
+            conflitti,
+          });
+          if (!ok) return;
+        }
+      }
+    }
+
     const { error } = await supabase.from("servizi").update(payload as any).eq("id", servizioId);
 
     if (error) {
@@ -578,6 +595,16 @@ export default function Servizi() {
   };
 
   const handleAssignVeicolo = async (servizioId: string, veicolo: { id: string; targa: string } | null) => {
+    if (veicolo) {
+      const target = servizi.find(s => s.id === servizioId);
+      if (target) {
+        const conflitti = await trovaConflitti(target, { tipo: "veicolo", id: veicolo.id });
+        if (conflitti.length > 0) {
+          const ok = await chiediConferma({ risorsa: `il veicolo ${veicolo.targa}`, conflitti });
+          if (!ok) return;
+        }
+      }
+    }
     const { error } = await supabase
       .from("servizi")
       .update({ veicolo_id: veicolo ? veicolo.id : null } as any)
@@ -586,6 +613,7 @@ export default function Servizi() {
     toast.success(veicolo ? `Veicolo ${veicolo.targa} assegnato` : "Veicolo rimosso");
     await loadServizi();
   };
+
 
   const handleBulkAssignDriver = async (driver: DriverOption) => {
     if (selectedServiziIds.length === 0) return;
