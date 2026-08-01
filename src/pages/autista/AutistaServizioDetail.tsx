@@ -35,9 +35,10 @@ export default function AutistaServizioDetail() {
       .from("servizi_autista_view" as any)
       .select("*").eq("id", id).maybeSingle();
     setS(data);
+    setVeicolo(null);
     if ((data as any)?.veicolo_id) {
       const { data: v } = await supabase.from("veicoli")
-        .select("modello,targa,foto_url,km_attuale")
+        .select("marca,modello,tipo_macchina,targa,foto_url,km_attuale")
         .eq("id", (data as any).veicolo_id).maybeSingle();
       setVeicolo(v);
     }
