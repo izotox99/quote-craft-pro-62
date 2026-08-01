@@ -757,6 +757,7 @@ export default function Servizi() {
     setFilterAutista("all");
     setFilterFornitore("all");
     setFilterCodice("");
+    setQuickConf(null);
     if (quickDay === key) {
       // Deselezione: torna alla vista completa di default
       const dal = defaultDal();
@@ -775,12 +776,68 @@ export default function Servizi() {
     await loadServizi({ dal: opt.date, al: opt.date, stato: "nuovo" });
   };
 
+  // Quick day filters for "Confermati" services
+  const [quickConf, setQuickConf] = useState<string | null>(null);
+  const quickConfOptions = useMemo(() => [
+    { key: "conf-oggi", label: "Oggi", date: romeToday(0) },
+    { key: "conf-domani", label: "Domani", date: romeToday(1) },
+    { key: "conf-dopodomani", label: "Dopodomani", date: romeToday(2) },
+  ], []);
+
+  const [quickConfCounts, setQuickConfCounts] = useState<Record<string, number>>({});
+  const loadQuickConfCounts = async () => {
+    if (!user) return;
+    const dates = quickConfOptions.map(o => o.date);
+    const { data } = await supabase
+      .from("servizi")
+      .select("data_servizio")
+      .in("data_servizio", dates)
+      .eq("archiviato", false)
+      .eq("stato", "confermato" as any);
+    const counts: Record<string, number> = {};
+    for (const opt of quickConfOptions) {
+      counts[opt.key] = (data ?? []).filter((r: any) => r.data_servizio === opt.date).length;
+    }
+    setQuickConfCounts(counts);
+  };
+  useEffect(() => { loadQuickConfCounts(); }, [user, quickConfOptions, servizi]);
+
+  const handleQuickConf = async (key: string) => {
+    const opt = quickConfOptions.find(o => o.key === key);
+    if (!opt) return;
+    setFilterTipologia("all");
+    setFilterTarga("");
+    setFilterContatto("");
+    setFilterCliente("all");
+    setFilterAutista("all");
+    setFilterFornitore("all");
+    setFilterCodice("");
+    setQuickDay(null);
+    if (quickConf === key) {
+      const dal = defaultDal();
+      const al = defaultAl();
+      setQuickConf(null);
+      setFilterDal(dal);
+      setFilterAl(al);
+      setFilterStato("all");
+      await loadServizi({ dal, al, stato: "all" });
+      return;
+    }
+    setQuickConf(key);
+    setFilterDal(opt.date);
+    setFilterAl(opt.date);
+    setFilterStato("confermato");
+    await loadServizi({ dal: opt.date, al: opt.date, stato: "confermato" });
+  };
+
+
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const hasActiveFilters = filterTipologia !== "all" || filterTarga || filterContatto || filterCliente !== "all" || filterAutista !== "all" || filterFornitore !== "all" || filterCodice;
 
   const resetAllFilters = () => {
     setQuickDay(null);
+    setQuickConf(null);
     setFilterDal(romeMonthRange(romeYearMonth()).from);
     setFilterAl(romeMonthRange(romeYearMonth()).to);
     setFilterStato("all");
@@ -897,7 +954,7 @@ export default function Servizi() {
               ))}
 
               <div className="ml-auto flex items-center gap-2">
-                {(quickDay || hasActiveFilters) && (
+                {(quickDay || quickConf || hasActiveFilters) && (
                   <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 text-muted-foreground" onClick={() => { resetAllFilters(); setTimeout(() => loadServizi(), 0); }}>
                     <X className="h-3 w-3" /> Reset
                   </Button>
@@ -933,6 +990,34 @@ export default function Servizi() {
                 </Collapsible>
               </div>
             </div>
+
+            {/* Confirmed day chips row */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mr-1">Confermati:</span>
+              {quickConfOptions.map(opt => (
+                <button
+                  key={opt.key}
+                  onClick={() => handleQuickConf(opt.key)}
+                  className={`
+                    inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all
+                    ${quickConf === opt.key
+                      ? "bg-emerald-600 text-white shadow-sm"
+                      : "bg-muted/60 text-muted-foreground hover:bg-muted"
+                    }
+                  `}
+                >
+                  {opt.label}
+                  {quickConfCounts[opt.key] > 0 && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center ${
+                      quickConf === opt.key ? "bg-white/20" : "bg-emerald-600/10 text-emerald-700 dark:text-emerald-400"
+                    }`}>
+                      {quickConfCounts[opt.key]}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
 
             {/* Collapsible advanced filters */}
             <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
