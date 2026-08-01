@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
 import { ServizioFormDialog, type ServizioFormInitial } from "@/components/servizi/ServizioFormDialog";
+import { useConflittoAssegnazione } from "@/components/ConflittoAssegnazioneDialog";
+import { trovaConflitti } from "@/lib/conflittiAssegnazione";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -245,6 +247,7 @@ export default function Servizi() {
   const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
   const [networkDialogId, setNetworkDialogId] = useState<string | null>(null);
   const [selectedServiziIds, setSelectedServiziIds] = useState<string[]>([]);
+  const { chiediConferma, dialog: conflittoDialog } = useConflittoAssegnazione();
   const [globalSearch, setGlobalSearch] = useState("");
 
   
@@ -777,6 +780,7 @@ export default function Servizi() {
 
   return (
     <DashboardLayout>
+      {conflittoDialog}
       <div className="space-y-2 overflow-x-clip">
         {/* Header row */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
