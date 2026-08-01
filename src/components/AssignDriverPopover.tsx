@@ -14,6 +14,14 @@ export type DriverOption = {
   kind: "interno" | "esterno";
 };
 
+export type VeicoloOption = {
+  id: string;
+  targa: string;
+  tipo_macchina: string | null;
+  marca: string | null;
+  modello: string | null;
+};
+
 type Props = {
   trigger: React.ReactNode;
   currentInternoId?: string | null;
@@ -21,7 +29,14 @@ type Props = {
   currentLabel?: string | null;
   onAssign: (driver: DriverOption | null) => Promise<void> | void;
   align?: "start" | "center" | "end";
+  /** Tipo di veicolo richiesto dal cliente (servizi.veicolo_tipo) */
+  requestedVeicoloTipo?: string | null;
+  currentVeicoloId?: string | null;
+  /** Se presente, mostra la sezione di assegnazione del veicolo specifico */
+  onAssignVeicolo?: (veicolo: VeicoloOption | null) => Promise<void> | void;
 };
+
+const normalize = (v?: string | null) => (v ?? "").trim().toLowerCase();
 
 export function AssignDriverPopover({
   trigger,
@@ -30,10 +45,15 @@ export function AssignDriverPopover({
   currentLabel,
   onAssign,
   align = "start",
+  requestedVeicoloTipo,
+  currentVeicoloId,
+  onAssignVeicolo,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [interni, setInterni] = useState<DriverOption[]>([]);
   const [esterni, setEsterni] = useState<DriverOption[]>([]);
+  const [veicoli, setVeicoli] = useState<VeicoloOption[]>([]);
+  const [tab, setTab] = useState<"autista" | "veicolo">("autista");
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -50,6 +70,43 @@ export function AssignDriverPopover({
       setLoading(false);
     });
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !onAssignVeicolo || veicoli.length > 0) return;
+    supabase
+      .from("veicoli")
+      .select("id, targa, tipo_macchina, marca, modello")
+      .eq("attivo", true)
+      .order("targa")
+      .then(({ data }) => setVeicoli((data ?? []) as any[]));
+  }, [open, onAssignVeicolo]);
+
+  const [veicoliMatch, veicoliAltri] = useMemo(() => {
+    const s = q.trim().toLowerCase();
+    const list = !s
+      ? veicoli
+      : veicoli.filter(v => `${v.targa} ${v.tipo_macchina ?? ""} ${v.marca ?? ""} ${v.modello ?? ""}`.toLowerCase().includes(s));
+    const tipo = normalize(requestedVeicoloTipo);
+    if (!tipo) return [[], list] as [VeicoloOption[], VeicoloOption[]];
+    const match = list.filter(v =>
+      normalize(v.tipo_macchina) === tipo ||
+      normalize(v.tipo_macchina).includes(tipo) ||
+      tipo.includes(normalize(v.tipo_macchina)) && !!v.tipo_macchina ||
+      normalize(v.modello).includes(tipo) ||
+      normalize(v.marca).includes(tipo)
+    );
+    const ids = new Set(match.map(v => v.id));
+    return [match, list.filter(v => !ids.has(v.id))] as [VeicoloOption[], VeicoloOption[]];
+  }, [veicoli, q, requestedVeicoloTipo]);
+
+  const handlePickVeicolo = async (v: VeicoloOption | null) => {
+    if (!onAssignVeicolo) return;
+    setSaving(true);
+    await onAssignVeicolo(v);
+    setSaving(false);
+    setOpen(false);
+    setQ("");
+  };
 
   const filteredInt = useMemo(() => {
     const s = q.trim().toLowerCase();
