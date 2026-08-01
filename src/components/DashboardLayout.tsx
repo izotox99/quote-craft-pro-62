@@ -13,7 +13,7 @@ import {
   FileText, LayoutDashboard, Users, Car, UserCheck, Truck, Settings, LogOut, User, Menu,
   ChevronDown, List, Receipt, Star, Package, UserPlus, StickyNote, Clock, FileSpreadsheet,
   Users2, Fuel, ClipboardCheck, ClipboardList, TrendingUp, FilePlus, FileText as FileTextIcon, CalendarDays,
-  AlertTriangle, Wrench, Droplet, PlusCircle, Calendar, Megaphone, Link2,
+  AlertTriangle, Wrench, Droplet, PlusCircle, Calendar, Megaphone, Link2, Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificheBell } from "@/components/NotificheBell";
@@ -64,7 +64,7 @@ const mainNavItems = [
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
-  const { user, signOut, organization } = useAuth();
+  const { user, signOut, organization, canWrite } = useAuth();
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [clientsExpanded, setClientsExpanded] = useState(false);
