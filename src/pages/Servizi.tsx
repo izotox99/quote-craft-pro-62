@@ -538,7 +538,13 @@ export default function Servizi() {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  const handleSearch = () => loadServizi();
+  const handleSearch = () => {
+    // I filtri avanzati sono esclusivi rispetto ai chip rapidi
+    setQuickDay(null);
+    setQuickConf(null);
+    return loadServizi();
+  };
+
 
   const openEditServizio = async (id: string) => {
     const { data, error } = await supabase.from("servizi").select("*").eq("id", id).single();
