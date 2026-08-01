@@ -136,16 +136,35 @@ export function AssignDriverPopover({
     setQ("");
   };
 
+  const showVeicoli = !!onAssignVeicolo;
+  const isVeicoloTab = showVeicoli && tab === "veicolo";
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent align={align} className="w-72 p-0" onClick={(e) => e.stopPropagation()}>
+        {showVeicoli && (
+          <div className="grid grid-cols-2 border-b text-xs">
+            {(["autista", "veicolo"] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => { setTab(t); setQ(""); }}
+                className={cn(
+                  "py-1.5 font-medium capitalize transition-colors",
+                  tab === t ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"
+                )}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="p-2 border-b bg-muted/30">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               autoFocus
-              placeholder="Cerca autista…"
+              placeholder={isVeicoloTab ? "Cerca targa o modello…" : "Cerca autista…"}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               className="h-8 pl-7 text-xs"
@@ -153,7 +172,28 @@ export function AssignDriverPopover({
           </div>
         </div>
         <div className="max-h-[280px] overflow-y-auto py-1">
-          {loading ? (
+          {isVeicoloTab ? (
+            <>
+              {requestedVeicoloTipo && (
+                <div className="px-3 py-1 text-[10px] text-muted-foreground">
+                  Richiesto dal cliente: <span className="font-semibold text-foreground">{requestedVeicoloTipo}</span>
+                </div>
+              )}
+              {veicoliMatch.length > 0 && (
+                <Section title="Corrispondenti al tipo richiesto" count={veicoliMatch.length}>
+                  {veicoliMatch.map(v => (
+                    <VeicoloRow key={v.id} v={v} highlight active={v.id === currentVeicoloId} disabled={saving} onClick={() => handlePickVeicolo(v)} />
+                  ))}
+                </Section>
+              )}
+              <Section title={veicoliMatch.length > 0 ? "Altri veicoli" : "Veicoli"} count={veicoliAltri.length}>
+                {veicoliAltri.map(v => (
+                  <VeicoloRow key={v.id} v={v} active={v.id === currentVeicoloId} disabled={saving} onClick={() => handlePickVeicolo(v)} />
+                ))}
+                {veicoliAltri.length === 0 && <Empty />}
+              </Section>
+            </>
+          ) : loading ? (
             <div className="px-3 py-6 text-center text-xs text-muted-foreground">Caricamento…</div>
           ) : (
             <>
@@ -187,20 +227,37 @@ export function AssignDriverPopover({
             </>
           )}
         </div>
-        {(currentInternoId || currentEsternoId) && (
-          <div className="border-t p-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full h-7 text-xs justify-start text-destructive hover:text-destructive"
-              onClick={handleClear}
-              disabled={saving}
-            >
-              <X className="h-3.5 w-3.5 mr-1.5" />
-              Rimuovi assegnazione
-            </Button>
-          </div>
-        )}
+        {isVeicoloTab
+          ? currentVeicoloId && (
+              <div className="border-t p-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full h-7 text-xs justify-start text-destructive hover:text-destructive"
+                  onClick={() => handlePickVeicolo(null)}
+                  disabled={saving}
+                >
+                  <X className="h-3.5 w-3.5 mr-1.5" />
+                  Rimuovi veicolo
+                </Button>
+              </div>
+            )
+          : (currentInternoId || currentEsternoId) && (
+              <div className="border-t p-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full h-7 text-xs justify-start text-destructive hover:text-destructive"
+                  onClick={handleClear}
+                  disabled={saving}
+                >
+                  <X className="h-3.5 w-3.5 mr-1.5" />
+                  Rimuovi assegnazione
+                </Button>
+              </div>
+            )}
+      </PopoverContent>
+    </Popover>
       </PopoverContent>
     </Popover>
   );
