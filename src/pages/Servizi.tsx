@@ -757,6 +757,7 @@ export default function Servizi() {
     setFilterAutista("all");
     setFilterFornitore("all");
     setFilterCodice("");
+    setQuickConf(null);
     if (quickDay === key) {
       // Deselezione: torna alla vista completa di default
       const dal = defaultDal();
@@ -774,6 +775,61 @@ export default function Servizi() {
     setFilterStato("nuovo");
     await loadServizi({ dal: opt.date, al: opt.date, stato: "nuovo" });
   };
+
+  // Quick day filters for "Confermati" services
+  const [quickConf, setQuickConf] = useState<string | null>(null);
+  const quickConfOptions = useMemo(() => [
+    { key: "conf-oggi", label: "Oggi", date: romeToday(0) },
+    { key: "conf-domani", label: "Domani", date: romeToday(1) },
+    { key: "conf-dopodomani", label: "Dopodomani", date: romeToday(2) },
+  ], []);
+
+  const [quickConfCounts, setQuickConfCounts] = useState<Record<string, number>>({});
+  const loadQuickConfCounts = async () => {
+    if (!user) return;
+    const dates = quickConfOptions.map(o => o.date);
+    const { data } = await supabase
+      .from("servizi")
+      .select("data_servizio")
+      .in("data_servizio", dates)
+      .eq("archiviato", false)
+      .eq("stato", "confermato" as any);
+    const counts: Record<string, number> = {};
+    for (const opt of quickConfOptions) {
+      counts[opt.key] = (data ?? []).filter((r: any) => r.data_servizio === opt.date).length;
+    }
+    setQuickConfCounts(counts);
+  };
+  useEffect(() => { loadQuickConfCounts(); }, [user, quickConfOptions, servizi]);
+
+  const handleQuickConf = async (key: string) => {
+    const opt = quickConfOptions.find(o => o.key === key);
+    if (!opt) return;
+    setFilterTipologia("all");
+    setFilterTarga("");
+    setFilterContatto("");
+    setFilterCliente("all");
+    setFilterAutista("all");
+    setFilterFornitore("all");
+    setFilterCodice("");
+    setQuickDay(null);
+    if (quickConf === key) {
+      const dal = defaultDal();
+      const al = defaultAl();
+      setQuickConf(null);
+      setFilterDal(dal);
+      setFilterAl(al);
+      setFilterStato("all");
+      await loadServizi({ dal, al, stato: "all" });
+      return;
+    }
+    setQuickConf(key);
+    setFilterDal(opt.date);
+    setFilterAl(opt.date);
+    setFilterStato("confermato");
+    await loadServizi({ dal: opt.date, al: opt.date, stato: "confermato" });
+  };
+
 
   const [filtersOpen, setFiltersOpen] = useState(false);
 
