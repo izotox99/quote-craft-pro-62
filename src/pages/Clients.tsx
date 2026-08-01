@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { PlusCircle, Search, Users, FileText, StickyNote, ChevronRight, X, RotateCcw, ArchiveRestore } from "lucide-react";
 import { toast } from "sonner";
 import { TariffarioUpload } from "@/components/clients/TariffarioUpload";
@@ -46,6 +47,7 @@ const emptyForm = {
 };
 
 export default function Clients() {
+  const { canWrite } = useAuth();
   const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
   const [utenzeInattive, setUtenzeInattive] = useState<Record<string, number>>({});
