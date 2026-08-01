@@ -625,6 +625,21 @@ export default function Servizi() {
       ? { autista_id: driver.id, autista_esterno_id: null }
       : { autista_id: null, autista_esterno_id: driver.id };
 
+    const targets = servizi.filter(s => selectedServiziIds.includes(s.id));
+    const risorsa = { tipo: driver.kind === "interno" ? "autista_interno" : "autista_esterno", id: driver.id } as const;
+    const conflittiTot = (await Promise.all(targets.map(t => trovaConflitti(t, risorsa))))
+      .flat()
+      .filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i)
+      .filter(c => !selectedServiziIds.includes(c.id));
+    if (conflittiTot.length > 0) {
+      const ok = await chiediConferma({
+        risorsa: `l'autista ${driver.nome}${driver.cognome ? ` ${driver.cognome}` : ""}`,
+        conflitti: conflittiTot,
+      });
+      if (!ok) return;
+    }
+
+
     const { error } = await supabase.from("servizi").update(payload as any).in("id", selectedServiziIds);
 
     if (error) {
