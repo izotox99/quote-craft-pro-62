@@ -1128,9 +1128,6 @@ export default function Servizi() {
                   currentInternoId={s.autista_id}
                   currentEsternoId={s.autista_esterno_id}
                   onAssign={(driver) => handleAssignDriver(s.id, driver)}
-                        requestedVeicoloTipo={s.veicolo_tipo}
-                        currentVeicoloId={s.veicolo_id}
-                        onAssignVeicolo={(v) => handleAssignVeicolo(s.id, v)}
                   requestedVeicoloTipo={s.veicolo_tipo}
                   currentVeicoloId={s.veicolo_id}
                   onAssignVeicolo={(v) => handleAssignVeicolo(s.id, v)}
