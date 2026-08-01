@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 
-type AppRole = "admin" | "manager" | "agent";
+type AppRole = "admin" | "manager" | "agent" | "viewer";
 
 type Organization = {
   id: string;
@@ -16,6 +16,7 @@ type Organization = {
   phone: string | null;
   address: string | null;
   industry: string | null;
+  owner_user_id?: string | null;
 };
 
 type AuthContextType = {
@@ -23,6 +24,8 @@ type AuthContextType = {
   session: Session | null;
   loading: boolean;
   role: AppRole | null;
+  canWrite: boolean;
+  isOwner: boolean;
   organization: Organization | null;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
@@ -147,8 +150,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   };
 
+  const canWrite = role === "admin" || role === "manager" || role === "agent";
+  const isOwner = !!user && !!organization?.owner_user_id && organization.owner_user_id === user.id;
+
   return (
-    <AuthContext.Provider value={{ user, session, loading, role, organization, signUp, signIn, signInWithGoogle, signOut, resetPassword, updatePassword, refreshOrg }}>
+    <AuthContext.Provider value={{ user, session, loading, role, canWrite, isOwner, organization, signUp, signIn, signInWithGoogle, signOut, resetPassword, updatePassword, refreshOrg }}>
       {children}
     </AuthContext.Provider>
   );
