@@ -239,6 +239,8 @@ export default function Servizi() {
   const [accessoriMap, setAccessoriMap] = useState<Record<string, string>>({});
   const [clients, setClients] = useState<Client[]>([]);
   const [autisti, setAutisti] = useState<Autista[]>([]);
+  const [autistiEsterni, setAutistiEsterni] = useState<{ id: string; nome: string }[]>([]);
+
   const [veicoli, setVeicoli] = useState<Veicolo[]>([]);
   const [fornitori, setFornitori] = useState<Fornitore[]>([]);
   const [loading, setLoading] = useState(true);
