@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { AssignDriverPopover, BulkAssignBar, type DriverOption } from "@/components/AssignDriverPopover";
 import { ServizioFormDialog, type ServizioFormInitial } from "@/components/servizi/ServizioFormDialog";
+import { useConflittoAssegnazione } from "@/components/ConflittoAssegnazioneDialog";
+import { trovaConflitti } from "@/lib/conflittiAssegnazione";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -245,6 +247,7 @@ export default function Servizi() {
   const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
   const [networkDialogId, setNetworkDialogId] = useState<string | null>(null);
   const [selectedServiziIds, setSelectedServiziIds] = useState<string[]>([]);
+  const { chiediConferma, dialog: conflittoDialog } = useConflittoAssegnazione();
   const [globalSearch, setGlobalSearch] = useState("");
 
   
@@ -566,6 +569,23 @@ export default function Servizi() {
         ? { autista_id: driver.id, autista_esterno_id: null }
         : { autista_id: null, autista_esterno_id: driver.id };
 
+    if (driver) {
+      const target = servizi.find(s => s.id === servizioId);
+      if (target) {
+        const conflitti = await trovaConflitti(target, {
+          tipo: driver.kind === "interno" ? "autista_interno" : "autista_esterno",
+          id: driver.id,
+        });
+        if (conflitti.length > 0) {
+          const ok = await chiediConferma({
+            risorsa: `l'autista ${driver.nome}${driver.cognome ? ` ${driver.cognome}` : ""}`,
+            conflitti,
+          });
+          if (!ok) return;
+        }
+      }
+    }
+
     const { error } = await supabase.from("servizi").update(payload as any).eq("id", servizioId);
 
     if (error) {
@@ -578,6 +598,16 @@ export default function Servizi() {
   };
 
   const handleAssignVeicolo = async (servizioId: string, veicolo: { id: string; targa: string } | null) => {
+    if (veicolo) {
+      const target = servizi.find(s => s.id === servizioId);
+      if (target) {
+        const conflitti = await trovaConflitti(target, { tipo: "veicolo", id: veicolo.id });
+        if (conflitti.length > 0) {
+          const ok = await chiediConferma({ risorsa: `il veicolo ${veicolo.targa}`, conflitti });
+          if (!ok) return;
+        }
+      }
+    }
     const { error } = await supabase
       .from("servizi")
       .update({ veicolo_id: veicolo ? veicolo.id : null } as any)
@@ -587,12 +617,28 @@ export default function Servizi() {
     await loadServizi();
   };
 
+
   const handleBulkAssignDriver = async (driver: DriverOption) => {
     if (selectedServiziIds.length === 0) return;
 
     const payload = driver.kind === "interno"
       ? { autista_id: driver.id, autista_esterno_id: null }
       : { autista_id: null, autista_esterno_id: driver.id };
+
+    const targets = servizi.filter(s => selectedServiziIds.includes(s.id));
+    const risorsa = { tipo: driver.kind === "interno" ? "autista_interno" : "autista_esterno", id: driver.id } as const;
+    const conflittiTot = (await Promise.all(targets.map(t => trovaConflitti(t, risorsa))))
+      .flat()
+      .filter((c, i, arr) => arr.findIndex(x => x.id === c.id) === i)
+      .filter(c => !selectedServiziIds.includes(c.id));
+    if (conflittiTot.length > 0) {
+      const ok = await chiediConferma({
+        risorsa: `l'autista ${driver.nome}${driver.cognome ? ` ${driver.cognome}` : ""}`,
+        conflitti: conflittiTot,
+      });
+      if (!ok) return;
+    }
+
 
     const { error } = await supabase.from("servizi").update(payload as any).in("id", selectedServiziIds);
 
@@ -749,6 +795,7 @@ export default function Servizi() {
 
   return (
     <DashboardLayout>
+      {conflittoDialog}
       <div className="space-y-2 overflow-x-clip">
         {/* Header row */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
