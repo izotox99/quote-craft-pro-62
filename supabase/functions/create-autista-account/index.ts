@@ -12,6 +12,17 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+function mapAuthError(message: string): { error: string; code: string } {
+  const m = (message ?? "").toLowerCase();
+  if (m.includes("weak") || m.includes("pwned") || m.includes("compromised") || m.includes("breach")) {
+    return {
+      error: "Password troppo debole o presente in archivi di password compromesse. Scegline una più robusta (min. 8 caratteri, con maiuscole, numeri e simboli).",
+      code: "weak_password",
+    };
+  }
+  return { error: message, code: "auth_update_failed" };
+}
+
 function cleanEmail(v: unknown): string | null {
   if (v === null || v === undefined) return null;
   const s = v.toString().trim().toLowerCase();
