@@ -111,13 +111,6 @@ export type Database = {
             referencedRelation: "servizi"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "agenda_eventi_servizio_id_fkey"
-            columns: ["servizio_id"]
-            isOneToOne: false
-            referencedRelation: "servizi_autista_view"
-            referencedColumns: ["id"]
-          },
         ]
       }
       agenda_promemoria_inviati: {
@@ -651,13 +644,6 @@ export type Database = {
             referencedRelation: "servizi"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "autisti_ore_servizio_id_fkey"
-            columns: ["servizio_id"]
-            isOneToOne: false
-            referencedRelation: "servizi_autista_view"
-            referencedColumns: ["id"]
-          },
         ]
       }
       autisti_ore_modifiche: {
@@ -902,13 +888,6 @@ export type Database = {
             columns: ["servizio_id"]
             isOneToOne: false
             referencedRelation: "servizi"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "autisti_spese_servizio_id_fkey"
-            columns: ["servizio_id"]
-            isOneToOne: false
-            referencedRelation: "servizi_autista_view"
             referencedColumns: ["id"]
           },
           {
@@ -1673,13 +1652,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "notifiche_servizio_id_fkey"
-            columns: ["servizio_id"]
-            isOneToOne: false
-            referencedRelation: "servizi_autista_view"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "notifiche_utenza_id_fkey"
             columns: ["utenza_id"]
             isOneToOne: false
@@ -2349,13 +2321,6 @@ export type Database = {
             referencedRelation: "servizi"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "servizi_accessori_servizio_id_fkey"
-            columns: ["servizio_id"]
-            isOneToOne: false
-            referencedRelation: "servizi_autista_view"
-            referencedColumns: ["id"]
-          },
         ]
       }
       servizi_modifiche: {
@@ -2395,13 +2360,6 @@ export type Database = {
             columns: ["servizio_id"]
             isOneToOne: false
             referencedRelation: "servizi"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "servizi_modifiche_servizio_id_fkey"
-            columns: ["servizio_id"]
-            isOneToOne: false
-            referencedRelation: "servizi_autista_view"
             referencedColumns: ["id"]
           },
         ]
@@ -2485,24 +2443,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "servizi_network_servizio_a_id_fkey"
-            columns: ["servizio_a_id"]
-            isOneToOne: false
-            referencedRelation: "servizi_autista_view"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "servizi_network_servizio_b_id_fkey"
             columns: ["servizio_b_id"]
             isOneToOne: false
             referencedRelation: "servizi"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "servizi_network_servizio_b_id_fkey"
-            columns: ["servizio_b_id"]
-            isOneToOne: false
-            referencedRelation: "servizi_autista_view"
             referencedColumns: ["id"]
           },
         ]
@@ -3036,126 +2980,7 @@ export type Database = {
           veicolo_id: string | null
           veicolo_tipo: string | null
         }
-        Insert: {
-          accessori?: string | null
-          allegato_nome?: string | null
-          allegato_path?: string | null
-          autista_id?: string | null
-          cartello?: string | null
-          citta?: string | null
-          codice?: string | null
-          con_assistente?: boolean | null
-          con_guida?: boolean | null
-          contatto?: string | null
-          created_at?: string | null
-          data_servizio?: string | null
-          dispo_conclusa_at?: string | null
-          dispo_nota_chiusura?: string | null
-          disposizione_oraria?: string | null
-          email_contatto?: string | null
-          foglio?: string | null
-          id?: string | null
-          info_autista?: string | null
-          info_cliente_autista?: string | null
-          itinerario?: string | null
-          km_fine_servizio?: number | null
-          km_inizio_servizio?: number | null
-          luogo_fine?: string | null
-          luogo_inizio?: string | null
-          modificato_at?: string | null
-          modificato_da_cliente?: boolean | null
-          n_bagagli?: number | null
-          n_passeggeri?: number | null
-          network_autista_nome?: string | null
-          network_autista_targa?: string | null
-          network_autista_telefono?: string | null
-          note?: string | null
-          ora_inizio?: string | null
-          org_id?: string | null
-          permesso_effettuato?: boolean | null
-          ritirare_voucher?: boolean | null
-          stato?: Database["public"]["Enums"]["servizio_stato"] | null
-          stato_autista?: string | null
-          telefono_contatto?: string | null
-          telefono_d?: string | null
-          tipo_pagamento?: string | null
-          tipologia?: Database["public"]["Enums"]["servizio_tipologia"] | null
-          tour_tipo?: string | null
-          transfer_concluso_at?: string | null
-          transfer_nota_chiusura?: string | null
-          transfer_tipo?: string | null
-          updated_at?: string | null
-          veicolo_id?: string | null
-          veicolo_tipo?: string | null
-        }
-        Update: {
-          accessori?: string | null
-          allegato_nome?: string | null
-          allegato_path?: string | null
-          autista_id?: string | null
-          cartello?: string | null
-          citta?: string | null
-          codice?: string | null
-          con_assistente?: boolean | null
-          con_guida?: boolean | null
-          contatto?: string | null
-          created_at?: string | null
-          data_servizio?: string | null
-          dispo_conclusa_at?: string | null
-          dispo_nota_chiusura?: string | null
-          disposizione_oraria?: string | null
-          email_contatto?: string | null
-          foglio?: string | null
-          id?: string | null
-          info_autista?: string | null
-          info_cliente_autista?: string | null
-          itinerario?: string | null
-          km_fine_servizio?: number | null
-          km_inizio_servizio?: number | null
-          luogo_fine?: string | null
-          luogo_inizio?: string | null
-          modificato_at?: string | null
-          modificato_da_cliente?: boolean | null
-          n_bagagli?: number | null
-          n_passeggeri?: number | null
-          network_autista_nome?: string | null
-          network_autista_targa?: string | null
-          network_autista_telefono?: string | null
-          note?: string | null
-          ora_inizio?: string | null
-          org_id?: string | null
-          permesso_effettuato?: boolean | null
-          ritirare_voucher?: boolean | null
-          stato?: Database["public"]["Enums"]["servizio_stato"] | null
-          stato_autista?: string | null
-          telefono_contatto?: string | null
-          telefono_d?: string | null
-          tipo_pagamento?: string | null
-          tipologia?: Database["public"]["Enums"]["servizio_tipologia"] | null
-          tour_tipo?: string | null
-          transfer_concluso_at?: string | null
-          transfer_nota_chiusura?: string | null
-          transfer_tipo?: string | null
-          updated_at?: string | null
-          veicolo_id?: string | null
-          veicolo_tipo?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "servizi_autista_id_fkey"
-            columns: ["autista_id"]
-            isOneToOne: false
-            referencedRelation: "autisti"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "servizi_veicolo_id_fkey"
-            columns: ["veicolo_id"]
-            isOneToOne: false
-            referencedRelation: "veicoli"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -3508,6 +3333,7 @@ export type Database = {
         }
       }
       current_user_email: { Args: never; Returns: string }
+      get_account_type: { Args: { _user_id: string }; Returns: string }
       get_active_utenza_id: { Args: { _user_id: string }; Returns: string }
       get_autista_esterno_id: { Args: { _user_id: string }; Returns: string }
       get_autista_id: { Args: { _user_id: string }; Returns: string }
@@ -3827,6 +3653,87 @@ export type Database = {
           to: "autisti_assenze"
           isOneToOne: true
           isSetofReturn: false
+        }
+      }
+      servizi_autista_rows: {
+        Args: never
+        Returns: {
+          accessori: string | null
+          allegato_nome: string | null
+          allegato_path: string | null
+          archiviato: boolean
+          autista_esterno_id: string | null
+          autista_id: string | null
+          cartello: string | null
+          centro_costo: string | null
+          citta: string | null
+          client_id: string | null
+          codice: string | null
+          com_cliente: number | null
+          con_assistente: boolean
+          con_guida: boolean
+          contatto: string | null
+          costo_autista: number | null
+          costo_centro: number | null
+          costo_commissione: number | null
+          costo_cs: number | null
+          created_at: string
+          created_by: string | null
+          data_servizio: string
+          dispo_conclusa_at: string | null
+          dispo_nota_chiusura: string | null
+          disposizione_oraria: string | null
+          email_contatto: string | null
+          foglio: string | null
+          fornitore_cs_id: string | null
+          id: string
+          incasso: number | null
+          info_autista: string | null
+          info_cliente: string | null
+          info_cliente_autista: string | null
+          info_interne: string | null
+          itinerario: string | null
+          km_fine_servizio: number | null
+          km_inizio_servizio: number | null
+          luogo_fine: string | null
+          luogo_inizio: string | null
+          modificato_at: string | null
+          modificato_da_cliente: boolean
+          n_bagagli: number | null
+          n_passeggeri: number | null
+          network_autista_nome: string | null
+          network_autista_targa: string | null
+          network_autista_telefono: string | null
+          non_incassato: number | null
+          note: string | null
+          ora_inizio: string | null
+          org_id: string
+          permesso_effettuato: boolean
+          prezzo: number | null
+          prezzo_ccredito: number | null
+          prezzo_contante: number | null
+          prezzo_fattura: number | null
+          ritirare_voucher: boolean
+          stato: Database["public"]["Enums"]["servizio_stato"]
+          stato_autista: string
+          telefono_contatto: string | null
+          telefono_d: string | null
+          tipo_pagamento: string | null
+          tipologia: Database["public"]["Enums"]["servizio_tipologia"] | null
+          tour_tipo: string | null
+          transfer_concluso_at: string | null
+          transfer_nota_chiusura: string | null
+          transfer_tipo: string | null
+          updated_at: string
+          utenza_id: string | null
+          veicolo_id: string | null
+          veicolo_tipo: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "servizi"
+          isOneToOne: false
+          isSetofReturn: true
         }
       }
       veicoli_check_tagliandi: { Args: never; Returns: undefined }
