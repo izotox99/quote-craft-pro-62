@@ -23,6 +23,8 @@ import { trovaConflitti } from "@/lib/conflittiAssegnazione";
 import { useConflittoAssegnazione } from "@/components/ConflittoAssegnazioneDialog";
 import { NetworkDispatchDialog } from "./NetworkDispatchDialog";
 import { Send } from "lucide-react";
+import { validaServizio, type ServizioErrors } from "@/lib/servizioValidation";
+
 
 
 const TRANSFER_OPZIONI = [
