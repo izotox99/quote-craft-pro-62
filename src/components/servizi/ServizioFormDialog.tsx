@@ -23,6 +23,8 @@ import { trovaConflitti } from "@/lib/conflittiAssegnazione";
 import { useConflittoAssegnazione } from "@/components/ConflittoAssegnazioneDialog";
 import { NetworkDispatchDialog } from "./NetworkDispatchDialog";
 import { Send } from "lucide-react";
+import { validaServizio, type ServizioErrors } from "@/lib/servizioValidation";
+
 
 
 const TRANSFER_OPZIONI = [
@@ -193,6 +195,8 @@ export function ServizioFormDialog({
 }: Props) {
   const [f, setF] = useState<any>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<ServizioErrors>({});
+
   const [telefonoDTouched, setTelefonoDTouched] = useState(false);
   const [accessoriRows, setAccessoriRows] = useState<AccessorioRow[]>([]);
   const [autore, setAutore] = useState<string>("—");
@@ -254,7 +258,19 @@ export function ServizioFormDialog({
     return () => { alive = false; };
   }, [open, mode, initialData]);
 
-  const set = (patch: any) => setF((prev: any) => ({ ...prev, ...patch }));
+  const set = (patch: any) => {
+    setErrors(prev => {
+      if (!Object.keys(prev).length) return prev;
+      const next = { ...prev };
+      Object.keys(patch).forEach(k => { delete next[k]; });
+      if ("transfer_tipo" in patch || "disposizione_oraria" in patch || "tour_tipo" in patch) {
+        delete next.transfer_tipo;
+      }
+      return next;
+    });
+    setF((prev: any) => ({ ...prev, ...patch }));
+  };
+
 
   // Auto-copia Telefono D dal Telefono finché l'utente non tocca il campo
   useEffect(() => {
@@ -349,18 +365,18 @@ export function ServizioFormDialog({
 
 
   const handleSubmit = async () => {
-    if (!f.citta) { toast.error("Seleziona la città"); return; }
-    if (!f.data_servizio) { toast.error("Data obbligatoria"); return; }
-    if (!f.ora_inizio) { toast.error("Ora inizio obbligatoria"); return; }
-    if (!f.luogo_inizio) { toast.error("Luogo inizio obbligatorio"); return; }
-    if (!f.luogo_fine) { toast.error("Luogo fine obbligatorio"); return; }
-    if (!f.tipo_pagamento) { toast.error("Tipo pagamento obbligatorio"); return; }
-    if (!f.transfer_tipo && !f.disposizione_oraria && !f.tour_tipo) {
-      toast.error("Seleziona Trasfert, Disposizione oraria o Tour");
+    const errs = validaServizio(f as any);
+    setErrors(errs);
+    const lista = Object.values(errs).filter((m): m is string => !!m);
+    if (lista.length) {
+      toast.error(lista[0], {
+        description: lista.length > 1 ? `Altri ${lista.length - 1} campi da correggere` : undefined,
+      });
       return;
     }
 
     if (!(await verificaConflitti())) return;
+
 
     // Deriva tipologia enum
     let tipologia: "transfer" | "disposizione" | "tour" = "transfer";
@@ -451,7 +467,14 @@ export function ServizioFormDialog({
       }
     }
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      // Il database applica le stesse regole sui campi obbligatori: mostra il messaggio così com'è.
+      setErrors({ form: error.message });
+      toast.error(error.message);
+      return;
+    }
+    setErrors({});
+
     toast.success(mode === "edit" ? "Servizio aggiornato" : "Servizio creato");
     onOpenChange(false);
     onSaved({ data_servizio: (payload as any).data_servizio ?? null });
@@ -466,6 +489,17 @@ export function ServizioFormDialog({
             {mode === "edit" ? "Modifica Servizio" : "Nuovo Servizio"}
           </DialogTitle>
         </DialogHeader>
+
+        {Object.keys(errors).length > 0 && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            <p className="font-semibold mb-1">Correggi i campi obbligatori:</p>
+            <ul className="list-disc pl-5 space-y-0.5">
+              {Object.entries(errors).map(([k, msg]) => <li key={k}>{msg}</li>)}
+            </ul>
+          </div>
+        )}
+
+
 
         <div className="space-y-4 text-sm">
           {/* 1. Città */}
