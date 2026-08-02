@@ -98,14 +98,16 @@ Deno.serve(async (req) => {
       const { data: existingFp } = await admin
         .from("password_fingerprints")
         .select("owner_type, owner_id")
+        .eq("org_id", parentClient.org_id)
         .eq("fingerprint", fingerprint)
         .maybeSingle();
       if (existingFp) {
         return jsonResponse({
-          error: "Password già in uso da un altro account, scegline una diversa.",
+          error: "Password già in uso da un altro account della tua organizzazione, scegline una diversa.",
           code: "password_in_use",
         }, 409);
       }
+
 
       // Hash bcrypt via RPC esistente.
       const { data: hash, error: hashErr } = await admin.rpc("hash_utenza_password", { _password: password });
@@ -189,14 +191,16 @@ Deno.serve(async (req) => {
         const { data: existingFp } = await admin
           .from("password_fingerprints")
           .select("owner_type, owner_id")
+          .eq("org_id", parentClient.org_id)
           .eq("fingerprint", fingerprint)
           .maybeSingle();
         if (existingFp && !(existingFp.owner_type === "utenza" && existingFp.owner_id === utenzaId)) {
           return jsonResponse({
-            error: "Password già in uso da un altro account, scegline una diversa.",
+            error: "Password già in uso da un altro account della tua organizzazione, scegline una diversa.",
             code: "password_in_use",
           }, 409);
         }
+
 
         const { data: hash, error: hashErr } = await admin.rpc("hash_utenza_password", { _password: password });
         if (hashErr || !hash) {
