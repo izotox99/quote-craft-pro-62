@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { invokeEdge } from "@/lib/edgeInvoke";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -139,29 +140,17 @@ export default function Clients() {
       nota_tariffario: toNull(form.nota_tariffario),
     };
 
-    const { data: fnData, error: fnError } = await supabase.functions.invoke("create-client-account", {
-      body: {
+    try {
+      await invokeEdge("create-client-account", {
         client_id: editing?.id,
         client: payload,
         password: form.password_cliente.trim() || undefined,
-      },
-    });
-
-    if (fnError || fnData?.error) {
-      let message = fnData?.error || "Errore durante il salvataggio";
-      // supabase-js non espone il body sugli errori non-2xx: leggiamolo dalla Response
-      const ctx = (fnError as unknown as { context?: Response })?.context;
-      if (ctx && typeof ctx.text === "function") {
-        try {
-          const raw = await ctx.text();
-          const parsed = JSON.parse(raw);
-          if (parsed?.error) message = parsed.error;
-        } catch { /* body non leggibile */ }
-      }
-      if (message === "Errore durante il salvataggio" && fnError?.message) message = fnError.message;
-      toast.error(message);
+      });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Errore durante il salvataggio");
       return;
     }
+
 
 
     toast.success(editing ? "Cliente aggiornato" : "Cliente e account creati con successo!");

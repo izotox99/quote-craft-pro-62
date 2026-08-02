@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { invokeEdge } from "@/lib/edgeInvoke";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -108,14 +109,12 @@ export default function Autisti() {
 
   const confirmRevoke = async () => {
     if (!revokeId) return;
-    const { data, error } = await supabase.functions.invoke("revoke-autista-account", {
-      body: { autista_id: revokeId, tipo: "interno" },
-    });
-    if (error || (data as any)?.error) {
-      toast.error((data as any)?.error ?? error?.message ?? "Errore revoca");
-    } else {
+    try {
+      await invokeEdge("revoke-autista-account", { autista_id: revokeId, tipo: "interno" });
       toast.success("Accesso app revocato");
       load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Errore revoca");
     }
     setRevokeId(null);
   };

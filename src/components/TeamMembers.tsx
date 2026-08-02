@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { invokeEdge } from "@/lib/edgeInvoke";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -43,14 +44,9 @@ export function TeamMembers() {
   const [daRevocare, setDaRevocare] = useState<Membro | null>(null);
 
   const call = useCallback(async (body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke("manage-org-members", { body });
-    if (error) {
-      const msg = (data as any)?.error ?? error.message;
-      throw new Error(msg);
-    }
-    if ((data as any)?.error) throw new Error((data as any).error);
-    return data as any;
+    return await invokeEdge<any>("manage-org-members", body);
   }, []);
+
 
   const load = useCallback(async () => {
     setLoading(true);

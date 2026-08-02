@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { invokeEdge } from "@/lib/edgeInvoke";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -182,19 +183,17 @@ export function NuovoAutistaDialog({
 
         // Account autista: crea o aggiorna solo se email fornita, o password fornita in modifica
         if (internoId && (common.email.trim() || password)) {
-          const { data: fnData, error: fnErr } = await supabase.functions.invoke("create-autista-account", {
-            body: {
-              autista_id: internoId,
-              tipo: "interno",
-              email: common.email.trim(),
-              password: password || undefined,
-            },
-          });
-          if (fnErr || (fnData as any)?.error) {
-            const msg = (fnData as any)?.error ?? fnErr?.message ?? "Errore creazione account autista";
-            throw new Error(msg);
+          if (!common.email.trim()) {
+            throw new Error("Inserisci l'email dell'autista: serve per creare o aggiornare l'accesso all'app autisti.");
           }
+          await invokeEdge("create-autista-account", {
+            autista_id: internoId,
+            tipo: "interno",
+            email: common.email.trim(),
+            password: password || undefined,
+          });
         }
+
       } else {
 
         const payload: any = {
@@ -230,19 +229,17 @@ export function NuovoAutistaDialog({
 
         // Account autista collaboratore esterno
         if (id && (common.email.trim() || password)) {
-          const { data: fnData, error: fnErr } = await supabase.functions.invoke("create-autista-account", {
-            body: {
-              autista_id: id,
-              tipo: "esterno",
-              email: common.email.trim(),
-              password: password || undefined,
-            },
-          });
-          if (fnErr || (fnData as any)?.error) {
-            const msg = (fnData as any)?.error ?? fnErr?.message ?? "Errore creazione account autista";
-            throw new Error(msg);
+          if (!common.email.trim()) {
+            throw new Error("Inserisci l'email del collaboratore: serve per creare o aggiornare l'accesso all'app autisti.");
           }
+          await invokeEdge("create-autista-account", {
+            autista_id: id,
+            tipo: "esterno",
+            email: common.email.trim(),
+            password: password || undefined,
+          });
         }
+
 
         // Upload foglio (tariffario) se presente
         if (foglio && id) {
