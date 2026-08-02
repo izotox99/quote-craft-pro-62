@@ -483,6 +483,17 @@ export function ServizioFormDialog({
           </DialogTitle>
         </DialogHeader>
 
+        {Object.keys(errors).length > 0 && (
+          <div className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            <p className="font-semibold mb-1">Correggi i campi obbligatori:</p>
+            <ul className="list-disc pl-5 space-y-0.5">
+              {Object.entries(errors).map(([k, msg]) => <li key={k}>{msg}</li>)}
+            </ul>
+          </div>
+        )}
+
+
+
         <div className="space-y-4 text-sm">
           {/* 1. Città */}
           <section className="bg-muted/40 rounded-md p-3">
