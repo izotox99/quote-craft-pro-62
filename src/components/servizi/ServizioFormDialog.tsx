@@ -128,6 +128,7 @@ type Props = {
   veicoli: Veicolo[];
   fornitori: Fornitore[];
   isAdmin: boolean;
+  readOnly?: boolean;
   userId?: string;
   onSaved: (info?: { data_servizio?: string | null }) => void;
 };
@@ -191,7 +192,7 @@ function n(v: any): number | null {
 const norm = (v?: string | null) => (v ?? "").trim().toLowerCase();
 
 export function ServizioFormDialog({
-  open, onOpenChange, mode, initialData, clients, autisti, autistiEsterni = [], veicoli, fornitori, isAdmin, userId, onSaved,
+  open, onOpenChange, mode, initialData, clients, autisti, autistiEsterni = [], veicoli, fornitori, isAdmin, readOnly = false, userId, onSaved,
 }: Props) {
   const [f, setF] = useState<any>(emptyForm());
   const [saving, setSaving] = useState(false);
@@ -501,7 +502,13 @@ export function ServizioFormDialog({
 
 
 
-        <div className="space-y-4 text-sm">
+        {readOnly && (
+          <div className="rounded-md border bg-muted/50 p-2 text-xs text-muted-foreground text-center">
+            Sola lettura: il tuo ruolo non consente di modificare i servizi.
+          </div>
+        )}
+
+        <fieldset disabled={readOnly} className="space-y-4 text-sm disabled:opacity-100">
           {/* 1. Città */}
           <section className="bg-muted/40 rounded-md p-3">
             <div className="grid grid-cols-12 items-center gap-3">
@@ -898,13 +905,15 @@ export function ServizioFormDialog({
               )}
             </section>
           )}
-        </div>
+        </fieldset>
 
         <div className="flex justify-end gap-2 pt-2 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
-          <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? "Salvataggio…" : mode === "edit" ? "Fine" : "Crea Servizio"}
-          </Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{readOnly ? "Chiudi" : "Annulla"}</Button>
+          {!readOnly && (
+            <Button onClick={handleSubmit} disabled={saving}>
+              {saving ? "Salvataggio…" : mode === "edit" ? "Fine" : "Crea Servizio"}
+            </Button>
+          )}
         </div>
 
         {conflittoDialog}

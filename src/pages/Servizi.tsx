@@ -246,7 +246,6 @@ export default function Servizi() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editServizio, setEditServizio] = useState<ServizioFormInitial | null>(null);
-  const [detailServizio, setDetailServizio] = useState<Servizio | null>(null);
   const [networkDialogId, setNetworkDialogId] = useState<string | null>(null);
   const [selectedServiziIds, setSelectedServiziIds] = useState<string[]>([]);
   const { chiediConferma, dialog: conflittoDialog } = useConflittoAssegnazione();
@@ -559,7 +558,6 @@ export default function Servizi() {
     const { data, error } = await supabase.from("servizi").select("*").eq("id", id).single();
     if (error) { toast.error(error.message); return; }
     setEditServizio(data as any);
-    setDetailServizio(null);
   };
 
 
@@ -1261,7 +1259,7 @@ export default function Servizi() {
                     isNuovoRosso ? "bg-red-50/60 dark:bg-red-950/20 border-red-200 dark:border-red-900" :
                     isDaConfermare ? "bg-orange-50/70 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900" : ""
                   } ${modificato ? "border-l-4 border-l-orange-700 dark:border-l-orange-500" : ""}`}
-                  onClick={() => setDetailServizio(s)}
+                  onClick={() => openEditServizio(s.id)}
                 >
                   <CardContent className="p-4 flex items-center gap-4">
                     <div className="flex flex-col items-center justify-center w-12 shrink-0">
@@ -1624,7 +1622,7 @@ export default function Servizi() {
                             return (
                               <tr
                                 key={s.id}
-                                onClick={() => setDetailServizio(s)}
+                                onClick={() => openEditServizio(s.id)}
                                 className={`border-b cursor-pointer transition-colors ${
                                   isSelected
                                     ? "bg-primary/5 hover:bg-primary/10"
@@ -1721,133 +1719,6 @@ export default function Servizi() {
           </div>
         </div>
 
-        {/* Detail dialog */}
-        <Dialog open={!!detailServizio} onOpenChange={o => !o && setDetailServizio(null)}>
-          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-            {detailServizio && (() => {
-              const s = detailServizio;
-              const DetailRow = ({ icon: Icon, label, value }: { icon: any; label: string; value: string | null | undefined }) => {
-                if (!value) return null;
-                return (
-                  <div className="flex items-start gap-3 py-1.5">
-                    <Icon className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-[11px] text-muted-foreground">{label}</p>
-                      <p className="text-sm font-medium text-foreground">{value}</p>
-                    </div>
-                  </div>
-                );
-              };
-              return (
-                <>
-                  <DialogHeader>
-                    <DialogTitle className="text-base">
-                      {format(new Date(s.data_servizio), "EEEE dd MMMM yyyy", { locale: itLocale })}
-                      {s.ora_inizio && ` · ${s.ora_inizio}`}
-                    </DialogTitle>
-                  </DialogHeader>
-                  <div className="flex flex-wrap gap-2 mt-1 items-center">
-                    <Badge variant="outline" className={statusColors[s.stato] || ""}>{statusLabels[s.stato] || s.stato}</Badge>
-                    {s.citta && <Badge variant="outline">{s.citta}</Badge>}
-                    {s.stato === "da_confermare" && (s.autista_id || s.autista_esterno_id) && (
-                      <Button
-                        size="sm"
-                        className="gap-1.5 h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white"
-                        onClick={() => handleConfirmServizio(s.id)}
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Conferma
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="ml-auto gap-1.5 h-7 text-xs"
-                      onClick={() => setNetworkDialogId(s.id)}
-                    >
-                      <Network className="h-3.5 w-3.5" /> Network
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5 h-7 text-xs"
-                      onClick={() => openEditServizio(s.id)}
-                    >
-                      <Pencil className="h-3.5 w-3.5" /> Modifica
-                    </Button>
-                  </div>
-
-                  <Separator className="my-2" />
-
-                  {/* T.Serv - combined service type */}
-                  <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tipo Servizio</p>
-                    <p className="font-medium">{buildTServ(s)}</p>
-                  </div>
-
-                  <Separator className="my-2" />
-
-                  {/* Contact & Passenger info */}
-                  <div className="space-y-0">
-                    <DetailRow icon={Users} label="Società" value={s.clients?.company || s.clients?.name} />
-                    <DetailRow icon={Phone} label="Contatto" value={s.contatto} />
-                    <DetailRow icon={Phone} label="Telefono" value={s.telefono_contatto} />
-                    <DetailRow icon={Info} label="Email Contatto" value={s.email_contatto} />
-                    <DetailRow icon={Users} label="Passeggeri / Bagagli" value={`${s.n_passeggeri ?? 0} pax · ${s.n_bagagli ?? 0} bag`} />
-                  </div>
-
-                  <Separator className="my-2" />
-
-                  {/* Route info */}
-                  <div className="space-y-0">
-                    <DetailRow icon={MapPin} label="Luogo Inizio" value={s.luogo_inizio} />
-                    <DetailRow icon={Route} label="Itinerario" value={s.itinerario} />
-                    <DetailRow icon={MapPin} label="Luogo Fine" value={s.luogo_fine} />
-                  </div>
-
-                  <Separator className="my-2" />
-
-                  {/* Vehicle & Driver */}
-                  <div className="space-y-0">
-                    <DetailRow icon={Info} label="Info Autista" value={s.info_autista} />
-                    <DetailRow icon={Luggage} label="Accessori" value={s.accessori} />
-                    <DetailRow icon={Car} label="Veicolo" value={
-                      s.veicoli
-                        ? `${[s.veicoli.marca, s.veicoli.modello].filter(Boolean).join(" ") || s.veicoli.tipo_macchina || ""} — ${s.veicoli.targa}`
-                        : (s.veicolo_tipo ? `${s.veicolo_tipo} (da assegnare)` : null)
-                    } />
-                    <DetailRow icon={Users} label="Autista" value={s.autisti ? `${s.autisti.nome} ${s.autisti.cognome}` : (s.autisti_esterni?.nome || null)} />
-                    <DetailRow icon={Users} label="Fornitore CS" value={s.fornitori_cs?.nome} />
-                  </div>
-
-                  <Separator className="my-2" />
-
-                  {/* Financial */}
-                  <div className="space-y-0">
-                    <DetailRow icon={CreditCard} label="Tipo Pagamento" value={s.tipo_pagamento} />
-                    <DetailRow icon={CreditCard} label="Prezzo" value={s.prezzo != null ? `€ ${s.prezzo}` : null} />
-                    <DetailRow icon={CreditCard} label="Incasso" value={s.incasso != null ? `€ ${s.incasso}` : null} />
-                    <DetailRow icon={CreditCard} label="Costo CS" value={s.costo_cs != null ? `€ ${s.costo_cs}` : null} />
-                    <DetailRow icon={CreditCard} label="Costo Autista" value={s.costo_autista != null ? `€ ${s.costo_autista}` : null} />
-                    <DetailRow icon={CreditCard} label="Commissione" value={s.costo_commissione != null ? `€ ${s.costo_commissione}` : null} />
-                    <DetailRow icon={Info} label="Centro Costo" value={s.centro_costo} />
-                  </div>
-
-                  {(s.codice || s.foglio || s.note) && (
-                    <>
-                      <Separator className="my-2" />
-                      <div className="space-y-0">
-                        <DetailRow icon={Info} label="Codice" value={s.codice} />
-                        <DetailRow icon={Info} label="Foglio" value={s.foglio} />
-                        <DetailRow icon={Info} label="Note" value={s.note} />
-                      </div>
-                    </>
-                  )}
-                </>
-              );
-            })()}
-          </DialogContent>
-        </Dialog>
-
         {/* Nuovo servizio */}
         <ServizioFormDialog
           open={dialogOpen}
@@ -1875,6 +1746,7 @@ export default function Servizi() {
           veicoli={veicoli}
           fornitori={fornitori}
           isAdmin={isAdmin}
+          readOnly={!canWrite}
           userId={user?.id}
           onSaved={handleServizioSaved}
         />
