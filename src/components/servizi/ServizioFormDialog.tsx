@@ -320,23 +320,33 @@ export function ServizioFormDialog({
       disposizione_oraria: f.disposizione_oraria,
       tipologia: f.tour_tipo ? "tour" : f.disposizione_oraria ? "disposizione" : "transfer",
     };
-    if (f.autista_id && f.autista_id !== initialData?.autista_id) {
+    // In modifica la finestra temporale può cambiare pur restando la stessa risorsa:
+    // in quel caso il controllo va rifatto comunque.
+    const finestraCambiata =
+      !initialData ||
+      f.data_servizio !== (initialData.data_servizio ?? "") ||
+      (f.ora_inizio || "") !== (initialData.ora_inizio ?? "") ||
+      (f.disposizione_oraria || "") !== (initialData.disposizione_oraria ?? "") ||
+      (f.tour_tipo || "") !== (initialData.tour_tipo ?? "");
+
+    if (f.autista_id && (finestraCambiata || f.autista_id !== initialData?.autista_id)) {
       const a = autisti.find(x => x.id === f.autista_id);
       const c = await trovaConflitti(target, { tipo: "autista_interno", id: f.autista_id });
       if (c.length && !(await chiediConferma({ risorsa: `l'autista ${a ? `${a.nome} ${a.cognome}` : ""}`.trim(), conflitti: c }))) return false;
     }
-    if (f.autista_esterno_id && f.autista_esterno_id !== initialData?.autista_esterno_id) {
+    if (f.autista_esterno_id && (finestraCambiata || f.autista_esterno_id !== initialData?.autista_esterno_id)) {
       const a = autistiEsterni.find(x => x.id === f.autista_esterno_id);
       const c = await trovaConflitti(target, { tipo: "autista_esterno", id: f.autista_esterno_id });
       if (c.length && !(await chiediConferma({ risorsa: `l'autista ${a?.nome ?? "esterno"}`, conflitti: c }))) return false;
     }
-    if (f.veicolo_id && f.veicolo_id !== initialData?.veicolo_id) {
+    if (f.veicolo_id && (finestraCambiata || f.veicolo_id !== initialData?.veicolo_id)) {
       const v = veicoli.find(x => x.id === f.veicolo_id);
       const c = await trovaConflitti(target, { tipo: "veicolo", id: f.veicolo_id });
       if (c.length && !(await chiediConferma({ risorsa: `il veicolo ${v?.targa ?? ""}`.trim(), conflitti: c }))) return false;
     }
     return true;
   };
+
 
   const handleSubmit = async () => {
     if (!f.citta) { toast.error("Seleziona la città"); return; }
