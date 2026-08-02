@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { invokeEdge } from "@/lib/edgeInvoke";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
