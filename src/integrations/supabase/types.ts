@@ -3736,6 +3736,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      storage_org_folder_ok: { Args: { _folder: string }; Returns: boolean }
       veicoli_check_tagliandi: { Args: never; Returns: undefined }
       veicoli_occupati: {
         Args: never
