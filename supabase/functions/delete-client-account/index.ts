@@ -97,7 +97,8 @@ Deno.serve(async (req) => {
       .from("password_fingerprints")
       .delete()
       .eq("owner_type", "client")
-      .eq("owner_id", client_id);
+      .eq("owner_id", client_id)
+      .eq("org_id", callerProfile.org_id);
 
 
     // Try to delete the auth user too, if no other client / utenza references it.

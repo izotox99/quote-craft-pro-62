@@ -212,7 +212,8 @@ Deno.serve(async (req) => {
           .from("password_fingerprints")
           .delete()
           .eq("owner_type", "utenza")
-          .eq("owner_id", utenzaId);
+          .eq("owner_id", utenzaId)
+          .eq("org_id", parentClient.org_id);
         const { error: fpErr } = await admin.from("password_fingerprints").insert({
           fingerprint,
           owner_type: "utenza",
@@ -271,7 +272,8 @@ Deno.serve(async (req) => {
         .from("password_fingerprints")
         .delete()
         .eq("owner_type", "utenza")
-        .eq("owner_id", utenzaId);
+        .eq("owner_id", utenzaId)
+        .eq("org_id", parentClient.org_id);
 
       // Cleanup auth user se non referenziato altrove.
       if (row.auth_user_id) {

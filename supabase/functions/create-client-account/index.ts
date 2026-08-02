@@ -284,7 +284,8 @@ Deno.serve(async (req) => {
         .from("password_fingerprints")
         .delete()
         .eq("owner_type", "client")
-        .eq("owner_id", savedClient.id);
+        .eq("owner_id", savedClient.id)
+        .eq("org_id", callerProfile.org_id);
       const { error: fpErr } = await admin.from("password_fingerprints").insert({
         fingerprint: passwordFingerprint,
         owner_type: "client",
