@@ -99,7 +99,7 @@ type Servizio = {
   fornitori_cs: { nome: string; telefono: string | null } | null;
 };
 
-type Client = { id: string; name: string; company: string | null; phone: string | null };
+type Client = { id: string; name: string; company: string | null; phone: string | null; sede_legale?: string | null; citta?: string | null };
 type Autista = { id: string; nome: string; cognome: string };
 type Veicolo = { id: string; targa: string; tipo_macchina: string | null };
 type Fornitore = { id: string; nome: string };
@@ -398,10 +398,10 @@ export default function Servizi() {
 
   const loadLookups = async () => {
     const [c, a, ae, v, f] = await Promise.all([
-      supabase.from("clients").select("id, name, company, phone").order("name"),
+      supabase.from("clients").select("id, name, company, phone, sede_legale, citta").order("name"),
       supabase.from("autisti").select("id, nome, cognome").order("cognome"),
       supabase.from("autisti_esterni").select("id, nome").order("nome"),
-      supabase.from("veicoli").select("id, targa, tipo_macchina").order("targa"),
+      supabase.from("veicoli").select("id, targa, tipo_macchina, marca, modello").order("targa"),
       supabase.from("fornitori_cs").select("id, nome").order("nome"),
     ]);
     setClients(c.data ?? []);
@@ -1855,6 +1855,7 @@ export default function Servizi() {
           mode="create"
           clients={clients}
           autisti={autisti}
+          autistiEsterni={autistiEsterni}
           veicoli={veicoli}
           fornitori={fornitori}
           isAdmin={isAdmin}
@@ -1870,6 +1871,7 @@ export default function Servizi() {
           initialData={editServizio}
           clients={clients}
           autisti={autisti}
+          autistiEsterni={autistiEsterni}
           veicoli={veicoli}
           fornitori={fornitori}
           isAdmin={isAdmin}
