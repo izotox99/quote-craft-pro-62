@@ -12,6 +12,17 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+function mapAuthError(message: string): { error: string; code: string } {
+  const m = (message ?? "").toLowerCase();
+  if (m.includes("weak") || m.includes("pwned") || m.includes("compromised") || m.includes("breach")) {
+    return {
+      error: "Password troppo debole o presente in archivi di password compromesse. Scegline una più robusta (min. 8 caratteri, con maiuscole, numeri e simboli).",
+      code: "weak_password",
+    };
+  }
+  return { error: message, code: "auth_update_failed" };
+}
+
 function cleanEmail(v: unknown): string | null {
   if (v === null || v === undefined) return null;
   const s = v.toString().trim().toLowerCase();
@@ -153,7 +164,7 @@ Deno.serve(async (req) => {
       };
       if (password) updates.password = password;
       const { error } = await admin.auth.admin.updateUserById(authUserId, updates);
-      if (error) return jsonResponse({ error: error.message, code: "auth_update_failed" }, 400);
+      if (error) return jsonResponse(mapAuthError(error.message), 400);
       authAction = (autista as any).auth_user_id ? "updated" : "linked";
     } else {
       if (!password) return jsonResponse({ error: "Password obbligatoria per creare l'account autista", code: "password_required" }, 400);
@@ -162,7 +173,10 @@ Deno.serve(async (req) => {
         user_metadata: { account_type: "autista" },
       });
       if (error || !created.user) {
-        return jsonResponse({ error: error?.message ?? "Errore creazione account", code: "auth_create_failed" }, 400);
+        return jsonResponse(
+          error ? mapAuthError(error.message) : { error: "Errore creazione account", code: "auth_create_failed" },
+          400,
+        );
       }
       authUserId = created.user.id;
       authAction = "created";
