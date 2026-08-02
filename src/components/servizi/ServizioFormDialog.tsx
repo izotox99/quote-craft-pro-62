@@ -19,6 +19,10 @@ import {
 } from "@/lib/booking-shared";
 import { AccessoriEditor, type AccessorioRow, loadServizioAccessori, saveServizioAccessori } from "./AccessoriEditor";
 import { romeToday } from "@/lib/romeDate";
+import { trovaConflitti } from "@/lib/conflittiAssegnazione";
+import { useConflittoAssegnazione } from "@/components/ConflittoAssegnazioneDialog";
+import { NetworkDispatchDialog } from "./NetworkDispatchDialog";
+import { Send } from "lucide-react";
 
 
 const TRANSFER_OPZIONI = [
@@ -38,18 +42,17 @@ const TRANSFER_SOTTO = [
   "Punto a punto",
 ];
 
-const STATO_OPZIONI = [
+const STATO_RADIO = [
   { value: "nuovo", label: "Nuovo" },
   { value: "da_confermare", label: "Da confermare" },
   { value: "confermato", label: "Confermato" },
-  { value: "in_corso", label: "In corso" },
-  { value: "completato", label: "Completato" },
-  { value: "annullato", label: "Annullato" },
+  { value: "annullato", label: "Annullato (rifiutato)" },
 ];
 
-type Client = { id: string; name: string; company: string | null; phone?: string | null };
+type Client = { id: string; name: string; company: string | null; phone?: string | null; sede_legale?: string | null; citta?: string | null };
 type Autista = { id: string; nome: string; cognome: string };
-type Veicolo = { id: string; targa: string; tipo_macchina: string | null };
+type AutistaEsterno = { id: string; nome: string };
+type Veicolo = { id: string; targa: string; tipo_macchina: string | null; marca?: string | null; modello?: string | null };
 type Fornitore = { id: string; nome: string };
 
 export type ServizioFormInitial = Partial<{
@@ -91,8 +94,11 @@ export type ServizioFormInitial = Partial<{
   veicolo_tipo: string | null;
   veicolo_id: string | null;
   autista_id: string | null;
+  autista_esterno_id: string | null;
   fornitore_cs_id: string | null;
   client_id: string | null;
+  utenza_id: string | null;
+  created_by: string | null;
   tipo_pagamento: string | null;
   codice: string | null;
   prezzo_fattura: number | null;
@@ -116,6 +122,7 @@ type Props = {
   initialData?: ServizioFormInitial | null;
   clients: Client[];
   autisti: Autista[];
+  autistiEsterni?: AutistaEsterno[];
   veicoli: Veicolo[];
   fornitori: Fornitore[];
   isAdmin: boolean;
@@ -123,7 +130,7 @@ type Props = {
   onSaved: (info?: { data_servizio?: string | null }) => void;
 };
 
-const emptyForm = (): Required<Omit<ServizioFormInitial, "id">> => ({
+const emptyForm = (): any => ({
   data_servizio: romeToday(),
   ora_inizio: "",
   citta: "",
@@ -154,6 +161,7 @@ const emptyForm = (): Required<Omit<ServizioFormInitial, "id">> => ({
   veicolo_tipo: "",
   veicolo_id: "",
   autista_id: "",
+  autista_esterno_id: "",
   fornitore_cs_id: "",
   client_id: "",
   tipo_pagamento: "",
@@ -170,7 +178,7 @@ const emptyForm = (): Required<Omit<ServizioFormInitial, "id">> => ({
   centro_costo: "",
   incasso: null,
   note: "",
-}) as any;
+});
 
 function n(v: any): number | null {
   if (v === "" || v === null || v === undefined) return null;
@@ -178,19 +186,28 @@ function n(v: any): number | null {
   return Number.isFinite(x) ? x : null;
 }
 
+const norm = (v?: string | null) => (v ?? "").trim().toLowerCase();
+
 export function ServizioFormDialog({
-  open, onOpenChange, mode, initialData, clients, autisti, veicoli, fornitori, isAdmin, userId, onSaved,
+  open, onOpenChange, mode, initialData, clients, autisti, autistiEsterni = [], veicoli, fornitori, isAdmin, userId, onSaved,
 }: Props) {
   const [f, setF] = useState<any>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [telefonoDTouched, setTelefonoDTouched] = useState(false);
   const [accessoriRows, setAccessoriRows] = useState<AccessorioRow[]>([]);
+  const [autore, setAutore] = useState<string>("—");
+  const [altriOpzioni, setAltriOpzioni] = useState<"network_cs" | "network_collaboratori" | "null">("null");
+  const [fornitoriPartner, setFornitoriPartner] = useState<Record<string, string | null>>({});
+  const [networkOpen, setNetworkOpen] = useState(false);
+  const [stessoAutista, setStessoAutista] = useState(false);
+  const { chiediConferma, dialog: conflittoDialog } = useConflittoAssegnazione();
 
   useEffect(() => {
     if (!open) return;
     if (mode === "edit" && initialData) {
       setF({ ...emptyForm(), ...initialData, stato: initialData.stato || "nuovo" });
       setTelefonoDTouched(true);
+      setAltriOpzioni(initialData.fornitore_cs_id ? "network_cs" : "null");
       if (initialData.id) {
         loadServizioAccessori(initialData.id).then(setAccessoriRows);
       } else {
@@ -200,9 +217,42 @@ export function ServizioFormDialog({
       setF({ ...emptyForm(), stato: "nuovo" });
       setTelefonoDTouched(false);
       setAccessoriRows([]);
+      setAltriOpzioni("null");
     }
+    setStessoAutista(false);
   }, [open, mode, initialData]);
 
+  // Fornitori CS collegati a un partner del network
+  useEffect(() => {
+    if (!open) return;
+    supabase.from("fornitori_cs").select("id, partner_org_id").then(({ data }) => {
+      const map: Record<string, string | null> = {};
+      (data ?? []).forEach((r: any) => { map[r.id] = r.partner_org_id ?? null; });
+      setFornitoriPartner(map);
+    });
+  }, [open]);
+
+  // Autore (origine del servizio), sola lettura
+  useEffect(() => {
+    if (!open || mode !== "edit" || !initialData) { setAutore("—"); return; }
+    let alive = true;
+    (async () => {
+      const d: any = initialData;
+      if (d.fornitore_cs_id) { if (alive) setAutore("Da C.S"); return; }
+      if (d.utenza_id) {
+        const { data } = await supabase.from("client_utenze").select("nome, cognome").eq("id", d.utenza_id).maybeSingle();
+        if (alive) setAutore(data ? `${data.nome} ${data.cognome ?? ""}`.trim() + " (portale cliente)" : "Portale cliente");
+        return;
+      }
+      if (d.created_by) {
+        const { data } = await supabase.from("profiles").select("full_name").eq("user_id", d.created_by).maybeSingle();
+        if (alive) setAutore(data?.full_name ? `${data.full_name} (dashboard)` : "Operatore dashboard");
+        return;
+      }
+      if (alive) setAutore("Portale cliente");
+    })();
+    return () => { alive = false; };
+  }, [open, mode, initialData]);
 
   const set = (patch: any) => setF((prev: any) => ({ ...prev, ...patch }));
 
@@ -218,6 +268,76 @@ export function ServizioFormDialog({
     [clients, f.client_id]
   );
 
+  // Autista combinato interni + esterni
+  const autistaValue = f.autista_id ? `int:${f.autista_id}` : f.autista_esterno_id ? `est:${f.autista_esterno_id}` : "";
+  const setAutistaValue = (v: string) => {
+    if (v === "none") { set({ autista_id: "", autista_esterno_id: "" }); return; }
+    const [kind, id] = v.split(":");
+    set(kind === "int" ? { autista_id: id, autista_esterno_id: "" } : { autista_id: "", autista_esterno_id: id });
+  };
+
+  // Veicoli: quelli del tipo richiesto in evidenza
+  const [veicoliMatch, veicoliAltri] = useMemo(() => {
+    const tipo = norm(f.veicolo_tipo);
+    if (!tipo) return [[], veicoli] as [Veicolo[], Veicolo[]];
+    const match = veicoli.filter(v =>
+      norm(v.tipo_macchina) === tipo ||
+      norm(v.tipo_macchina).includes(tipo) ||
+      (!!v.tipo_macchina && tipo.includes(norm(v.tipo_macchina))) ||
+      norm(v.modello).includes(tipo)
+    );
+    const ids = new Set(match.map(v => v.id));
+    return [match, veicoli.filter(v => !ids.has(v.id))] as [Veicolo[], Veicolo[]];
+  }, [veicoli, f.veicolo_tipo]);
+
+  // "Utilizza stesso autista": riprende l'autista dell'ultimo servizio dello stesso cliente
+  const applicaStessoAutista = async (checked: boolean) => {
+    setStessoAutista(checked);
+    if (!checked || !f.client_id) return;
+    const { data } = await supabase
+      .from("servizi")
+      .select("autista_id, autista_esterno_id, veicolo_id, data_servizio")
+      .eq("client_id", f.client_id)
+      .neq("id", initialData?.id ?? "00000000-0000-0000-0000-000000000000")
+      .or("autista_id.not.is.null,autista_esterno_id.not.is.null")
+      .order("data_servizio", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (!data) { toast.info("Nessun servizio precedente con autista per questo cliente"); return; }
+    set({
+      autista_id: (data as any).autista_id || "",
+      autista_esterno_id: (data as any).autista_esterno_id || "",
+      veicolo_id: (data as any).veicolo_id || f.veicolo_id,
+    });
+    toast.success("Autista dell'ultimo servizio del cliente applicato");
+  };
+
+  const verificaConflitti = async (): Promise<boolean> => {
+    const target = {
+      id: initialData?.id ?? "00000000-0000-0000-0000-000000000000",
+      data_servizio: f.data_servizio,
+      ora_inizio: f.ora_inizio,
+      disposizione_oraria: f.disposizione_oraria,
+      tipologia: f.tour_tipo ? "tour" : f.disposizione_oraria ? "disposizione" : "transfer",
+    };
+    if (f.autista_id && f.autista_id !== initialData?.autista_id) {
+      const a = autisti.find(x => x.id === f.autista_id);
+      const c = await trovaConflitti(target, { tipo: "autista_interno", id: f.autista_id });
+      if (c.length && !(await chiediConferma({ risorsa: `l'autista ${a ? `${a.nome} ${a.cognome}` : ""}`.trim(), conflitti: c }))) return false;
+    }
+    if (f.autista_esterno_id && f.autista_esterno_id !== initialData?.autista_esterno_id) {
+      const a = autistiEsterni.find(x => x.id === f.autista_esterno_id);
+      const c = await trovaConflitti(target, { tipo: "autista_esterno", id: f.autista_esterno_id });
+      if (c.length && !(await chiediConferma({ risorsa: `l'autista ${a?.nome ?? "esterno"}`, conflitti: c }))) return false;
+    }
+    if (f.veicolo_id && f.veicolo_id !== initialData?.veicolo_id) {
+      const v = veicoli.find(x => x.id === f.veicolo_id);
+      const c = await trovaConflitti(target, { tipo: "veicolo", id: f.veicolo_id });
+      if (c.length && !(await chiediConferma({ risorsa: `il veicolo ${v?.targa ?? ""}`.trim(), conflitti: c }))) return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
     if (!f.citta) { toast.error("Seleziona la città"); return; }
     if (!f.data_servizio) { toast.error("Data obbligatoria"); return; }
@@ -229,6 +349,8 @@ export function ServizioFormDialog({
       toast.error("Seleziona Trasfert, Disposizione oraria o Tour");
       return;
     }
+
+    if (!(await verificaConflitti())) return;
 
     // Deriva tipologia enum
     let tipologia: "transfer" | "disposizione" | "tour" = "transfer";
@@ -251,7 +373,8 @@ export function ServizioFormDialog({
       veicolo_tipo: f.veicolo_tipo || null,
       veicolo_id: f.veicolo_id || null,
       autista_id: f.autista_id || null,
-      fornitore_cs_id: f.fornitore_cs_id || null,
+      autista_esterno_id: f.autista_esterno_id || null,
+      fornitore_cs_id: altriOpzioni === "network_cs" ? (f.fornitore_cs_id || null) : null,
       client_id: f.client_id || null,
       contatto: f.contatto || null,
       telefono_contatto: f.telefono_contatto || null,
@@ -270,11 +393,16 @@ export function ServizioFormDialog({
       permesso_effettuato: !!f.permesso_effettuato,
       tipo_pagamento: f.tipo_pagamento || null,
       codice: f.codice || null,
+      centro_costo: f.centro_costo || null,
       note: f.note || null,
     };
 
-    // Se l'operatore ha cliccato "Conferma servizio" nel dialog, azzera
-    // esplicitamente il flag modificato_da_cliente (viene rilevato dal trigger).
+    // Conferma esplicita dello stato: azzera il flag modificato_da_cliente
+    // (stessa logica delle azioni "Conferma" nella tabella servizi).
+    if (mode === "edit" && f.stato === "confermato" && initialData?.stato !== "confermato") {
+      payload.modificato_da_cliente = false;
+      payload.modificato_at = null;
+    }
     if (mode === "edit" && (f as any).modificato_da_cliente === false) {
       payload.modificato_da_cliente = false;
       payload.modificato_at = null;
@@ -292,7 +420,6 @@ export function ServizioFormDialog({
         costo_cs: n(f.costo_cs),
         costo_autista: n(f.costo_autista),
         costo_centro: n(f.costo_centro),
-        centro_costo: f.centro_costo || null,
         incasso: n(f.incasso),
       });
     }
@@ -346,8 +473,8 @@ export function ServizioFormDialog({
             </div>
           </section>
 
-          {/* 2. Per Conto di + Telefono + Codice */}
-          <section className="bg-muted/40 rounded-md p-3">
+          {/* 2. Per Conto di + indirizzo/telefono società + Telefono + Codice */}
+          <section className="bg-muted/40 rounded-md p-3 space-y-2">
             <div className="grid grid-cols-12 items-center gap-3">
               <Label className="col-span-3 md:col-span-2 text-right font-semibold">Per Conto di: <span className="text-destructive">*</span></Label>
               <div className="col-span-9 md:col-span-4">
@@ -367,10 +494,21 @@ export function ServizioFormDialog({
                 <Input value={f.codice} onChange={e => set({ codice: e.target.value })} />
               </div>
             </div>
+            <div className="grid grid-cols-12 gap-3">
+              <div className="col-span-12 md:col-start-3 md:col-span-10 text-xs italic text-muted-foreground">
+                {selectedClient
+                  ? [selectedClient.sede_legale, selectedClient.citta].filter(Boolean).join(" — ") || "Indirizzo società non impostato"
+                  : "Seleziona la società per vedere indirizzo e telefono"}
+              </div>
+            </div>
           </section>
 
-          {/* 3. Anagrafica passeggero */}
+          {/* 3. Autore + anagrafica passeggero */}
           <section className="bg-muted/40 rounded-md p-3 space-y-2">
+            <div className="grid grid-cols-12 items-center gap-3">
+              <Label className="col-span-4 md:col-span-2 text-right font-semibold italic">Autore:</Label>
+              <div className="col-span-8 md:col-span-10 text-xs font-medium">{mode === "edit" ? autore : "Nuovo inserimento (dashboard)"}</div>
+            </div>
             <Row label="Cliente:">
               <Input value={f.contatto} onChange={e => set({ contatto: e.target.value })} />
             </Row>
@@ -491,7 +629,6 @@ export function ServizioFormDialog({
               <Input value={f.info_interne} onChange={e => set({ info_interne: e.target.value })} />
             </Row>
 
-            {/* 7. Quattro checkbox */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
               <CheckboxRow label="Ritirare voucher clienti" checked={!!f.ritirare_voucher} onChange={v => set({ ritirare_voucher: v })} />
               <CheckboxRow label="Con Guida" checked={!!f.con_guida} onChange={v => set({ con_guida: v })} />
@@ -499,7 +636,6 @@ export function ServizioFormDialog({
               <CheckboxRow label="Permesso effettuato" checked={!!f.permesso_effettuato} onChange={v => set({ permesso_effettuato: v })} />
             </div>
 
-            {/* 8. Info cliente autista / Info cliente */}
             <Row label="Info cliente autista:">
               <Input value={f.info_cliente_autista} onChange={e => set({ info_cliente_autista: e.target.value })} />
             </Row>
@@ -508,64 +644,14 @@ export function ServizioFormDialog({
             </Row>
           </section>
 
-          {/* Assegnazione (interna) */}
-          <section className="bg-muted/40 rounded-md p-3 space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Assegnazione interna</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <Label>Autista</Label>
-                <Select value={f.autista_id} onValueChange={v => set({ autista_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
-                  <SelectContent>
-                    {autisti.map(a => <SelectItem key={a.id} value={a.id}>{a.cognome} {a.nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Veicolo (mezzo)</Label>
-                <Select value={f.veicolo_id} onValueChange={v => set({ veicolo_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
-                  <SelectContent>
-                    {veicoli.map(v => <SelectItem key={v.id} value={v.id}>{v.targa} — {v.tipo_macchina || ""}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Fornitore CS</Label>
-                <Select value={f.fornitore_cs_id} onValueChange={v => set({ fornitore_cs_id: v })}>
-                  <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
-                  <SelectContent>
-                    {fornitori.map(fr => <SelectItem key={fr.id} value={fr.id}>{fr.nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Stato</Label>
-                <Select value={f.stato} onValueChange={v => set({ stato: v })} disabled={mode === "create"}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {STATO_OPZIONI.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                {mode === "edit" && f.stato === "da_confermare" && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="mt-2 w-full h-8 text-xs bg-orange-600 hover:bg-orange-700 text-white gap-1.5"
-                    onClick={() => set({ stato: "confermato", modificato_da_cliente: false, modificato_at: null } as any)}
-                  >
-                    ✓ Conferma servizio
-                  </Button>
-                )}
-                {mode === "create" && (
-                  <p className="text-[10px] text-muted-foreground mt-1">Alla creazione lo stato è sempre "Nuovo".</p>
-                )}
-              </div>
-            </div>
+          {/* 7. Accessori */}
+          <section className="bg-primary/5 rounded-md p-3 space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accessori</p>
+            <AccessoriEditor value={accessoriRows} onChange={setAccessoriRows} />
           </section>
 
-          {/* 9. Pagamento */}
-          <section className="bg-muted/40 rounded-md p-3 space-y-3">
+          {/* 8. Pagamento */}
+          <section className="bg-primary/5 rounded-md p-3 space-y-3">
             <Row label={<>Tipo pagamento: <span className="text-destructive">*</span></>}>
               <Select value={f.tipo_pagamento} onValueChange={v => set({ tipo_pagamento: v })}>
                 <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
@@ -591,19 +677,157 @@ export function ServizioFormDialog({
                   <MoneyField label="Costo Autista €" value={f.costo_autista} onChange={v => set({ costo_autista: v })} />
                   <MoneyField label="Costo centro €" value={f.costo_centro} onChange={v => set({ costo_centro: v })} />
                 </div>
-                <div>
-                  <Label>Centro di costo (etichetta)</Label>
-                  <Input value={f.centro_costo} onChange={e => set({ centro_costo: e.target.value })} placeholder="es. Marketing" />
-                </div>
               </>
             )}
           </section>
 
-          <section className="bg-muted/40 rounded-md p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Accessori</p>
+          {/* 9. Assegnazione (autista + macchina) */}
+          <section className="rounded-md p-3 space-y-2 bg-[hsl(60_45%_60%/0.25)] border border-[hsl(60_45%_45%/0.4)]">
+            <div className="grid grid-cols-12 items-center gap-3">
+              <Label className="col-span-4 md:col-span-2 text-right font-semibold italic">Autista:</Label>
+              <div className="col-span-8 md:col-span-5">
+                <Select value={autistaValue || "none"} onValueChange={setAutistaValue}>
+                  <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">--- Nessun autista ---</SelectItem>
+                    {autisti.map(a => (
+                      <SelectItem key={a.id} value={`int:${a.id}`}>{a.cognome} {a.nome} ( Interno )</SelectItem>
+                    ))}
+                    {autistiEsterni.map(a => (
+                      <SelectItem key={a.id} value={`est:${a.id}`}>{a.nome} ( Esterno )</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <AccessoriEditor value={accessoriRows} onChange={setAccessoriRows} />
+            <div className="grid grid-cols-12 items-center gap-3">
+              <Label className="col-span-4 md:col-span-2 text-right font-semibold italic">Macchina:</Label>
+              <div className="col-span-8 md:col-span-5">
+                <Select value={f.veicolo_id || "none"} onValueChange={v => set({ veicolo_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">--- Nessun veicolo ---</SelectItem>
+                    {veicoliMatch.length > 0 && (
+                      <>
+                        <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">Tipo richiesto: {f.veicolo_tipo}</div>
+                        {veicoliMatch.map(v => (
+                          <SelectItem key={v.id} value={v.id}>
+                            {(v.tipo_macchina || [v.marca, v.modello].filter(Boolean).join(" ")) + " : " + v.targa}
+                          </SelectItem>
+                        ))}
+                        <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">Altri veicoli</div>
+                      </>
+                    )}
+                    {veicoliAltri.map(v => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {(v.tipo_macchina || [v.marca, v.modello].filter(Boolean).join(" ")) + " : " + v.targa}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-center pt-1">
+              <CheckboxRow label="Utilizza stesso autista" checked={stessoAutista} onChange={applicaStessoAutista} />
+            </div>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Le sovrapposizioni con altri servizi vengono verificate al salvataggio.
+            </p>
+          </section>
+
+          {/* 10-11. Centro interno città + Altri opzioni */}
+          <section className="rounded-md p-3 space-y-3 bg-[hsl(60_80%_75%/0.35)] border border-[hsl(60_60%_50%/0.35)]">
+            <div className="grid grid-cols-12 items-center gap-3">
+              <Label className="col-span-5 md:col-span-4 text-right font-semibold italic">Centro interno Città:</Label>
+              <div className="col-span-7 md:col-span-4">
+                <Select value={f.centro_costo || "none"} onValueChange={v => set({ centro_costo: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">---</SelectItem>
+                    {CITTA_OPZIONI.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-12 items-start gap-3">
+              <Label className="col-span-5 md:col-span-4 text-right font-semibold italic">Altri opzioni:</Label>
+              <div className="col-span-7 md:col-span-8 space-y-2">
+                <div className="flex flex-wrap gap-4">
+                  {([
+                    { v: "network_cs", l: "Network CS" },
+                    { v: "network_collaboratori", l: "Network Collaboratori" },
+                    { v: "null", l: "Null" },
+                  ] as const).map(o => (
+                    <label key={o.v} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                      <input
+                        type="radio"
+                        name="altri-opzioni"
+                        checked={altriOpzioni === o.v}
+                        onChange={() => {
+                          setAltriOpzioni(o.v);
+                          if (o.v !== "network_cs") set({ fornitore_cs_id: "" });
+                        }}
+                      />
+                      <span className="italic font-medium">{o.l}</span>
+                    </label>
+                  ))}
+                </div>
+
+                {altriOpzioni === "network_cs" && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Select value={f.fornitore_cs_id || "none"} onValueChange={v => set({ fornitore_cs_id: v === "none" ? "" : v })}>
+                      <SelectTrigger className="w-64"><SelectValue placeholder="Fornitore CS…" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">---</SelectItem>
+                        {fornitori.map(fr => (
+                          <SelectItem key={fr.id} value={fr.id}>
+                            {fr.nome}{fornitoriPartner[fr.id] ? " · partner network" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {mode === "edit" && initialData?.id && (
+                      <Button type="button" variant="secondary" size="sm" className="gap-1.5" onClick={() => setNetworkOpen(true)}>
+                        <Send className="h-3.5 w-3.5" /> Passaggio al network
+                      </Button>
+                    )}
+                  </div>
+                )}
+                {altriOpzioni === "network_collaboratori" && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Assegna il servizio a un autista esterno (collaboratore) nella sezione Assegnazione.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* 12. Stato */}
+          <section className="rounded-md p-3 bg-muted/40">
+            <div className="flex flex-wrap items-center justify-center gap-6">
+              <span className="font-semibold italic">Stato :</span>
+              {STATO_RADIO.map(s => (
+                <label key={s.value} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                  <span className="font-medium">{s.label}</span>
+                  <input
+                    type="radio"
+                    name="stato-servizio"
+                    disabled={mode === "create"}
+                    checked={f.stato === s.value}
+                    onChange={() => set({ stato: s.value })}
+                  />
+                </label>
+              ))}
+            </div>
+            {mode === "create" && (
+              <p className="text-[10px] text-muted-foreground mt-1 text-center">Alla creazione lo stato è sempre "Nuovo".</p>
+            )}
+            {["in_corso", "completato"].includes(f.stato) && (
+              <p className="text-[10px] text-muted-foreground mt-1 text-center">
+                Stato corrente: <b>{f.stato}</b> (gestito dall'app autista)
+              </p>
+            )}
           </section>
 
           <section className="bg-muted/40 rounded-md p-3">
@@ -635,9 +859,16 @@ export function ServizioFormDialog({
         <div className="flex justify-end gap-2 pt-2 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Annulla</Button>
           <Button onClick={handleSubmit} disabled={saving}>
-            {saving ? "Salvataggio…" : mode === "edit" ? "Salva modifiche" : "Crea Servizio"}
+            {saving ? "Salvataggio…" : mode === "edit" ? "Fine" : "Crea Servizio"}
           </Button>
         </div>
+
+        {conflittoDialog}
+        <NetworkDispatchDialog
+          open={networkOpen}
+          onOpenChange={setNetworkOpen}
+          servizioId={initialData?.id ?? null}
+        />
       </DialogContent>
     </Dialog>
   );
