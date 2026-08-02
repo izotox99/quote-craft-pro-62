@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
       };
       if (password) updates.password = password;
       const { error } = await admin.auth.admin.updateUserById(authUserId, updates);
-      if (error) return jsonResponse({ error: error.message, code: "auth_update_failed" }, 400);
+      if (error) return jsonResponse(mapAuthError(error.message), 400);
       authAction = (autista as any).auth_user_id ? "updated" : "linked";
     } else {
       if (!password) return jsonResponse({ error: "Password obbligatoria per creare l'account autista", code: "password_required" }, 400);
@@ -173,7 +173,10 @@ Deno.serve(async (req) => {
         user_metadata: { account_type: "autista" },
       });
       if (error || !created.user) {
-        return jsonResponse({ error: error?.message ?? "Errore creazione account", code: "auth_create_failed" }, 400);
+        return jsonResponse(
+          error ? mapAuthError(error.message) : { error: "Errore creazione account", code: "auth_create_failed" },
+          400,
+        );
       }
       authUserId = created.user.id;
       authAction = "created";
