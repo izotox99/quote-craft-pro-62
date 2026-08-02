@@ -193,6 +193,8 @@ export function ServizioFormDialog({
 }: Props) {
   const [f, setF] = useState<any>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<ServizioErrors>({});
+
   const [telefonoDTouched, setTelefonoDTouched] = useState(false);
   const [accessoriRows, setAccessoriRows] = useState<AccessorioRow[]>([]);
   const [autore, setAutore] = useState<string>("—");
