@@ -117,21 +117,23 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Non autorizzato per questo autista", code: "forbidden" }, 403);
     }
 
-    // Password fingerprint uniqueness (shared con clienti/utenze)
+    // Unicità password: SOLO all'interno dell'organizzazione del chiamante
     const ownerType = tipo === "esterno" ? "autista_esterno" : "autista";
     let passwordFingerprint: string | null = null;
     if (password) {
       passwordFingerprint = await computePasswordFingerprint(password);
       const { data: existingFp } = await admin
         .from("password_fingerprints").select("owner_type, owner_id")
+        .eq("org_id", callerProfile.org_id)
         .eq("fingerprint", passwordFingerprint).maybeSingle();
       if (existingFp && !(existingFp.owner_type === ownerType && existingFp.owner_id === autistaId)) {
         return jsonResponse({
-          error: "Password già in uso da un altro account, scegline una diversa.",
+          error: "Password già in uso da un altro account della tua organizzazione, scegline una diversa.",
           code: "password_in_use",
         }, 409);
       }
     }
+
 
     // Email non deve collidere con NCC/cliente/utenza/altro autista
     const existingAuthUser = await findUserByEmail(admin, email);
