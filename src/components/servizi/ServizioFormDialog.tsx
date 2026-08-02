@@ -258,7 +258,19 @@ export function ServizioFormDialog({
     return () => { alive = false; };
   }, [open, mode, initialData]);
 
-  const set = (patch: any) => setF((prev: any) => ({ ...prev, ...patch }));
+  const set = (patch: any) => {
+    setErrors(prev => {
+      if (!Object.keys(prev).length) return prev;
+      const next = { ...prev };
+      Object.keys(patch).forEach(k => { delete next[k]; });
+      if ("transfer_tipo" in patch || "disposizione_oraria" in patch || "tour_tipo" in patch) {
+        delete next.transfer_tipo;
+      }
+      return next;
+    });
+    setF((prev: any) => ({ ...prev, ...patch }));
+  };
+
 
   // Auto-copia Telefono D dal Telefono finché l'utente non tocca il campo
   useEffect(() => {
