@@ -349,18 +349,18 @@ export function ServizioFormDialog({
 
 
   const handleSubmit = async () => {
-    if (!f.citta) { toast.error("Seleziona la città"); return; }
-    if (!f.data_servizio) { toast.error("Data obbligatoria"); return; }
-    if (!f.ora_inizio) { toast.error("Ora inizio obbligatoria"); return; }
-    if (!f.luogo_inizio) { toast.error("Luogo inizio obbligatorio"); return; }
-    if (!f.luogo_fine) { toast.error("Luogo fine obbligatorio"); return; }
-    if (!f.tipo_pagamento) { toast.error("Tipo pagamento obbligatorio"); return; }
-    if (!f.transfer_tipo && !f.disposizione_oraria && !f.tour_tipo) {
-      toast.error("Seleziona Trasfert, Disposizione oraria o Tour");
+    const errs = validaServizio(f as any);
+    setErrors(errs);
+    const lista = Object.values(errs);
+    if (lista.length) {
+      toast.error(lista[0], {
+        description: lista.length > 1 ? `Altri ${lista.length - 1} campi da correggere` : undefined,
+      });
       return;
     }
 
     if (!(await verificaConflitti())) return;
+
 
     // Deriva tipologia enum
     let tipologia: "transfer" | "disposizione" | "tour" = "transfer";
