@@ -174,8 +174,8 @@ export default function Veicoli() {
         const path = `${id}/photo-${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage.from("veicoli-foto").upload(path, photoFile, { upsert: true });
         if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("veicoli-foto").getPublicUrl(path);
-        await supabase.from("veicoli").update({ photo_url: pub.publicUrl }).eq("id", id);
+        // Bucket privato: salviamo il path, la foto si apre solo con link firmato
+        await supabase.from("veicoli").update({ photo_url: path }).eq("id", id);
       }
       toast.success(editing ? "Mezzo aggiornato" : "Mezzo aggiunto");
       setDialogOpen(false); setEditing(null); setForm(emptyForm); setPhotoFile(null);
