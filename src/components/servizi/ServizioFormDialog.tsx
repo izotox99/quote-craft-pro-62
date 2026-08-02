@@ -467,7 +467,14 @@ export function ServizioFormDialog({
       }
     }
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      // Il database applica le stesse regole sui campi obbligatori: mostra il messaggio così com'è.
+      setErrors({ form: error.message });
+      toast.error(error.message);
+      return;
+    }
+    setErrors({});
+
     toast.success(mode === "edit" ? "Servizio aggiornato" : "Servizio creato");
     onOpenChange(false);
     onSaved({ data_servizio: (payload as any).data_servizio ?? null });
