@@ -174,8 +174,8 @@ export default function Veicoli() {
         const path = `${id}/photo-${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage.from("veicoli-foto").upload(path, photoFile, { upsert: true });
         if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("veicoli-foto").getPublicUrl(path);
-        await supabase.from("veicoli").update({ photo_url: pub.publicUrl }).eq("id", id);
+        // Bucket privato: salviamo il path, la foto si apre solo con link firmato
+        await supabase.from("veicoli").update({ photo_url: path }).eq("id", id);
       }
       toast.success(editing ? "Mezzo aggiornato" : "Mezzo aggiunto");
       setDialogOpen(false); setEditing(null); setForm(emptyForm); setPhotoFile(null);
@@ -464,9 +464,21 @@ export default function Veicoli() {
                 <div className="space-y-2">
                   <Input type="file" accept="image/*" onChange={(e) => setPhotoFile(e.target.files?.[0] ?? null)} />
                   {editing?.photo_url && !photoFile && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <ImageIcon className="h-3 w-3" /> Foto attuale presente
-                    </div>
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 text-xs text-primary hover:underline"
+                      onClick={async () => {
+                        const raw = editing.photo_url as string;
+                        const path = raw.includes("/veicoli-foto/") ? raw.split("/veicoli-foto/")[1] : raw;
+                        const { data, error } = await supabase.storage
+                          .from("veicoli-foto")
+                          .createSignedUrl(decodeURIComponent(path), 300);
+                        if (error || !data) return toast.error("Impossibile aprire la foto");
+                        window.open(data.signedUrl, "_blank");
+                      }}
+                    >
+                      <ImageIcon className="h-3 w-3" /> Visualizza foto attuale
+                    </button>
                   )}
                 </div>
               </VField>
