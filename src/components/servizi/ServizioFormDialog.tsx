@@ -355,7 +355,7 @@ export function ServizioFormDialog({
   const handleSubmit = async () => {
     const errs = validaServizio(f as any);
     setErrors(errs);
-    const lista = Object.values(errs);
+    const lista = Object.values(errs).filter((m): m is string => !!m);
     if (lista.length) {
       toast.error(lista[0], {
         description: lista.length > 1 ? `Altri ${lista.length - 1} campi da correggere` : undefined,
