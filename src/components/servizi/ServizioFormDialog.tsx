@@ -358,7 +358,8 @@ export function ServizioFormDialog({
   };
 
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (opts?: { ripeti?: boolean }) => {
+    if (savingRef.current) return; // guardia anti doppio click (immediata, non attende il render)
     const errs = validaServizio(f as any);
     setErrors(errs);
     const lista = Object.values(errs).filter((m): m is string => !!m);
