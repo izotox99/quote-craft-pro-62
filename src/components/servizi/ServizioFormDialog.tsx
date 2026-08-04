@@ -28,17 +28,6 @@ import { Send } from "lucide-react";
 import { validaServizio, type ServizioErrors } from "@/lib/servizioValidation";
 
 
-const TRANSFER_SOTTO = [
-  "Da Aeroporto",
-  "Per Aeroporto",
-  "Da Stazione",
-  "Per Stazione",
-  "Da Porto",
-  "Per Porto",
-  "Da Hotel",
-  "Per Hotel",
-  "Punto a punto",
-];
 
 const STATO_RADIO = [
   { value: "nuovo", label: "Nuovo" },
@@ -613,17 +602,6 @@ export function ServizioFormDialog({
                   <SelectContent>
                     {TRANSFER_TIPO_OPZIONI.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
 
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="col-span-4 md:col-span-3">
-                <Select
-                  value={f.accessori || ""}
-                  onValueChange={v => set({ accessori: v })}
-                >
-                  <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
-                  <SelectContent>
-                    {TRANSFER_SOTTO.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
