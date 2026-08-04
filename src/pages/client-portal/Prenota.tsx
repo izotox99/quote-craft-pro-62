@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { ClientPortalLayout } from "@/components/ClientPortalLayout";
 import { supabase } from "@/integrations/supabase/client";
+import CartelloUpload from "@/components/servizi/CartelloUpload";
+import { uploadCartelloFile } from "@/lib/cartello";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +42,7 @@ export default function Prenota() {
   const [form, setForm] = useState<BookingFormState>(emptyBookingForm);
   const [accessoriRows, setAccessoriRows] = useState<AccessorioRow[]>([]);
   const [allegato, setAllegato] = useState<File | null>(null);
+  const [cartelloFile, setCartelloFile] = useState<File | null>(null);
 
   const loadPasseggeri = async (cId: string) => {
     const { data } = await supabase
@@ -233,6 +236,17 @@ export default function Prenota() {
       }
     }
 
+    if (cartelloFile && orgId) {
+      try {
+        const path = await uploadCartelloFile(orgId, inserted.id, cartelloFile);
+        await supabase.from("servizi")
+          .update({ cartello_path: path, cartello_nome: cartelloFile.name } as any)
+          .eq("id", inserted.id);
+      } catch (e: any) {
+        toast.error("Servizio creato ma upload cartello fallito: " + (e?.message ?? ""));
+      }
+    }
+
     toast.success("Prenotazione inviata con successo!");
 
     await loadUltimoServizio(clientId, activeUtenzaId);
@@ -240,6 +254,7 @@ export default function Prenota() {
     setForm(emptyBookingForm);
     setAccessoriRows([]);
     setAllegato(null);
+    setCartelloFile(null);
     setLoading(false);
   };
 
@@ -329,6 +344,14 @@ export default function Prenota() {
                 <input type="file" accept={ALLEGATO_ACCEPT} className="hidden" onChange={handleAllegato} />
               </label>
             )}
+
+            <div className="pt-2 space-y-2">
+              <h3 className="text-sm font-semibold">Cartello di accoglienza</h3>
+              <p className="text-xs text-muted-foreground">
+                Opzionale. Immagine o PDF (logo/insegna) che l'autista mostrerà all'arrivo.
+              </p>
+              <CartelloUpload file={cartelloFile} onFile={setCartelloFile} />
+            </div>
           </CardContent>
         </Card>
 
