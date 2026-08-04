@@ -145,9 +145,8 @@ export function servizioToBookingForm(s: {
   // splitLuogo imported from booking-shared
   const inizio = splitLuogo(s.luogo_inizio);
   const fine = splitLuogo(s.luogo_fine);
-  let transfer_tipo = "";
-  if (s.transfer_tipo === "Transfer regionale") transfer_tipo = "transfer_regionale";
-  else if (s.transfer_tipo) transfer_tipo = "transfer_interno";
+  const transfer_tipo = normalizeTransferTipo(s.transfer_tipo);
+
   return {
     citta: s.citta ?? "",
     data_servizio: s.data_servizio ?? "",
