@@ -945,10 +945,15 @@ export function ServizioFormDialog({
         </fieldset>
 
         <div className="flex justify-end gap-2 pt-2 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>{readOnly ? "Chiudi" : "Annulla"}</Button>
+          {readOnly && <Button variant="outline" onClick={() => onOpenChange(false)}>Chiudi</Button>}
+          {!readOnly && mode === "create" && (
+            <Button variant="secondary" onClick={() => handleSubmit({ ripeti: true })} disabled={!!saving}>
+              {saving === "ripeti" ? "Creazione…" : "Ripeti"}
+            </Button>
+          )}
           {!readOnly && (
-            <Button onClick={handleSubmit} disabled={saving}>
-              {saving ? "Salvataggio…" : mode === "edit" ? "Fine" : "Crea Servizio"}
+            <Button onClick={() => handleSubmit()} disabled={!!saving}>
+              {saving === "crea" ? (mode === "edit" ? "Salvataggio…" : "Creazione…") : mode === "edit" ? "Fine" : "Crea Servizio"}
             </Button>
           )}
         </div>
