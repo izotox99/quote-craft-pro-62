@@ -2025,6 +2025,8 @@ export type Database = {
           autista_esterno_id: string | null
           autista_id: string | null
           cartello: string | null
+          cartello_nome: string | null
+          cartello_path: string | null
           centro_costo: string | null
           citta: string | null
           client_id: string | null
@@ -2097,6 +2099,8 @@ export type Database = {
           autista_esterno_id?: string | null
           autista_id?: string | null
           cartello?: string | null
+          cartello_nome?: string | null
+          cartello_path?: string | null
           centro_costo?: string | null
           citta?: string | null
           client_id?: string | null
@@ -2169,6 +2173,8 @@ export type Database = {
           autista_esterno_id?: string | null
           autista_id?: string | null
           cartello?: string | null
+          cartello_nome?: string | null
+          cartello_path?: string | null
           centro_costo?: string | null
           citta?: string | null
           client_id?: string | null
@@ -2934,6 +2940,8 @@ export type Database = {
           allegato_path: string | null
           autista_id: string | null
           cartello: string | null
+          cartello_nome: string | null
+          cartello_path: string | null
           citta: string | null
           codice: string | null
           con_assistente: boolean | null
@@ -3149,6 +3157,8 @@ export type Database = {
           autista_esterno_id: string | null
           autista_id: string | null
           cartello: string | null
+          cartello_nome: string | null
+          cartello_path: string | null
           centro_costo: string | null
           citta: string | null
           client_id: string | null
@@ -3233,6 +3243,8 @@ export type Database = {
           _allegato_nome?: string
           _allegato_path?: string
           _cancel?: boolean
+          _cartello_nome?: string
+          _cartello_path?: string
           _centro_costo?: string
           _citta?: string
           _data_servizio?: string
@@ -3246,6 +3258,7 @@ export type Database = {
           _note?: string
           _ora_inizio?: string
           _remove_allegato?: boolean
+          _remove_cartello?: boolean
           _servizio_id: string
           _tipo_pagamento?: string
           _tipologia?: Database["public"]["Enums"]["servizio_tipologia"]
@@ -3261,6 +3274,8 @@ export type Database = {
           autista_esterno_id: string | null
           autista_id: string | null
           cartello: string | null
+          cartello_nome: string | null
+          cartello_path: string | null
           centro_costo: string | null
           citta: string | null
           client_id: string | null
@@ -3665,6 +3680,8 @@ export type Database = {
           autista_esterno_id: string | null
           autista_id: string | null
           cartello: string | null
+          cartello_nome: string | null
+          cartello_path: string | null
           centro_costo: string | null
           citta: string | null
           client_id: string | null

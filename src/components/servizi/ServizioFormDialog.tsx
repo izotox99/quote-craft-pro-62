@@ -26,6 +26,8 @@ import { useConflittoAssegnazione } from "@/components/ConflittoAssegnazioneDial
 import { NetworkDispatchDialog } from "./NetworkDispatchDialog";
 import { Send } from "lucide-react";
 import { validaServizio, type ServizioErrors } from "@/lib/servizioValidation";
+import CartelloUpload from "./CartelloUpload";
+import { uploadCartelloFile, removeCartelloFile } from "@/lib/cartello";
 
 
 
@@ -189,6 +191,10 @@ export function ServizioFormDialog({
   const [networkOpen, setNetworkOpen] = useState(false);
   const [stessoAutista, setStessoAutista] = useState(false);
   const { chiediConferma, dialog: conflittoDialog } = useConflittoAssegnazione();
+  const [cartelloFile, setCartelloFile] = useState<File | null>(null);
+  const [cartelloPath, setCartelloPath] = useState<string | null>(null);
+  const [cartelloNome, setCartelloNome] = useState<string | null>(null);
+  const [cartelloRimosso, setCartelloRimosso] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -208,6 +214,10 @@ export function ServizioFormDialog({
       setAltriOpzioni("null");
     }
     setStessoAutista(false);
+    setCartelloFile(null);
+    setCartelloRimosso(false);
+    setCartelloPath((initialData as any)?.cartello_path ?? null);
+    setCartelloNome((initialData as any)?.cartello_nome ?? null);
   }, [open, mode, initialData]);
 
   // Fornitori CS collegati a un partner del network
@@ -445,6 +455,28 @@ export function ServizioFormDialog({
       servizioId = (res.data as any)?.id;
     }
     if (!error && servizioId) {
+      try {
+        const oldPath = (initialData as any)?.cartello_path ?? null;
+        if ((cartelloRimosso || cartelloFile) && oldPath) {
+          await removeCartelloFile(oldPath);
+        }
+        if (cartelloFile) {
+          let orgId = (initialData as any)?.org_id ?? null;
+          if (!orgId) {
+            const { data: row } = await supabase.from("servizi").select("org_id").eq("id", servizioId).maybeSingle();
+            orgId = (row as any)?.org_id ?? null;
+          }
+          if (orgId) {
+            const path = await uploadCartelloFile(orgId, servizioId, cartelloFile);
+            await supabase.from("servizi").update({ cartello_path: path, cartello_nome: cartelloFile.name } as any).eq("id", servizioId);
+          }
+        } else if (cartelloRimosso) {
+          await supabase.from("servizi").update({ cartello_path: null, cartello_nome: null } as any).eq("id", servizioId);
+        }
+      } catch (e: any) {
+        console.error("[cartello] save error", e);
+        toast.error("Servizio salvato ma caricamento cartello fallito");
+      }
       try { await saveServizioAccessori(servizioId, accessoriRows); } catch (e: any) {
         console.error("[accessori] save error", e);
       }
@@ -543,7 +575,17 @@ export function ServizioFormDialog({
               <div className="col-span-8 md:col-span-10 text-xs font-medium">{mode === "edit" ? autore : "Nuovo inserimento (dashboard)"}</div>
             </div>
             <Row label="Cliente:">
-              <Input value={f.contatto} onChange={e => set({ contatto: e.target.value })} />
+              <div className="space-y-1.5">
+                <Input value={f.contatto} onChange={e => set({ contatto: e.target.value })} />
+                <CartelloUpload
+                  path={cartelloPath}
+                  nome={cartelloNome}
+                  file={cartelloFile}
+                  onFile={setCartelloFile}
+                  onRemoveExisting={() => { setCartelloRimosso(true); setCartelloPath(null); setCartelloNome(null); setCartelloFile(null); }}
+                  disabled={readOnly}
+                />
+              </div>
             </Row>
             <Row label="Email:">
               <Input type="email" value={f.email_contatto} onChange={e => set({ email_contatto: e.target.value })} />

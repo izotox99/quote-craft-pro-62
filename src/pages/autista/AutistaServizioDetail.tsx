@@ -8,6 +8,7 @@ import {
   ArrowLeft, Phone, FileText, Monitor, Play, Flag, X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getCartelloUrl } from "@/lib/cartello";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -22,6 +23,18 @@ export default function AutistaServizioDetail() {
   const [veicolo, setVeicolo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showCartello, setShowCartello] = useState(false);
+  const [cartelloUrl, setCartelloUrl] = useState<string | null>(null);
+  const [cartelloLoading, setCartelloLoading] = useState(false);
+
+  const apriCartelloFile = async () => {
+    if (!s?.cartello_path) return;
+    setCartelloLoading(true);
+    const url = await getCartelloUrl(s.cartello_path, 3600);
+    setCartelloLoading(false);
+    if (!url) { toast.error("Impossibile aprire il cartello"); return; }
+    setCartelloUrl(url);
+    setShowCartello(true);
+  };
 
   const [dlg, setDlg] = useState<null | "start" | "close_transfer" | "close_dispo">(null);
   const [km, setKm] = useState<string>("");
@@ -107,13 +120,20 @@ export default function AutistaServizioDetail() {
         </Card>
 
         {/* Cartello */}
-        {s.contatto && (
+        {(s.contatto || s.cartello_path) && (
           <Card className="p-3 space-y-2 bg-blue-50 border-blue-200">
             <div className="text-[10px] uppercase font-bold text-blue-800">Cartello aeroporto</div>
-            <div className="text-lg font-semibold">{s.contatto}</div>
-            <Button size="sm" variant="secondary" onClick={() => setShowCartello(true)} className="w-full">
-              <Monitor className="h-4 w-4 mr-1" /> Mostra cartello
-            </Button>
+            <div className="text-lg font-semibold">{s.contatto ?? s.cartello_nome}</div>
+            {s.cartello_path && (
+              <Button size="sm" onClick={apriCartelloFile} disabled={cartelloLoading} className="w-full">
+                <Monitor className="h-4 w-4 mr-1" /> {cartelloLoading ? "Apertura…" : "Apri cartello"}
+              </Button>
+            )}
+            {s.contatto && (
+              <Button size="sm" variant="secondary" onClick={() => { setCartelloUrl(null); setShowCartello(true); }} className="w-full">
+                <Monitor className="h-4 w-4 mr-1" /> Mostra cartello (nome)
+              </Button>
+            )}
           </Card>
         )}
 
@@ -225,9 +245,17 @@ export default function AutistaServizioDetail() {
           >
             <X className="h-6 w-6" />
           </button>
-          <div className="text-center font-display font-bold text-black break-words leading-none" style={{ fontSize: "clamp(3rem, 15vw, 10rem)" }}>
-            {s.contatto}
-          </div>
+          {cartelloUrl ? (
+            s.cartello_nome?.toLowerCase().endsWith(".pdf") ? (
+              <iframe src={cartelloUrl} title="Cartello" className="w-full h-full border-0" />
+            ) : (
+              <img src={cartelloUrl} alt={`Cartello per ${s.contatto ?? "il passeggero"}`} className="max-w-full max-h-full object-contain" />
+            )
+          ) : (
+            <div className="text-center font-display font-bold text-black break-words leading-none" style={{ fontSize: "clamp(3rem, 15vw, 10rem)" }}>
+              {s.contatto}
+            </div>
+          )}
         </div>
       )}
 
