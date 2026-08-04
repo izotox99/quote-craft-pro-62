@@ -37,6 +37,9 @@ import {
   detectLuogoSpeciale,
   LuogoField,
   splitLuogo,
+  TRANSFER_TIPO_OPZIONI,
+  normalizeTransferTipo,
+
 } from "@/lib/booking-shared";
 import type { AccessorioRow } from "@/components/servizi/AccessoriEditor";
 
