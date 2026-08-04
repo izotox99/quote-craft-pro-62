@@ -16,6 +16,8 @@ import {
   PAGAMENTO_OPZIONI,
   CITTA_OPZIONI,
   DISPOSIZIONE_OPZIONI,
+  TRANSFER_TIPO_OPZIONI,
+  normalizeTransferTipo,
 } from "@/lib/booking-shared";
 import { AccessoriEditor, type AccessorioRow, loadServizioAccessori, saveServizioAccessori } from "./AccessoriEditor";
 import { romeToday } from "@/lib/romeDate";
@@ -25,12 +27,6 @@ import { NetworkDispatchDialog } from "./NetworkDispatchDialog";
 import { Send } from "lucide-react";
 import { validaServizio, type ServizioErrors } from "@/lib/servizioValidation";
 
-
-
-const TRANSFER_OPZIONI = [
-  { value: "Transfer interno città", label: "Transfer interno città" },
-  { value: "Transfer regionale", label: "Transfer regionale" },
-];
 
 const TRANSFER_SOTTO = [
   "Da Aeroporto",
