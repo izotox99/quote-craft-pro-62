@@ -361,6 +361,9 @@ export function ServizioFormDialog({
 
   const handleSubmit = async (opts?: { ripeti?: boolean }) => {
     if (savingRef.current) return; // guardia anti doppio click (immediata, non attende il render)
+    savingRef.current = true;
+    setSaving(opts?.ripeti ? "ripeti" : "crea");
+    const rilascia = () => { savingRef.current = false; setSaving(false); };
     const errs = validaServizio(f as any);
     setErrors(errs);
     const lista = Object.values(errs).filter((m): m is string => !!m);
@@ -368,10 +371,11 @@ export function ServizioFormDialog({
       toast.error(lista[0], {
         description: lista.length > 1 ? `Altri ${lista.length - 1} campi da correggere` : undefined,
       });
+      rilascia();
       return;
     }
 
-    if (!(await verificaConflitti())) return;
+    if (!(await verificaConflitti())) { rilascia(); return; }
 
 
     // Deriva tipologia enum
