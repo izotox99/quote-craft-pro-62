@@ -582,8 +582,8 @@ export function BookingFormFields({
               <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="—" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">—</SelectItem>
-                <SelectItem value="transfer_interno">Transfer interno città</SelectItem>
-                <SelectItem value="transfer_regionale">Transfer regionale</SelectItem>
+                {TRANSFER_TIPO_OPZIONI.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+
               </SelectContent>
             </Select>
           </div>
