@@ -445,7 +445,8 @@ export function ServizioFormDialog({
       });
     }
 
-    setSaving(true);
+    savingRef.current = true;
+    setSaving(opts?.ripeti ? "ripeti" : "crea");
     let error;
     let servizioId: string | undefined = initialData?.id;
     if (mode === "edit" && initialData?.id) {
