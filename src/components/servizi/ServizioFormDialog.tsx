@@ -180,7 +180,8 @@ export function ServizioFormDialog({
   open, onOpenChange, mode, initialData, clients, autisti, autistiEsterni = [], veicoli, fornitori, isAdmin, readOnly = false, userId, onSaved,
 }: Props) {
   const [f, setF] = useState<any>(emptyForm());
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState<false | "crea" | "ripeti">(false);
+  const savingRef = useRef(false);
   const [errors, setErrors] = useState<ServizioErrors>({});
 
   const [telefonoDTouched, setTelefonoDTouched] = useState(false);
