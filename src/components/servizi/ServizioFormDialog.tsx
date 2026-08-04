@@ -377,6 +377,28 @@ export function ServizioFormDialog({
 
     if (!(await verificaConflitti())) { rilascia(); return; }
 
+    // Possibile doppio invio: avvisa (non blocca) se esiste un servizio identico creato da poco.
+    if (mode !== "edit") {
+      const daQuando = new Date(Date.now() - 60_000).toISOString();
+      let q = supabase
+        .from("servizi")
+        .select("id")
+        .gte("created_at", daQuando)
+        .eq("data_servizio", f.data_servizio as any)
+        .eq("ora_inizio", (f.ora_inizio || "") as any)
+        .eq("contatto", (f.contatto || "") as any)
+        .eq("luogo_inizio", (f.luogo_inizio || "") as any)
+        .eq("luogo_fine", (f.luogo_fine || "") as any)
+        .limit(1);
+      q = f.client_id ? q.eq("client_id", f.client_id) : q.is("client_id", null);
+      const { data: simili } = await q;
+      if (simili?.length && !window.confirm("Esiste già un servizio identico creato pochi secondi fa. Vuoi crearlo comunque?")) {
+        rilascia();
+        return;
+      }
+    }
+
+
 
     // Deriva tipologia enum
     let tipologia: "transfer" | "disposizione" | "tour" = "transfer";
