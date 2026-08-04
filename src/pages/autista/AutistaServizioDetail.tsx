@@ -107,10 +107,10 @@ export default function AutistaServizioDetail() {
         </Card>
 
         {/* Cartello */}
-        {s.cartello && (
+        {s.contatto && (
           <Card className="p-3 space-y-2 bg-blue-50 border-blue-200">
             <div className="text-[10px] uppercase font-bold text-blue-800">Cartello aeroporto</div>
-            <div className="text-lg font-semibold">{s.cartello}</div>
+            <div className="text-lg font-semibold">{s.contatto}</div>
             <Button size="sm" variant="secondary" onClick={() => setShowCartello(true)} className="w-full">
               <Monitor className="h-4 w-4 mr-1" /> Mostra cartello
             </Button>
@@ -226,7 +226,7 @@ export default function AutistaServizioDetail() {
             <X className="h-6 w-6" />
           </button>
           <div className="text-center font-display font-bold text-black break-words leading-none" style={{ fontSize: "clamp(3rem, 15vw, 10rem)" }}>
-            {s.cartello}
+            {s.contatto}
           </div>
         </div>
       )}
