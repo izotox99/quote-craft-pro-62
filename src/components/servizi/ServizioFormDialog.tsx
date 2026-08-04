@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -180,7 +180,8 @@ export function ServizioFormDialog({
   open, onOpenChange, mode, initialData, clients, autisti, autistiEsterni = [], veicoli, fornitori, isAdmin, readOnly = false, userId, onSaved,
 }: Props) {
   const [f, setF] = useState<any>(emptyForm());
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState<false | "crea" | "ripeti">(false);
+  const savingRef = useRef(false);
   const [errors, setErrors] = useState<ServizioErrors>({});
 
   const [telefonoDTouched, setTelefonoDTouched] = useState(false);
@@ -358,7 +359,11 @@ export function ServizioFormDialog({
   };
 
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (opts?: { ripeti?: boolean }) => {
+    if (savingRef.current) return; // guardia anti doppio click (immediata, non attende il render)
+    savingRef.current = true;
+    setSaving(opts?.ripeti ? "ripeti" : "crea");
+    const rilascia = () => { savingRef.current = false; setSaving(false); };
     const errs = validaServizio(f as any);
     setErrors(errs);
     const lista = Object.values(errs).filter((m): m is string => !!m);
@@ -366,10 +371,11 @@ export function ServizioFormDialog({
       toast.error(lista[0], {
         description: lista.length > 1 ? `Altri ${lista.length - 1} campi da correggere` : undefined,
       });
+      rilascia();
       return;
     }
 
-    if (!(await verificaConflitti())) return;
+    if (!(await verificaConflitti())) { rilascia(); return; }
 
 
     // Deriva tipologia enum
@@ -443,7 +449,6 @@ export function ServizioFormDialog({
       });
     }
 
-    setSaving(true);
     let error;
     let servizioId: string | undefined = initialData?.id;
     if (mode === "edit" && initialData?.id) {
@@ -482,6 +487,7 @@ export function ServizioFormDialog({
       }
     }
     setSaving(false);
+    savingRef.current = false;
     if (error) {
       // Il database applica le stesse regole sui campi obbligatori: mostra il messaggio così com'è.
       setErrors({ form: error.message });
@@ -489,6 +495,32 @@ export function ServizioFormDialog({
       return;
     }
     setErrors({});
+
+    if (opts?.ripeti) {
+      // Mantiene i dati del cliente dall'intestazione fino a N. Bagagli, svuota il resto.
+      setF({
+        ...emptyForm(),
+        citta: f.citta,
+        client_id: f.client_id,
+        codice: f.codice,
+        contatto: f.contatto,
+        email_contatto: f.email_contatto,
+        telefono_contatto: f.telefono_contatto,
+        telefono_d: f.telefono_d,
+        n_passeggeri: f.n_passeggeri,
+        n_bagagli: f.n_bagagli,
+      });
+      setAccessoriRows([]);
+      setCartelloFile(null);
+      setCartelloPath(null);
+      setCartelloNome(null);
+      setCartelloRimosso(false);
+      setStessoAutista(false);
+      setAltriOpzioni("null");
+      toast.success("Servizio creato — puoi inserirne un altro");
+      onSaved({ data_servizio: (payload as any).data_servizio ?? null });
+      return;
+    }
 
     toast.success(mode === "edit" ? "Servizio aggiornato" : "Servizio creato");
     onOpenChange(false);
@@ -915,10 +947,15 @@ export function ServizioFormDialog({
         </fieldset>
 
         <div className="flex justify-end gap-2 pt-2 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>{readOnly ? "Chiudi" : "Annulla"}</Button>
+          {readOnly && <Button variant="outline" onClick={() => onOpenChange(false)}>Chiudi</Button>}
+          {!readOnly && mode === "create" && (
+            <Button variant="secondary" onClick={() => handleSubmit({ ripeti: true })} disabled={!!saving}>
+              {saving === "ripeti" ? "Creazione…" : "Ripeti"}
+            </Button>
+          )}
           {!readOnly && (
-            <Button onClick={handleSubmit} disabled={saving}>
-              {saving ? "Salvataggio…" : mode === "edit" ? "Fine" : "Crea Servizio"}
+            <Button onClick={() => handleSubmit()} disabled={!!saving}>
+              {saving === "crea" ? (mode === "edit" ? "Salvataggio…" : "Creazione…") : mode === "edit" ? "Fine" : "Crea Servizio"}
             </Button>
           )}
         </div>
