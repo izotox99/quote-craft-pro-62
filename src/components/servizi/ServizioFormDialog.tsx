@@ -485,6 +485,7 @@ export function ServizioFormDialog({
       }
     }
     setSaving(false);
+    savingRef.current = false;
     if (error) {
       // Il database applica le stesse regole sui campi obbligatori: mostra il messaggio così com'è.
       setErrors({ form: error.message });
@@ -492,6 +493,32 @@ export function ServizioFormDialog({
       return;
     }
     setErrors({});
+
+    if (opts?.ripeti) {
+      // Mantiene i dati del cliente dall'intestazione fino a N. Bagagli, svuota il resto.
+      setF({
+        ...emptyForm(),
+        citta: f.citta,
+        client_id: f.client_id,
+        codice: f.codice,
+        contatto: f.contatto,
+        email_contatto: f.email_contatto,
+        telefono_contatto: f.telefono_contatto,
+        telefono_d: f.telefono_d,
+        n_passeggeri: f.n_passeggeri,
+        n_bagagli: f.n_bagagli,
+      });
+      setAccessoriRows([]);
+      setCartelloFile(null);
+      setCartelloPath(null);
+      setCartelloNome(null);
+      setCartelloRimosso(false);
+      setStessoAutista(false);
+      setAltriOpzioni("null");
+      toast.success("Servizio creato — puoi inserirne un altro");
+      onSaved({ data_servizio: (payload as any).data_servizio ?? null });
+      return;
+    }
 
     toast.success(mode === "edit" ? "Servizio aggiornato" : "Servizio creato");
     onOpenChange(false);
