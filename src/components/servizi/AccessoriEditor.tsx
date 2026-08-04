@@ -1,10 +1,7 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Package } from "lucide-react";
+import { Package } from "lucide-react";
 
 export type AccessorioRow = {
   accessorio_id: string;
@@ -16,6 +13,7 @@ export type CatalogoItem = {
   id: string;
   nome: string;
   prezzo: number;
+  attivo?: boolean;
 };
 
 type Props = {
@@ -25,7 +23,7 @@ type Props = {
   compact?: boolean;
 };
 
-export function AccessoriEditor({ value, onChange, readOnly, compact }: Props) {
+export function AccessoriEditor({ value, onChange, readOnly }: Props) {
   const [catalogo, setCatalogo] = useState<CatalogoItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,42 +31,43 @@ export function AccessoriEditor({ value, onChange, readOnly, compact }: Props) {
     (async () => {
       const { data } = await supabase
         .from("accessori_catalogo")
-        .select("id, nome, prezzo")
-        .eq("attivo", true)
+        .select("id, nome, prezzo, attivo")
         .order("nome");
       setCatalogo((data ?? []) as CatalogoItem[]);
       setLoading(false);
     })();
   }, []);
 
-  const addRow = () => {
-    onChange([...value, { accessorio_id: "", quantita: 1, prezzo_unitario: 0 }]);
-  };
+  const usati = new Set(value.filter(r => (r.quantita || 0) > 0).map(r => r.accessorio_id));
+  // accessori attivi + eventuali disattivati già presenti nel servizio (sola lettura)
+  const visibili = catalogo.filter(c => c.attivo !== false || usati.has(c.id));
 
-  const updateRow = (idx: number, patch: Partial<AccessorioRow>) => {
-    const next = value.map((r, i) => (i === idx ? { ...r, ...patch } : r));
-    onChange(next);
-  };
+  const getQty = (id: string) => value.find(r => r.accessorio_id === id)?.quantita ?? 0;
 
-  const removeRow = (idx: number) => {
-    onChange(value.filter((_, i) => i !== idx));
-  };
-
-  const onSelectAcc = (idx: number, accessorio_id: string) => {
-    const item = catalogo.find(c => c.id === accessorio_id);
-    updateRow(idx, {
-      accessorio_id,
-      prezzo_unitario: item ? Number(item.prezzo) : value[idx].prezzo_unitario,
-    });
+  const setQty = (item: CatalogoItem, raw: string) => {
+    const qty = raw === "" ? 0 : Math.max(0, parseInt(raw) || 0);
+    if (qty <= 0) {
+      onChange(value.filter(r => r.accessorio_id !== item.id));
+      return;
+    }
+    const existing = value.find(r => r.accessorio_id === item.id);
+    if (existing) {
+      onChange(value.map(r => (r.accessorio_id === item.id ? { ...r, quantita: qty } : r)));
+    } else {
+      onChange([...value, { accessorio_id: item.id, quantita: qty, prezzo_unitario: Number(item.prezzo) }]);
+    }
   };
 
   const total = value.reduce((s, r) => s + (r.quantita || 0) * (Number(r.prezzo_unitario) || 0), 0);
 
+  if (loading) return <p className="text-xs text-muted-foreground">Caricamento catalogo…</p>;
+
   if (readOnly) {
-    if (!value.length) return <p className="text-xs text-muted-foreground italic">Nessun accessorio</p>;
+    const inclusi = value.filter(r => (r.quantita || 0) > 0);
+    if (!inclusi.length) return <p className="text-xs text-muted-foreground italic">Nessun accessorio</p>;
     return (
       <div className="space-y-1 text-xs">
-        {value.map((r, i) => {
+        {inclusi.map((r, i) => {
           const item = catalogo.find(c => c.id === r.accessorio_id);
           return (
             <div key={i} className="flex justify-between border-b py-1">
@@ -85,86 +84,58 @@ export function AccessoriEditor({ value, onChange, readOnly, compact }: Props) {
     );
   }
 
+  if (!visibili.length) {
+    return (
+      <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground text-center">
+        <Package className="mx-auto h-5 w-5 mb-1 opacity-40" />
+        Nessun accessorio nel catalogo. Configurali dalla pagina Accessori.
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-2">
-      {loading ? (
-        <p className="text-xs text-muted-foreground">Caricamento catalogo…</p>
-      ) : catalogo.length === 0 ? (
-        <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground text-center">
-          <Package className="mx-auto h-5 w-5 mb-1 opacity-40" />
-          Nessun accessorio nel catalogo. Configurali dalla pagina Accessori.
-        </div>
-      ) : (
-        <>
-          {value.length > 0 && !compact && (
-            <div className="grid grid-cols-12 gap-2 text-[10px] uppercase text-muted-foreground font-semibold px-1">
-              <div className="col-span-6">Accessorio</div>
-              <div className="col-span-2 text-center">Qta</div>
-              <div className="col-span-2 text-right">Prezzo €</div>
-              <div className="col-span-1 text-right">Totale</div>
-              <div className="col-span-1" />
+    <div className="space-y-1.5">
+      {visibili.map(item => {
+        const qty = getQty(item.id);
+        const rowTotal = qty * Number(item.prezzo || 0);
+        const disattivato = item.attivo === false;
+        return (
+          <div
+            key={item.id}
+            className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-3 py-2"
+          >
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium truncate">
+                {item.nome}
+                {disattivato && (
+                  <span className="ml-2 text-[10px] uppercase text-muted-foreground">non più disponibile</span>
+                )}
+              </div>
+              <div className="text-[11px] text-muted-foreground">€ {Number(item.prezzo).toFixed(2)} cad.</div>
             </div>
-          )}
-          {value.map((row, idx) => {
-            const rowTotal = (row.quantita || 0) * (Number(row.prezzo_unitario) || 0);
-            return (
-              <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                <div className="col-span-6">
-                  <Select value={row.accessorio_id} onValueChange={v => onSelectAcc(idx, v)}>
-                    <SelectTrigger className="h-9"><SelectValue placeholder="Seleziona accessorio" /></SelectTrigger>
-                    <SelectContent>
-                      {catalogo.map(c => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.nome} <span className="text-muted-foreground ml-2">€ {Number(c.prezzo).toFixed(2)}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-2">
-                  <Input
-                    type="number"
-                    min={1}
-                    value={row.quantita}
-                    onChange={e => updateRow(idx, { quantita: Math.max(1, parseInt(e.target.value || "1")) })}
-                    className="h-9 text-center"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={row.prezzo_unitario}
-                    onChange={e => updateRow(idx, { prezzo_unitario: parseFloat(e.target.value || "0") })}
-                    className="h-9 text-right"
-                  />
-                </div>
-                <div className="col-span-1 text-right text-xs font-medium">
-                  € {rowTotal.toFixed(2)}
-                </div>
-                <div className="col-span-1 flex justify-end">
-                  <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeRow(idx)}>
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            );
-          })}
-          <div className="flex items-center justify-between pt-1">
-            <Button type="button" variant="outline" size="sm" className="gap-1.5 h-8" onClick={addRow}>
-              <Plus className="h-3.5 w-3.5" /> Aggiungi accessorio
-            </Button>
-            {value.length > 0 && (
-              <div className="text-sm font-semibold">
-                Totale: € {total.toFixed(2)}
-              </div>
-            )}
+            <div className="w-20 text-right text-xs font-medium tabular-nums">
+              {qty > 0 ? `€ ${rowTotal.toFixed(2)}` : ""}
+            </div>
+            <Input
+              type="number"
+              min={0}
+              inputMode="numeric"
+              disabled={disattivato}
+              value={qty === 0 ? "" : qty}
+              onChange={e => setQty(item, e.target.value)}
+              placeholder="0"
+              className="w-16 h-9 text-center rounded-md"
+            />
           </div>
-        </>
-      )}
+        );
+      })}
+      <div className="flex justify-end pt-1 text-sm font-semibold">
+        Totale accessori: € {total.toFixed(2)}
+      </div>
     </div>
   );
 }
+
 
 export function accessoriSummary(rows: AccessorioRow[], catalogo: CatalogoItem[]): string {
   if (!rows.length) return "";
