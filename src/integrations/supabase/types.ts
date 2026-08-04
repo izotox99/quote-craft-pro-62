@@ -3093,6 +3093,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      autista_can_read_allegato: { Args: { _path: string }; Returns: boolean }
       autista_chiudi_sessione_veicolo: {
         Args: { _km_fine?: number }
         Returns: undefined
