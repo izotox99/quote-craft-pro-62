@@ -108,9 +108,14 @@ export function deriveTipologia(f: BookingFormState): DerivedTipologia {
     return { tipologia: "disposizione", transfer_tipo: null, disposizione_oraria: f.disposizione_oraria, tour_tipo: null };
   }
   if (f.transfer_tipo) {
-    const label = f.transfer_tipo === "transfer_regionale" ? "Transfer regionale" : "Transfer interno città";
-    return { tipologia: "transfer", transfer_tipo: label, disposizione_oraria: null, tour_tipo: null };
+    return {
+      tipologia: "transfer",
+      transfer_tipo: normalizeTransferTipo(f.transfer_tipo),
+      disposizione_oraria: null,
+      tour_tipo: null,
+    };
   }
+
   return { tipologia: "altro", transfer_tipo: null, disposizione_oraria: null, tour_tipo: null };
 }
 
