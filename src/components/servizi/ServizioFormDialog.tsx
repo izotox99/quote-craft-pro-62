@@ -741,12 +741,7 @@ export function ServizioFormDialog({
               <Input value={f.info_interne} onChange={e => set({ info_interne: e.target.value })} />
             </Row>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
-              <CheckboxRow label="Ritirare voucher clienti" checked={!!f.ritirare_voucher} onChange={v => set({ ritirare_voucher: v })} />
-              <CheckboxRow label="Con Guida" checked={!!f.con_guida} onChange={v => set({ con_guida: v })} />
-              <CheckboxRow label="Con Assistente" checked={!!f.con_assistente} onChange={v => set({ con_assistente: v })} />
-              <CheckboxRow label="Permesso effettuato" checked={!!f.permesso_effettuato} onChange={v => set({ permesso_effettuato: v })} />
-            </div>
+
 
             <Row label="Info cliente autista:">
               <Input value={f.info_cliente_autista} onChange={e => set({ info_cliente_autista: e.target.value })} />
