@@ -208,8 +208,7 @@ function AccessoriCatalogoList({
       if (!orgId) { setLoading(false); return; }
       const { data } = await supabase
         .from("accessori_catalogo")
-        .select("id, nome, prezzo")
-        .eq("attivo", true)
+        .select("id, nome, prezzo, attivo")
         .eq("org_id", orgId)
         .order("nome");
       setCatalogo((data ?? []) as CatalogoItem[]);
@@ -217,7 +216,11 @@ function AccessoriCatalogoList({
     })();
   }, [orgId]);
 
+  const usati = new Set(value.filter(r => (r.quantita || 0) > 0).map(r => r.accessorio_id));
+  const visibili = catalogo.filter(c => (c as any).attivo !== false || usati.has(c.id));
+
   const getQty = (id: string) => value.find(r => r.accessorio_id === id)?.quantita ?? 0;
+
 
   const setQty = (item: CatalogoItem, raw: string) => {
     const qty = raw === "" ? 0 : Math.max(0, parseInt(raw) || 0);
