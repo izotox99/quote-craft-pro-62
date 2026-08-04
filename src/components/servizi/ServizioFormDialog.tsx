@@ -75,10 +75,6 @@ export type ServizioFormInitial = Partial<{
   info_interne: string | null;
   info_cliente_autista: string | null;
   info_cliente: string | null;
-  ritirare_voucher: boolean | null;
-  con_guida: boolean | null;
-  con_assistente: boolean | null;
-  permesso_effettuato: boolean | null;
   veicolo_tipo: string | null;
   veicolo_id: string | null;
   autista_id: string | null;
