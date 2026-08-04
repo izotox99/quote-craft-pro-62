@@ -616,17 +616,6 @@ export function ServizioFormDialog({
                   </SelectContent>
                 </Select>
               </div>
-              <div className="col-span-4 md:col-span-3">
-                <Select
-                  value={f.accessori || ""}
-                  onValueChange={v => set({ accessori: v })}
-                >
-                  <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
-                  <SelectContent>
-                    {TRANSFER_SOTTO.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
             <Row label={<span className="italic">Disposizione Oraria:</span>}>
               <Select
