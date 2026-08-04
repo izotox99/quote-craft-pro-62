@@ -208,8 +208,7 @@ function AccessoriCatalogoList({
       if (!orgId) { setLoading(false); return; }
       const { data } = await supabase
         .from("accessori_catalogo")
-        .select("id, nome, prezzo")
-        .eq("attivo", true)
+        .select("id, nome, prezzo, attivo")
         .eq("org_id", orgId)
         .order("nome");
       setCatalogo((data ?? []) as CatalogoItem[]);
@@ -217,7 +216,11 @@ function AccessoriCatalogoList({
     })();
   }, [orgId]);
 
+  const usati = new Set(value.filter(r => (r.quantita || 0) > 0).map(r => r.accessorio_id));
+  const visibili = catalogo.filter(c => (c as any).attivo !== false || usati.has(c.id));
+
   const getQty = (id: string) => value.find(r => r.accessorio_id === id)?.quantita ?? 0;
+
 
   const setQty = (item: CatalogoItem, raw: string) => {
     const qty = raw === "" ? 0 : Math.max(0, parseInt(raw) || 0);
@@ -236,7 +239,7 @@ function AccessoriCatalogoList({
   const total = value.reduce((s, r) => s + (r.quantita || 0) * (Number(r.prezzo_unitario) || 0), 0);
 
   if (loading) return <p className="text-xs text-muted-foreground">Caricamento catalogo…</p>;
-  if (!catalogo.length) {
+  if (!visibili.length) {
     return (
       <p className="text-xs text-muted-foreground italic">Nessun accessorio disponibile per questo cliente.</p>
     );
@@ -244,18 +247,29 @@ function AccessoriCatalogoList({
 
   return (
     <div className="space-y-1.5">
-      {catalogo.map(item => {
+      {visibili.map(item => {
         const qty = getQty(item.id);
+        const rowTotal = qty * Number(item.prezzo || 0);
+        const disattivato = (item as any).attivo === false;
         return (
           <div key={item.id} className="flex items-center gap-3 rounded-lg border border-border/60 bg-card px-3 py-2">
             <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium truncate">{item.nome}</div>
+              <div className="text-sm font-medium truncate">
+                {item.nome}
+                {disattivato && (
+                  <span className="ml-2 text-[10px] uppercase text-muted-foreground">non più disponibile</span>
+                )}
+              </div>
               <div className="text-[11px] text-muted-foreground">€ {Number(item.prezzo).toFixed(2)} cad.</div>
+            </div>
+            <div className="w-20 text-right text-xs font-medium tabular-nums">
+              {qty > 0 ? `€ ${rowTotal.toFixed(2)}` : ""}
             </div>
             <Input
               type="number"
               min={0}
               inputMode="numeric"
+              disabled={disattivato}
               value={qty === 0 ? "" : qty}
               onChange={e => setQty(item, e.target.value)}
               placeholder="0"
@@ -264,13 +278,12 @@ function AccessoriCatalogoList({
           </div>
         );
       })}
-      {total > 0 && (
-        <div className="flex justify-end text-xs font-semibold text-foreground pt-1">
-          Totale accessori: € {total.toFixed(2)}
-        </div>
-      )}
+      <div className="flex justify-end text-xs font-semibold text-foreground pt-1">
+        Totale accessori: € {total.toFixed(2)}
+      </div>
     </div>
   );
+
 }
 
 export function BookingFormFields({
