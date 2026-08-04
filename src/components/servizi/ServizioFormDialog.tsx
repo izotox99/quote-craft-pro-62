@@ -75,10 +75,6 @@ export type ServizioFormInitial = Partial<{
   info_interne: string | null;
   info_cliente_autista: string | null;
   info_cliente: string | null;
-  ritirare_voucher: boolean | null;
-  con_guida: boolean | null;
-  con_assistente: boolean | null;
-  permesso_effettuato: boolean | null;
   veicolo_tipo: string | null;
   veicolo_id: string | null;
   autista_id: string | null;
@@ -142,10 +138,6 @@ const emptyForm = (): any => ({
   info_interne: "",
   info_cliente_autista: "",
   info_cliente: "",
-  ritirare_voucher: false,
-  con_guida: false,
-  con_assistente: false,
-  permesso_effettuato: false,
   veicolo_tipo: "",
   veicolo_id: "",
   autista_id: "",
@@ -434,10 +426,6 @@ export function ServizioFormDialog({
       info_interne: f.info_interne || null,
       info_cliente_autista: f.info_cliente_autista || null,
       info_cliente: f.info_cliente || null,
-      ritirare_voucher: !!f.ritirare_voucher,
-      con_guida: !!f.con_guida,
-      con_assistente: !!f.con_assistente,
-      permesso_effettuato: !!f.permesso_effettuato,
       tipo_pagamento: f.tipo_pagamento || null,
       codice: f.codice || null,
       centro_costo: f.centro_costo || null,
@@ -741,12 +729,7 @@ export function ServizioFormDialog({
               <Input value={f.info_interne} onChange={e => set({ info_interne: e.target.value })} />
             </Row>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
-              <CheckboxRow label="Ritirare voucher clienti" checked={!!f.ritirare_voucher} onChange={v => set({ ritirare_voucher: v })} />
-              <CheckboxRow label="Con Guida" checked={!!f.con_guida} onChange={v => set({ con_guida: v })} />
-              <CheckboxRow label="Con Assistente" checked={!!f.con_assistente} onChange={v => set({ con_assistente: v })} />
-              <CheckboxRow label="Permesso effettuato" checked={!!f.permesso_effettuato} onChange={v => set({ permesso_effettuato: v })} />
-            </div>
+
 
             <Row label="Info cliente autista:">
               <Input value={f.info_cliente_autista} onChange={e => set({ info_cliente_autista: e.target.value })} />
