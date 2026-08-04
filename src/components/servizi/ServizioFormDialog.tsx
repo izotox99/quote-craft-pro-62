@@ -28,17 +28,6 @@ import { Send } from "lucide-react";
 import { validaServizio, type ServizioErrors } from "@/lib/servizioValidation";
 
 
-const TRANSFER_SOTTO = [
-  "Da Aeroporto",
-  "Per Aeroporto",
-  "Da Stazione",
-  "Per Stazione",
-  "Da Porto",
-  "Per Porto",
-  "Da Hotel",
-  "Per Hotel",
-  "Punto a punto",
-];
 
 const STATO_RADIO = [
   { value: "nuovo", label: "Nuovo" },
