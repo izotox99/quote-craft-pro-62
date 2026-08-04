@@ -63,7 +63,6 @@ export type ServizioFormInitial = Partial<{
   n_bagagli: number | null;
   accessori: string | null;
   info_autista: string | null;
-  cartello: string | null;
   stato_autista?: string | null;
   transfer_concluso_at?: string | null;
   transfer_nota_chiusura?: string | null;
@@ -138,7 +137,6 @@ const emptyForm = (): any => ({
   n_bagagli: 0,
   accessori: "",
   info_autista: "",
-  cartello: "",
   info_interne: "",
   info_cliente_autista: "",
   info_cliente: "",
@@ -395,7 +393,6 @@ export function ServizioFormDialog({
       n_passeggeri: f.n_passeggeri ?? 1,
       n_bagagli: f.n_bagagli ?? 0,
       info_autista: f.info_autista || null,
-      cartello: (f as any).cartello || null,
       info_interne: f.info_interne || null,
       info_cliente_autista: f.info_cliente_autista || null,
       info_cliente: f.info_cliente || null,
@@ -643,13 +640,6 @@ export function ServizioFormDialog({
             </Row>
             <Row label="Info autista:">
               <Input value={f.info_autista} onChange={e => set({ info_autista: e.target.value })} />
-            </Row>
-            <Row label="Cartello:">
-              <Input
-                placeholder="Nome da mostrare all'aeroporto (es. Sig. Rossi)"
-                value={f.cartello ?? ""}
-                onChange={e => set({ cartello: e.target.value })}
-              />
             </Row>
             <Row label="Info interne:">
               <Input value={f.info_interne} onChange={e => set({ info_interne: e.target.value })} />
