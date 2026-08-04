@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { ClientPortalLayout } from "@/components/ClientPortalLayout";
 import { supabase } from "@/integrations/supabase/client";
+import CartelloUpload from "@/components/servizi/CartelloUpload";
+import { uploadCartelloFile, removeCartelloFile, validateCartelloFile } from "@/lib/cartello";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -73,6 +75,8 @@ type Servizio = {
   org_id?: string | null;
   allegato_path?: string | null;
   allegato_nome?: string | null;
+  cartello_path?: string | null;
+  cartello_nome?: string | null;
 };
 
 const ALLOWED_FILE_TYPES = [
@@ -465,6 +469,70 @@ export default function ListaServizi() {
     loadServizi();
   };
 
+  const rpcBaseArgs = (s: Servizio) => ({
+    _servizio_id: s.id,
+    _data_servizio: s.data_servizio,
+    _ora_inizio: s.ora_inizio,
+    _citta: s.citta,
+    _n_passeggeri: s.n_passeggeri,
+    _n_bagagli: s.n_bagagli,
+    _tipologia: s.tipologia as any,
+    _transfer_tipo: s.transfer_tipo,
+    _disposizione_oraria: s.disposizione_oraria,
+    _tour_tipo: s.tour_tipo,
+    _veicolo_tipo: s.veicolo_tipo,
+    _luogo_inizio: s.luogo_inizio,
+    _luogo_fine: s.luogo_fine,
+    _itinerario: s.itinerario,
+    _info_autista: s.info_autista,
+    _tipo_pagamento: s.tipo_pagamento,
+    _centro_costo: s.centro_costo,
+    _accessori: s.accessori,
+    _note: s.note,
+    _allegato_path: s.allegato_path ?? null,
+    _allegato_nome: s.allegato_nome ?? null,
+  });
+
+  const uploadCartello = async (s: Servizio, file: File) => {
+    const err = validateCartelloFile(file);
+    if (err) { toast.error(err); return; }
+    let orgId = s.org_id;
+    if (!orgId) {
+      const { data: srv } = await supabase.from("servizi").select("org_id").eq("id", s.id).maybeSingle();
+      orgId = (srv as any)?.org_id ?? null;
+    }
+    if (!orgId) { toast.error("Errore: organizzazione non trovata"); return; }
+    if (s.cartello_path) await removeCartelloFile(s.cartello_path);
+    let path: string;
+    try {
+      path = await uploadCartelloFile(orgId, s.id, file);
+    } catch (e: any) {
+      toast.error("Errore caricamento cartello");
+      return;
+    }
+    const { error } = await supabase.rpc("client_portal_update_servizio" as any, {
+      ...rpcBaseArgs(s),
+      _cartello_path: path,
+      _cartello_nome: file.name,
+    });
+    if (error) { toast.error("Errore aggiornamento servizio"); return; }
+    toast.success("Cartello caricato");
+    loadServizi();
+  };
+
+  const deleteCartello = async (s: Servizio) => {
+    if (!s.cartello_path) return;
+    if (!window.confirm("Eliminare il cartello?")) return;
+    await removeCartelloFile(s.cartello_path);
+    const { error } = await supabase.rpc("client_portal_update_servizio" as any, {
+      ...rpcBaseArgs(s),
+      _remove_cartello: true,
+    });
+    if (error) { toast.error("Errore aggiornamento servizio"); return; }
+    toast.success("Cartello rimosso");
+    loadServizi();
+  };
+
   const deleteAllegato = async (s: Servizio) => {
     if (!s.allegato_path) return;
     if (!window.confirm("Eliminare l'allegato?")) return;
@@ -813,6 +881,22 @@ export default function ListaServizi() {
                       ) : (
                         <p className="text-xs text-muted-foreground italic">Nessun allegato</p>
                       )}
+                    </div>
+
+                    {/* Cartello di accoglienza */}
+                    <div className="py-2">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-xs text-muted-foreground font-medium flex items-center gap-1.5">
+                          <FileText className="h-3.5 w-3.5" /> Cartello di accoglienza
+                        </span>
+                      </div>
+                      <CartelloUpload
+                        path={selected.cartello_path}
+                        nome={selected.cartello_nome}
+                        onFile={(f) => { if (f) uploadCartello(selected, f); }}
+                        onRemoveExisting={() => deleteCartello(selected)}
+                        disabled={!editable}
+                      />
                     </div>
                   </div>
 
