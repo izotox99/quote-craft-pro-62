@@ -13,11 +13,51 @@ export const VEICOLI_DISPONIBILI = [
   "Servizio guida",
 ];
 
+/**
+ * UNICA sorgente delle opzioni del campo Trasfert (servizi.transfer_tipo).
+ * Usare SEMPRE questa costante in dashboard, portale cliente e app autisti.
+ */
+export const TRANSFER_TIPO_OPZIONI = [
+  "Da aeroporto",
+  "Per aeroporto",
+  "Da stazione",
+  "Per stazione",
+  "Da porto",
+  "Per porto",
+  "Interno città",
+  "Transfer regionale",
+] as const;
+
+export type TransferTipo = (typeof TRANSFER_TIPO_OPZIONI)[number];
+
+const TRANSFER_TIPO_LEGACY: Record<string, TransferTipo> = {
+  "transfer interno città": "Interno città",
+  "transfer interno citta": "Interno città",
+  "interno città": "Interno città",
+  "transfer regionale": "Transfer regionale",
+  "da aeroporto": "Da aeroporto",
+  "per aeroporto": "Per aeroporto",
+  "da stazione": "Da stazione",
+  "per stazione": "Per stazione",
+  "da porto": "Da porto",
+  "per porto": "Per porto",
+  "da civitavecchia": "Da porto",
+  "per civitavecchia": "Per porto",
+};
+
+/** Normalizza un valore storico di transfer_tipo su una delle 8 voci ufficiali. */
+export function normalizeTransferTipo(v: string | null | undefined): string {
+  if (!v) return "";
+  const k = v.trim().toLowerCase();
+  return TRANSFER_TIPO_LEGACY[k] ?? v.trim();
+}
+
 export const TIPOLOGIA_OPZIONI = [
   { value: "transfer_interno", label: "Transfer interno città" },
   { value: "transfer_regionale", label: "Transfer regionale" },
   { value: "tour", label: "Tour" },
 ];
+
 
 export const DISPOSIZIONE_OPZIONI = [
   "2 ore",

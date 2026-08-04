@@ -37,6 +37,9 @@ import {
   detectLuogoSpeciale,
   LuogoField,
   splitLuogo,
+  TRANSFER_TIPO_OPZIONI,
+  normalizeTransferTipo,
+
 } from "@/lib/booking-shared";
 import type { AccessorioRow } from "@/components/servizi/AccessoriEditor";
 
@@ -105,9 +108,14 @@ export function deriveTipologia(f: BookingFormState): DerivedTipologia {
     return { tipologia: "disposizione", transfer_tipo: null, disposizione_oraria: f.disposizione_oraria, tour_tipo: null };
   }
   if (f.transfer_tipo) {
-    const label = f.transfer_tipo === "transfer_regionale" ? "Transfer regionale" : "Transfer interno città";
-    return { tipologia: "transfer", transfer_tipo: label, disposizione_oraria: null, tour_tipo: null };
+    return {
+      tipologia: "transfer",
+      transfer_tipo: normalizeTransferTipo(f.transfer_tipo),
+      disposizione_oraria: null,
+      tour_tipo: null,
+    };
   }
+
   return { tipologia: "altro", transfer_tipo: null, disposizione_oraria: null, tour_tipo: null };
 }
 
@@ -137,9 +145,8 @@ export function servizioToBookingForm(s: {
   // splitLuogo imported from booking-shared
   const inizio = splitLuogo(s.luogo_inizio);
   const fine = splitLuogo(s.luogo_fine);
-  let transfer_tipo = "";
-  if (s.transfer_tipo === "Transfer regionale") transfer_tipo = "transfer_regionale";
-  else if (s.transfer_tipo) transfer_tipo = "transfer_interno";
+  const transfer_tipo = normalizeTransferTipo(s.transfer_tipo);
+
   return {
     citta: s.citta ?? "",
     data_servizio: s.data_servizio ?? "",
@@ -582,8 +589,8 @@ export function BookingFormFields({
               <SelectTrigger className="rounded-lg h-10"><SelectValue placeholder="—" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="__none__">—</SelectItem>
-                <SelectItem value="transfer_interno">Transfer interno città</SelectItem>
-                <SelectItem value="transfer_regionale">Transfer regionale</SelectItem>
+                {TRANSFER_TIPO_OPZIONI.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+
               </SelectContent>
             </Select>
           </div>

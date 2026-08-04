@@ -16,6 +16,8 @@ import {
   PAGAMENTO_OPZIONI,
   CITTA_OPZIONI,
   DISPOSIZIONE_OPZIONI,
+  TRANSFER_TIPO_OPZIONI,
+  normalizeTransferTipo,
 } from "@/lib/booking-shared";
 import { AccessoriEditor, type AccessorioRow, loadServizioAccessori, saveServizioAccessori } from "./AccessoriEditor";
 import { romeToday } from "@/lib/romeDate";
@@ -25,12 +27,6 @@ import { NetworkDispatchDialog } from "./NetworkDispatchDialog";
 import { Send } from "lucide-react";
 import { validaServizio, type ServizioErrors } from "@/lib/servizioValidation";
 
-
-
-const TRANSFER_OPZIONI = [
-  { value: "Transfer interno città", label: "Transfer interno città" },
-  { value: "Transfer regionale", label: "Transfer regionale" },
-];
 
 const TRANSFER_SOTTO = [
   "Da Aeroporto",
@@ -610,12 +606,13 @@ export function ServizioFormDialog({
               <Label className="col-span-3 md:col-span-2 text-right font-semibold italic">Trasfert:</Label>
               <div className="col-span-5 md:col-span-4">
                 <Select
-                  value={f.transfer_tipo}
+                  value={normalizeTransferTipo(f.transfer_tipo)}
                   onValueChange={v => set({ transfer_tipo: v, disposizione_oraria: "", tour_tipo: "" })}
                 >
                   <SelectTrigger><SelectValue placeholder="---" /></SelectTrigger>
                   <SelectContent>
-                    {TRANSFER_OPZIONI.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                    {TRANSFER_TIPO_OPZIONI.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+
                   </SelectContent>
                 </Select>
               </div>
