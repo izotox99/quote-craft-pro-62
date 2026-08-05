@@ -421,7 +421,7 @@ export function BookingFormFields({
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Ora inizio <span className="text-destructive">*</span></Label>
-            <TimePicker value={form.ora_inizio} onChange={v => set("ora_inizio", v)} placeholder="Seleziona ora" />
+            <TimePicker value={form.ora_inizio} onChange={v => set("ora_inizio", v)} placeholder="HH:MM" />
           </div>
 
           {/* PASSEGGERO */}
