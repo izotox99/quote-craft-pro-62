@@ -2936,6 +2936,7 @@ export type Database = {
       servizi_autista_view: {
         Row: {
           accessori: string | null
+          accessori_dettaglio: string | null
           allegato_nome: string | null
           allegato_path: string | null
           autista_id: string | null
@@ -2974,6 +2975,7 @@ export type Database = {
           org_id: string | null
           permesso_effettuato: boolean | null
           ritirare_voucher: boolean | null
+          societa_cliente: string | null
           stato: Database["public"]["Enums"]["servizio_stato"] | null
           stato_autista: string | null
           telefono_contatto: string | null
@@ -3141,6 +3143,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      autista_servizio_accessori: {
+        Args: { _servizio_id: string }
+        Returns: string
+      }
+      autista_servizio_societa: {
+        Args: { _servizio_id: string }
+        Returns: string
       }
       autista_update_servizio: {
         Args: {
