@@ -803,11 +803,18 @@ export default function Servizi() {
 
   // Quick day filters for "Confermati" services
   const [quickConf, setQuickConf] = useState<string | null>(null);
-  const quickConfOptions = useMemo(() => [
-    { key: "conf-oggi", label: "Oggi", date: romeToday(0) },
-    { key: "conf-domani", label: "Domani", date: romeToday(1) },
-    { key: "conf-dopodomani", label: "Dopodomani", date: romeToday(2) },
-  ], []);
+  const quickConfOptions = useMemo(() => {
+    const chipLabel = (iso: string) => {
+      const [y, m, d] = iso.split("-").map(Number);
+      return format(new Date(y, m - 1, d), "EEE dd/MM", { locale: itLocale });
+    };
+    return [
+      { key: "conf-oggi", label: "Oggi", date: romeToday(0) },
+      { key: "conf-domani", label: "Domani", date: romeToday(1) },
+      { key: "conf-dopodomani", label: "Dopodomani", date: romeToday(2) },
+      { key: "conf-day3", label: chipLabel(romeToday(3)), date: romeToday(3) },
+    ];
+  }, []);
 
   const [quickConfCounts, setQuickConfCounts] = useState<Record<string, number>>({});
   const loadQuickConfCounts = async () => {
