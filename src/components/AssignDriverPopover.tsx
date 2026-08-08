@@ -163,9 +163,18 @@ export function AssignDriverPopover({
 
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(o) => { if (o) setOpen(true); else closeAll(); }}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent align={align} className="w-72 p-0" onClick={(e) => e.stopPropagation()}>
+        {justAssigned && isVeicoloTab && (
+          <div className="flex items-center gap-1.5 border-b bg-primary/5 px-3 py-1.5 text-[11px]">
+            <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span className="truncate">
+              Autista <span className="font-medium">{justAssigned}</span> assegnato — scegli il mezzo (facoltativo)
+            </span>
+          </div>
+        )}
+
         {showVeicoli && (
           <div className="grid grid-cols-2 border-b text-xs">
             {(["autista", "veicolo"] as const).map(t => (
