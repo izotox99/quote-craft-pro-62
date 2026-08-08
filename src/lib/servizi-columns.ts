@@ -31,12 +31,12 @@ export type ColumnKey =
   | "costo_centro"
   | "commissione"
   | "codice"
-  | "azioni"
   | "foglio"
   | "network_stato";
 
 /** Colonne sempre visibili, non nascondibili dall'utente. */
-export const PINNED_COLUMNS: ReadonlySet<ColumnKey> = new Set<ColumnKey>(["azioni"]);
+export const PINNED_COLUMNS: ReadonlySet<ColumnKey> = new Set<ColumnKey>();
+
 
 
 export type ColumnDef = {
