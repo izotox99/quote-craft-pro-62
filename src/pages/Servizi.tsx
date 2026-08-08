@@ -1497,13 +1497,11 @@ export default function Servizi() {
                 );
               }
               default: return null;
-
-              default: return null;
             }
           };
 
           // Le celle che gestiscono un'interazione propria non devono aprire il dettaglio.
-          const INTERACTIVE_COLS: ColumnKey[] = ["autista", "foglio", "azioni"];
+          const INTERACTIVE_COLS: ColumnKey[] = ["autista", "foglio"];
 
 
           return (
