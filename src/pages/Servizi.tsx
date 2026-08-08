@@ -1496,59 +1496,8 @@ export default function Servizi() {
                   </div>
                 );
               }
-              case "azioni": {
-                const hasLocal = !!(s.autista_id || s.autista_esterno_id);
-                const st = s.stato;
-                const modif = !!s.modificato_da_cliente;
-                // 1) da_confermare → pulsante CONFERMA arancione (testo pieno)
-                if (st === "da_confermare") {
-                  return (
-                    <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={() => handleConfirmServizio(s.id)}
-                        title="Conferma servizio"
-                        className="inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 leading-none bg-orange-500 text-white hover:bg-orange-600 font-bold text-[8px] uppercase tracking-wide"
-                      >
-                        <CheckCircle2 className="h-2.5 w-2.5" />
-                        CONFERMA
-                      </button>
-                      {modif && <ModificheClientePopover servizioId={s.id} iconClassName="h-3 w-3 text-amber-600" />}
-                    </div>
-                  );
-                }
-                // 2) confermato → spunta verde
-                if (st === "confermato") {
-                  return (
-                    <div className="flex items-center justify-center">
-                      <CheckCircle2 className="h-3 w-3 text-emerald-600" aria-label="Confermato" />
-                    </div>
-                  );
-                }
-                // 3) nuovo senza autista → chip Assegna
-                if (st === "nuovo" && !hasLocal) {
-                  return (
-                    <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center">
-                      <AssignDriverPopover
-                        onAssign={(driver) => handleAssignDriver(s.id, driver)}
-                        requestedVeicoloTipo={s.veicolo_tipo}
-                        currentVeicoloId={s.veicolo_id}
-                        onAssignVeicolo={(v) => handleAssignVeicolo(s.id, v)}
-                        trigger={
-                          <button
-                            type="button"
-                            className="inline-flex items-center gap-0.5 rounded-sm px-1 py-0.5 leading-none bg-red-500 text-white hover:bg-red-600 font-bold text-[8px] uppercase tracking-wide"
-                          >
-                            Assegna
-                          </button>
-                        }
-                      />
-                    </div>
-                  );
-                }
-                // 4) altri stati (in_corso, completato, annullato, o nuovo con autista) → indicatore neutro
-                return <span className="text-muted-foreground">—</span>;
-              }
+              default: return null;
+
               default: return null;
             }
           };
