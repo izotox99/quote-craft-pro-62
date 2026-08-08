@@ -66,7 +66,7 @@ export default function AutistaHome() {
           .from("servizi_autista_view" as any)
           .select("id", { count: "exact", head: true })
           .eq("data_servizio", date)
-          .in("stato", ["confermato", "in_corso", "da_confermare"])
+          .in("stato", ["confermato", "in_corso"])
           .neq("stato_autista", "concluso");
         return count ?? 0;
       };
