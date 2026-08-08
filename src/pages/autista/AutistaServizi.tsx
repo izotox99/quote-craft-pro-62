@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AutistaLayout } from "@/components/autista/AutistaLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Luggage, Tag, Wallet, ArrowRight } from "lucide-react";
+import { Users, Luggage, Tag, Wallet, ArrowRight, Package } from "lucide-react";
 import { romeToday, romeLabel } from "@/lib/romeDate";
 
 type Servizio = any;
