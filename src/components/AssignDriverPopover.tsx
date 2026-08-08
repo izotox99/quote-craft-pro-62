@@ -59,6 +59,8 @@ export function AssignDriverPopover({
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [justAssigned, setJustAssigned] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!open || (interni.length + esterni.length) > 0) return;
