@@ -93,8 +93,11 @@ function computeClientStato(s: Servizio): { label: string; className: string } {
   if (s.modificato_da_cliente) {
     return { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" };
   }
-  const hasDriver = !!(s.autista_id || s.autista_esterno_id);
-  if (!hasDriver && (s.stato === "nuovo" || s.stato === "da_confermare" || s.stato === "confermato")) {
+  // L'autista è visibile al cliente solo da CONFERMATO in poi.
+  const driverVisible =
+    !!(s.autista_id || s.autista_esterno_id) &&
+    (s.stato === "confermato" || s.stato === "in_corso" || s.stato === "completato");
+  if (!driverVisible && (s.stato === "nuovo" || s.stato === "da_confermare" || s.stato === "confermato")) {
     return { label: "In attesa", className: "bg-amber-100 text-amber-700 border-amber-200" };
   }
   return statoConfig[s.stato] ?? { label: s.stato, className: "bg-muted" };
