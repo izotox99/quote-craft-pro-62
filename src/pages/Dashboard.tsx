@@ -322,7 +322,7 @@ export default function Dashboard() {
             { key: "nuovo", label: "Nuovi", count: counts.nuovi, color: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300" },
             { key: "da_confermare", label: "Da confermare", count: counts.daConfermare, color: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300" },
             { key: "confermato", label: "Confermati", count: counts.confermati, color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
-            { key: "annullato", label: "Annullati", count: counts.annullati, color: "bg-red-200 text-red-900 dark:bg-red-900/40 dark:text-red-200" },
+            { key: "annullato", label: "Rifiutati", count: counts.annullati, color: "bg-red-200 text-red-900 dark:bg-red-900/40 dark:text-red-200" },
           ].map(c => (
             <button
               key={c.key}

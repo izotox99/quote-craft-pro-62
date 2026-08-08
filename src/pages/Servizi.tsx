@@ -119,7 +119,7 @@ const statusLabels: Record<string, string> = {
   confermato: "Confermato",
   in_corso: "In Corso",
   completato: "Completato",
-  annullato: "Annullato",
+  annullato: "Rifiutato",
 };
 
 const tipologiaLabels: Record<string, string> = {
