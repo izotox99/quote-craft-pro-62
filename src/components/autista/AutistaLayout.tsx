@@ -46,7 +46,7 @@ export function AutistaLayout({ children }: Props) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col">
+    <div className="min-h-screen bg-muted/30 flex flex-col overflow-x-hidden">
       <header className="sticky top-0 z-40 bg-slate-900 text-white shadow-md">
         <div className="mx-auto max-w-2xl flex items-center justify-between px-4 h-14">
           <div className="font-display font-semibold text-sm truncate">{azienda || "NCC"}</div>
@@ -63,8 +63,8 @@ export function AutistaLayout({ children }: Props) {
         </div>
       </header>
 
-      <main className="flex-1 pb-20">
-        <div className="mx-auto max-w-2xl px-3 py-3">{children}</div>
+      <main className="flex-1 pb-20 w-full min-w-0">
+        <div className="mx-auto w-full max-w-2xl min-w-0 px-3 py-3">{children}</div>
       </main>
 
       <nav className="fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">

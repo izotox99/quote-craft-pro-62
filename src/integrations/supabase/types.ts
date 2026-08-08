@@ -3159,6 +3159,7 @@ export type Database = {
           _nota?: string
           _ora_fine?: string
           _servizio_id: string
+          _veicolo_id?: string
         }
         Returns: {
           accessori: string | null

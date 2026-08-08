@@ -37,6 +37,9 @@ export default function AutistaServizioDetail() {
   };
 
   const [dlg, setDlg] = useState<null | "start" | "close_transfer" | "close_dispo">(null);
+  const [veicoli, setVeicoli] = useState<any[]>([]);
+  const [sessioneVeicoloId, setSessioneVeicoloId] = useState<string | null>(null);
+  const [veicoloScelto, setVeicoloScelto] = useState<string>("");
   const [km, setKm] = useState<string>("");
   const [nota, setNota] = useState("");
   const [oraFine, setOraFine] = useState(() => new Date().toISOString().slice(0, 16));
@@ -67,8 +70,24 @@ export default function AutistaServizioDetail() {
   const transferDone = !hasTransfer || !!s.transfer_concluso_at;
   const dispoDone = !hasDispo || !!s.dispo_conclusa_at;
 
-  const openDlg = (action: "start" | "close_transfer" | "close_dispo") => {
+  const openDlg = async (action: "start" | "close_transfer" | "close_dispo") => {
     setDlg(action);
+    if (action === "start" && !s.veicolo_id) {
+      const [{ data: vs }, { data: sess }] = await Promise.all([
+        supabase.from("veicoli").select("id,marca,modello,targa,tipo_macchina,km_attuale")
+          .eq("attivo", true).order("targa"),
+        supabase.from("autisti_veicolo_sessioni").select("veicolo_id")
+          .is("chiusa_at", null).maybeSingle(),
+      ]);
+      setVeicoli(vs ?? []);
+      const attivo = (sess as any)?.veicolo_id ?? null;
+      setSessioneVeicoloId(attivo);
+      setVeicoloScelto(attivo ?? "");
+      if (attivo) {
+        const v = (vs ?? []).find((x: any) => x.id === attivo);
+        if (v?.km_attuale != null) setKm(String(v.km_attuale));
+      }
+    }
     setNota("");
     setOraFine(new Date().toISOString().slice(0, 16));
     if (action === "start") setKm(veicolo?.km_attuale?.toString() ?? "");
@@ -83,6 +102,14 @@ export default function AutistaServizioDetail() {
       _action: dlg,
       _km: km ? parseInt(km, 10) : null,
     };
+    if (dlg === "start" && !s.veicolo_id) {
+      if (!veicoloScelto) {
+        setSaving(false);
+        toast.error("Seleziona il mezzo con cui svolgi il servizio");
+        return;
+      }
+      payload._veicolo_id = veicoloScelto;
+    }
     if (dlg !== "start") {
       payload._nota = nota || null;
       payload._ora_fine = new Date(oraFine).toISOString();
@@ -104,7 +131,7 @@ export default function AutistaServizioDetail() {
 
   return (
     <AutistaLayout>
-      <div className="space-y-3">
+      <div className="space-y-3 min-w-0">
         <button onClick={() => navigate(-1)} className="text-sm text-muted-foreground flex items-center gap-1">
           <ArrowLeft className="h-4 w-4" /> Indietro
         </button>
@@ -160,14 +187,14 @@ export default function AutistaServizioDetail() {
         </Card>
 
         {/* Percorso */}
-        <Card className="p-3 space-y-1 text-base">
+        <Card className="p-3 space-y-1 text-base break-words">
           <div className="flex items-start gap-2"><span className="mt-1.5 h-2 w-2 rounded-full bg-emerald-500" />{s.luogo_inizio}</div>
           {s.itinerario && <div className="pl-4 text-sm italic text-muted-foreground">{s.itinerario}</div>}
           <div className="flex items-start gap-2"><span className="mt-1.5 h-2 w-2 rounded-full bg-red-500" />{s.luogo_fine}</div>
         </Card>
 
         {/* Dati operativi */}
-        <Card className="p-3 grid grid-cols-2 gap-2 text-sm">
+        <Card className="p-3 grid grid-cols-2 gap-2 text-sm break-words">
           <Info label="Passeggeri" value={s.n_passeggeri} />
           <Info label="Bagagli" value={s.n_bagagli} />
           <Info
@@ -279,7 +306,7 @@ export default function AutistaServizioDetail() {
               {dlg === "close_dispo" && "Concludi disposizione"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-3 min-w-0">
             <div>
               <Label>Km {dlg === "start" ? "iniziali" : "finali"}</Label>
               <Input type="number" inputMode="numeric" value={km} onChange={(e) => setKm(e.target.value)} />
@@ -312,7 +339,7 @@ function Info({ label, value }: { label: string; value: any }) {
   return (
     <div>
       <div className="text-xs uppercase text-muted-foreground font-semibold">{label}</div>
-      <div className="text-base font-medium">{value}</div>
+      <div className="text-base font-medium break-words">{value}</div>
     </div>
   );
 }
