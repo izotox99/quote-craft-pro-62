@@ -110,11 +110,11 @@ export default function AutistaServizioDetail() {
         </button>
 
         <Card className="p-4 space-y-1">
-          <div className="text-3xl font-bold tabular-nums">{s.ora_inizio ?? "--:--"}</div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-4xl font-bold tabular-nums">{s.ora_inizio ?? "--:--"}</div>
+          <div className="text-sm text-muted-foreground">
             {new Date(s.data_servizio).toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "long" })}
           </div>
-          <div className="text-[10px] uppercase font-bold mt-2">
+          <div className="text-xs uppercase font-bold mt-2">
             Stato: <span className="text-primary">{s.stato_autista}</span>
           </div>
         </Card>
@@ -122,8 +122,8 @@ export default function AutistaServizioDetail() {
         {/* Cartello */}
         {(s.contatto || s.cartello_path) && (
           <Card className="p-3 space-y-2 bg-blue-50 border-blue-200">
-            <div className="text-[10px] uppercase font-bold text-blue-800">Cartello aeroporto</div>
-            <div className="text-lg font-semibold">{s.contatto ?? s.cartello_nome}</div>
+            <div className="text-xs uppercase font-bold text-blue-800">Cartello aeroporto</div>
+            <div className="text-xl font-semibold">{s.contatto ?? s.cartello_nome}</div>
             {s.cartello_path && (
               <Button size="sm" onClick={apriCartelloFile} disabled={cartelloLoading} className="w-full">
                 <Monitor className="h-4 w-4 mr-1" /> {cartelloLoading ? "Apertura…" : "Apri cartello"}
@@ -139,14 +139,20 @@ export default function AutistaServizioDetail() {
 
         {/* Cliente e passeggero */}
         <Card className="p-3 space-y-2">
+          {s.societa_cliente && (
+            <div>
+              <div className="text-xs uppercase text-muted-foreground font-semibold">Società cliente</div>
+              <div className="text-lg font-bold leading-snug">{s.societa_cliente}</div>
+            </div>
+          )}
           <Info label="Cliente" value={s.contatto} />
           {s.telefono_contatto && (
-            <a href={`tel:${s.telefono_contatto}`} className="flex items-center gap-2 text-primary text-sm">
+            <a href={`tel:${s.telefono_contatto}`} className="flex items-center gap-2 text-primary text-base">
               <Phone className="h-4 w-4" /> {s.telefono_contatto}
             </a>
           )}
           {s.telefono_d && (
-            <a href={`tel:${s.telefono_d}`} className="flex items-center gap-2 text-primary text-sm">
+            <a href={`tel:${s.telefono_d}`} className="flex items-center gap-2 text-primary text-base">
               <Phone className="h-4 w-4" /> {s.telefono_d}
             </a>
           )}
@@ -154,14 +160,14 @@ export default function AutistaServizioDetail() {
         </Card>
 
         {/* Percorso */}
-        <Card className="p-3 space-y-1 text-sm">
+        <Card className="p-3 space-y-1 text-base">
           <div className="flex items-start gap-2"><span className="mt-1.5 h-2 w-2 rounded-full bg-emerald-500" />{s.luogo_inizio}</div>
-          {s.itinerario && <div className="pl-4 text-xs italic text-muted-foreground">{s.itinerario}</div>}
+          {s.itinerario && <div className="pl-4 text-sm italic text-muted-foreground">{s.itinerario}</div>}
           <div className="flex items-start gap-2"><span className="mt-1.5 h-2 w-2 rounded-full bg-red-500" />{s.luogo_fine}</div>
         </Card>
 
         {/* Dati operativi */}
-        <Card className="p-3 grid grid-cols-2 gap-2 text-xs">
+        <Card className="p-3 grid grid-cols-2 gap-2 text-sm">
           <Info label="Passeggeri" value={s.n_passeggeri} />
           <Info label="Bagagli" value={s.n_bagagli} />
           <Info
@@ -178,20 +184,24 @@ export default function AutistaServizioDetail() {
           {s.transfer_tipo && <Info label="Transfer" value={s.transfer_tipo} />}
           {s.disposizione_oraria && <Info label="Disposizione" value={s.disposizione_oraria} />}
           {s.tour_tipo && <Info label="Tour" value={s.tour_tipo} />}
-          {s.accessori && <Info label="Accessori" value={s.accessori} />}
+          {(s.accessori_dettaglio || s.accessori) && (
+            <div className="col-span-2">
+              <Info label="Accessori" value={s.accessori_dettaglio || s.accessori} />
+            </div>
+          )}
           {s.tipo_pagamento && <Info label="Pagamento" value={s.tipo_pagamento} />}
         </Card>
 
         {/* Note operative */}
         {s.info_autista && (
-          <div className="bg-yellow-100 border border-yellow-300 rounded-md p-3 text-sm">
-            <div className="font-bold uppercase text-[10px] text-yellow-800 mb-1">Note per l'autista</div>
+          <div className="bg-yellow-100 border border-yellow-300 rounded-md p-3 text-base">
+            <div className="font-bold uppercase text-xs text-yellow-800 mb-1">Note per l'autista</div>
             <div className="text-yellow-900 whitespace-pre-wrap">{s.info_autista}</div>
           </div>
         )}
         {s.note && (
-          <Card className="p-3 text-sm">
-            <div className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Note ufficio</div>
+          <Card className="p-3 text-base">
+            <div className="text-xs uppercase font-bold text-muted-foreground mb-1">Note ufficio</div>
             <div className="whitespace-pre-wrap">{s.note}</div>
           </Card>
         )}
@@ -301,8 +311,8 @@ function Info({ label, value }: { label: string; value: any }) {
   if (value === null || value === undefined || value === "") return null;
   return (
     <div>
-      <div className="text-[10px] uppercase text-muted-foreground font-semibold">{label}</div>
-      <div className="text-sm font-medium">{value}</div>
+      <div className="text-xs uppercase text-muted-foreground font-semibold">{label}</div>
+      <div className="text-base font-medium">{value}</div>
     </div>
   );
 }
