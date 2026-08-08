@@ -127,7 +127,7 @@ export function AssignDriverPopover({
     return esterni.filter(d => d.nome.toLowerCase().includes(s));
   }, [esterni, q]);
 
-  const [justAssigned, setJustAssigned] = useState<string | null>(null);
+
 
   const handlePick = async (d: DriverOption) => {
     setSaving(true);
