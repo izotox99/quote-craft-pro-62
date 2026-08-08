@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.autista_update_servizio(uuid, text, integer, timestamp with time zone, text);
