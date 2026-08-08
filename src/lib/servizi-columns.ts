@@ -31,12 +31,12 @@ export type ColumnKey =
   | "costo_centro"
   | "commissione"
   | "codice"
-  | "azioni"
   | "foglio"
   | "network_stato";
 
 /** Colonne sempre visibili, non nascondibili dall'utente. */
-export const PINNED_COLUMNS: ReadonlySet<ColumnKey> = new Set<ColumnKey>(["azioni"]);
+export const PINNED_COLUMNS: ReadonlySet<ColumnKey> = new Set<ColumnKey>();
+
 
 
 export type ColumnDef = {
@@ -73,7 +73,7 @@ export const COLUMNS: ColumnDef[] = [
   { key: "costo_centro", label: "C.C €", short: "C.C\n€", description: "Costo imputato a un centro di costo aziendale (spesa interna).", weight: 2, align: "center" },
   { key: "commissione", label: "Com €", short: "Com\n€", description: "Commissione applicata al servizio.", weight: 2, align: "center" },
   { key: "codice", label: "Codice", short: "Codice", description: "Codice interno identificativo del servizio.", weight: 4 },
-  { key: "azioni", label: "Azioni", short: "Azioni", description: "Azioni contestuali sul servizio: assegna autista, conferma, stato.", weight: 5, align: "center" },
+  
   { key: "foglio", label: "Foglio", short: "PDF", description: "Pulsante di stampa del foglio di servizio in PDF.", weight: 3, align: "center" },
 
   { key: "network_stato", label: "Network", short: "Network", description: "Stato del passaggio al partner del network (inviato, accettato, ritirato).", weight: 4.2 },
@@ -91,7 +91,7 @@ export const LEGACY_ORDER: ColumnKey[] = [
   "np", "nb", "tserv", "luogo_inizio", "itinerario",
   "luogo_fine", "info_autista", "accessori", "veicolo", "tp",
   "non_incassato", "incasso", "cs", "costo_cs", "autista",
-  "costo_autista", "costo_centro", "commissione", "codice", "azioni", "foglio",
+  "costo_autista", "costo_centro", "commissione", "codice", "foglio",
 ];
 
 
