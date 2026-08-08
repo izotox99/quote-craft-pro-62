@@ -44,7 +44,7 @@ export default function AutistaServizi() {
         .from("servizi_autista_view" as any)
         .select("*")
         .eq("data_servizio", iso)
-        .in("stato", ["confermato", "da_confermare", "in_corso", "completato"])
+        .in("stato", ["confermato", "in_corso", "completato"])
         .order("ora_inizio", { ascending: true });
       setItems((data as any[]) ?? []);
       setLoading(false);
