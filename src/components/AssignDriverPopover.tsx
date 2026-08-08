@@ -59,6 +59,8 @@ export function AssignDriverPopover({
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [justAssigned, setJustAssigned] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (!open || (interni.length + esterni.length) > 0) return;
@@ -108,7 +110,10 @@ export function AssignDriverPopover({
     setSaving(false);
     setOpen(false);
     setQ("");
+    setJustAssigned(null);
+    setTab(initialTab);
   };
+
 
   const filteredInt = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -122,12 +127,20 @@ export function AssignDriverPopover({
     return esterni.filter(d => d.nome.toLowerCase().includes(s));
   }, [esterni, q]);
 
+
+
   const handlePick = async (d: DriverOption) => {
     setSaving(true);
     await onAssign(d);
     setSaving(false);
-    setOpen(false);
     setQ("");
+    // Dopo l'autista proponiamo sempre il mezzo (facoltativo)
+    if (onAssignVeicolo) {
+      setJustAssigned(`${d.nome}${d.cognome ? ` ${d.cognome}` : ""}`);
+      setTab("veicolo");
+      return;
+    }
+    setOpen(false);
   };
 
   const handleClear = async () => {
@@ -138,13 +151,30 @@ export function AssignDriverPopover({
     setQ("");
   };
 
+  const closeAll = () => {
+    setOpen(false);
+    setQ("");
+    setJustAssigned(null);
+    setTab(initialTab);
+  };
+
   const showVeicoli = !!onAssignVeicolo;
   const isVeicoloTab = showVeicoli && tab === "veicolo";
 
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(o) => { if (o) setOpen(true); else closeAll(); }}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent align={align} className="w-72 p-0" onClick={(e) => e.stopPropagation()}>
+        {justAssigned && isVeicoloTab && (
+          <div className="flex items-center gap-1.5 border-b bg-primary/5 px-3 py-1.5 text-[11px]">
+            <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+            <span className="truncate">
+              Autista <span className="font-medium">{justAssigned}</span> assegnato — scegli il mezzo (facoltativo)
+            </span>
+          </div>
+        )}
+
         {showVeicoli && (
           <div className="grid grid-cols-2 border-b text-xs">
             {(["autista", "veicolo"] as const).map(t => (
@@ -230,20 +260,34 @@ export function AssignDriverPopover({
           )}
         </div>
         {isVeicoloTab
-          ? currentVeicoloId && (
-              <div className="border-t p-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full h-7 text-xs justify-start text-destructive hover:text-destructive"
-                  onClick={() => handlePickVeicolo(null)}
-                  disabled={saving}
-                >
-                  <X className="h-3.5 w-3.5 mr-1.5" />
-                  Rimuovi veicolo
-                </Button>
+          ? (currentVeicoloId || justAssigned) && (
+              <div className="border-t p-2 space-y-1">
+                {justAssigned && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full h-7 text-xs justify-start"
+                    onClick={closeAll}
+                    disabled={saving}
+                  >
+                    Lascia mezzo da assegnare
+                  </Button>
+                )}
+                {currentVeicoloId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full h-7 text-xs justify-start text-destructive hover:text-destructive"
+                    onClick={() => handlePickVeicolo(null)}
+                    disabled={saving}
+                  >
+                    <X className="h-3.5 w-3.5 mr-1.5" />
+                    Rimuovi veicolo
+                  </Button>
+                )}
               </div>
             )
+
           : (currentInternoId || currentEsternoId) && (
               <div className="border-t p-2">
                 <Button
