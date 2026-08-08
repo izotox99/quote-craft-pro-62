@@ -122,12 +122,20 @@ export function AssignDriverPopover({
     return esterni.filter(d => d.nome.toLowerCase().includes(s));
   }, [esterni, q]);
 
+  const [justAssigned, setJustAssigned] = useState<string | null>(null);
+
   const handlePick = async (d: DriverOption) => {
     setSaving(true);
     await onAssign(d);
     setSaving(false);
-    setOpen(false);
     setQ("");
+    // Dopo l'autista proponiamo sempre il mezzo (facoltativo)
+    if (onAssignVeicolo) {
+      setJustAssigned(`${d.nome}${d.cognome ? ` ${d.cognome}` : ""}`);
+      setTab("veicolo");
+      return;
+    }
+    setOpen(false);
   };
 
   const handleClear = async () => {
@@ -138,8 +146,16 @@ export function AssignDriverPopover({
     setQ("");
   };
 
+  const closeAll = () => {
+    setOpen(false);
+    setQ("");
+    setJustAssigned(null);
+    setTab(initialTab);
+  };
+
   const showVeicoli = !!onAssignVeicolo;
   const isVeicoloTab = showVeicoli && tab === "veicolo";
+
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
