@@ -35,7 +35,7 @@ const NETWORK_STATO_LABEL: Record<string, string> = {
   inviato: "Inviato",
   accettato: "Accettato",
   rifiutato: "Rifiutato",
-  annullato: "Annullato",
+  annullato: "Rifiutato",
   completato: "Completato",
 };
 const NETWORK_STATO_COLOR: Record<string, string> = {
@@ -119,7 +119,7 @@ const statusLabels: Record<string, string> = {
   confermato: "Confermato",
   in_corso: "In Corso",
   completato: "Completato",
-  annullato: "Annullato",
+  annullato: "Rifiutato",
 };
 
 const tipologiaLabels: Record<string, string> = {

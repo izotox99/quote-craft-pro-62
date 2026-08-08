@@ -140,7 +140,7 @@ const statoConfig: Record<string, { label: string; className: string }> = {
   confermato: { label: "Confermato", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
   in_corso: { label: "In corso", className: "bg-amber-100 text-amber-700 border-amber-200" },
   completato: { label: "Completato", className: "bg-green-100 text-green-700 border-green-200" },
-  annullato: { label: "Annullato", className: "bg-destructive/10 text-destructive border-destructive/20" },
+  annullato: { label: "Rifiutato", className: "bg-destructive/10 text-destructive border-destructive/20" },
 };
 
 function DetailRow({ label, value }: { label: string; value: string | null | undefined }) {

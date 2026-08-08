@@ -35,7 +35,7 @@ const STATO_RADIO = [
   { value: "nuovo", label: "Nuovo" },
   { value: "da_confermare", label: "Da confermare" },
   { value: "confermato", label: "Confermato" },
-  { value: "annullato", label: "Annullato (rifiutato)" },
+  { value: "annullato", label: "Rifiutato" },
 ];
 
 type Client = { id: string; name: string; company: string | null; phone?: string | null; sede_legale?: string | null; citta?: string | null };
