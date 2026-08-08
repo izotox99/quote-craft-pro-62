@@ -108,7 +108,10 @@ export function AssignDriverPopover({
     setSaving(false);
     setOpen(false);
     setQ("");
+    setJustAssigned(null);
+    setTab(initialTab);
   };
+
 
   const filteredInt = useMemo(() => {
     const s = q.trim().toLowerCase();
