@@ -260,20 +260,34 @@ export function AssignDriverPopover({
           )}
         </div>
         {isVeicoloTab
-          ? currentVeicoloId && (
-              <div className="border-t p-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full h-7 text-xs justify-start text-destructive hover:text-destructive"
-                  onClick={() => handlePickVeicolo(null)}
-                  disabled={saving}
-                >
-                  <X className="h-3.5 w-3.5 mr-1.5" />
-                  Rimuovi veicolo
-                </Button>
+          ? (currentVeicoloId || justAssigned) && (
+              <div className="border-t p-2 space-y-1">
+                {justAssigned && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full h-7 text-xs justify-start"
+                    onClick={closeAll}
+                    disabled={saving}
+                  >
+                    Lascia mezzo da assegnare
+                  </Button>
+                )}
+                {currentVeicoloId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full h-7 text-xs justify-start text-destructive hover:text-destructive"
+                    onClick={() => handlePickVeicolo(null)}
+                    disabled={saving}
+                  >
+                    <X className="h-3.5 w-3.5 mr-1.5" />
+                    Rimuovi veicolo
+                  </Button>
+                )}
               </div>
             )
+
           : (currentInternoId || currentEsternoId) && (
               <div className="border-t p-2">
                 <Button
