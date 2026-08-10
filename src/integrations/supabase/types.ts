@@ -2987,7 +2987,12 @@ export type Database = {
           transfer_nota_chiusura: string | null
           transfer_tipo: string | null
           updated_at: string | null
+          veicolo_foto_url: string | null
           veicolo_id: string | null
+          veicolo_km_attuale: number | null
+          veicolo_marca: string | null
+          veicolo_modello: string | null
+          veicolo_targa: string | null
           veicolo_tipo: string | null
         }
         Relationships: []
