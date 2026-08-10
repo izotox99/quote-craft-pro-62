@@ -96,12 +96,9 @@ export default function AutistaServizi() {
 }
 
 function CardServizio({ s, onOpen }: { s: any; onOpen: () => void }) {
-  const [veicolo, setVeicolo] = useState<{ marca?: string; modello?: string; targa?: string; foto_url?: string } | null>(null);
-  useEffect(() => {
-    if (!s.veicolo_id) { setVeicolo(null); return; }
-    supabase.from("veicoli").select("marca,modello,targa,foto_url").eq("id", s.veicolo_id).maybeSingle()
-      .then(({ data }) => setVeicolo(data as any));
-  }, [s.veicolo_id]);
+  const veicolo = s.veicolo_targa
+    ? { marca: s.veicolo_marca, modello: s.veicolo_modello, targa: s.veicolo_targa, foto_url: s.veicolo_foto_url }
+    : null;
 
   return (
     <Card className="p-4 space-y-3 shadow-sm overflow-hidden">
@@ -113,11 +110,12 @@ function CardServizio({ s, onOpen }: { s: any; onOpen: () => void }) {
         {veicolo ? (
           <div className="text-right min-w-0 max-w-[45%]">
             {veicolo.foto_url && <img src={veicolo.foto_url} className="h-12 w-20 object-cover rounded ml-auto" alt="" />}
-            <div className="text-sm font-medium mt-1 break-words">{[veicolo.marca, veicolo.modello].filter(Boolean).join(" ")}</div>
-            {veicolo.targa && (
-              <div className="inline-block text-xs font-mono border rounded px-1.5 py-0.5 bg-yellow-50 border-slate-400">{veicolo.targa}</div>
-            )}
+            <div className="text-sm font-medium mt-1 break-words">
+              {[s.veicolo_tipo, [veicolo.marca, veicolo.modello].filter(Boolean).join(" ")].filter(Boolean).join(" · ")}
+            </div>
+            <div className="inline-block text-xs font-mono border rounded px-1.5 py-0.5 bg-yellow-50 border-slate-400">{veicolo.targa}</div>
           </div>
+
         ) : (
           <div className="text-right text-sm max-w-[45%] min-w-0 break-words">
             {s.veicolo_tipo ? (

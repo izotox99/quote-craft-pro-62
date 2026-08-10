@@ -51,15 +51,22 @@ export default function AutistaServizioDetail() {
       .from("servizi_autista_view" as any)
       .select("*").eq("id", id).maybeSingle();
     setS(data);
-    setVeicolo(null);
-    if ((data as any)?.veicolo_id) {
-      const { data: v } = await supabase.from("veicoli")
-        .select("marca,modello,tipo_macchina,targa,foto_url,km_attuale")
-        .eq("id", (data as any).veicolo_id).maybeSingle();
-      setVeicolo(v);
-    }
+    const d: any = data;
+    setVeicolo(
+      d?.veicolo_targa
+        ? {
+            marca: d.veicolo_marca,
+            modello: d.veicolo_modello,
+            targa: d.veicolo_targa,
+            foto_url: d.veicolo_foto_url,
+            km_attuale: d.veicolo_km_attuale,
+            tipo_macchina: d.veicolo_tipo,
+          }
+        : null
+    );
     setLoading(false);
   };
+
   useEffect(() => { load(); }, [id]);
 
   if (loading) return <AutistaLayout><div className="text-sm text-center py-8">Caricamento…</div></AutistaLayout>;
@@ -201,12 +208,13 @@ export default function AutistaServizioDetail() {
             label="Veicolo"
             value={
               veicolo
-                ? `${[veicolo.marca, veicolo.modello].filter(Boolean).join(" ") || veicolo.tipo_macchina || ""} — ${veicolo.targa}`.trim()
+                ? `${[s.veicolo_tipo, [veicolo.marca, veicolo.modello].filter(Boolean).join(" ")].filter(Boolean).join(" · ")} — ${veicolo.targa}`.trim()
                 : s.veicolo_tipo
                   ? `${s.veicolo_tipo} · Veicolo da assegnare`
                   : null
             }
           />
+
           <Info label="Tipologia" value={s.tipologia} />
           {s.transfer_tipo && <Info label="Transfer" value={s.transfer_tipo} />}
           {s.disposizione_oraria && <Info label="Disposizione" value={s.disposizione_oraria} />}

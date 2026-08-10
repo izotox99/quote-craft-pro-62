@@ -148,18 +148,31 @@ export function accessoriSummary(rows: AccessorioRow[], catalogo: CatalogoItem[]
 }
 
 export async function saveServizioAccessori(servizioId: string, rows: AccessorioRow[]) {
-  await supabase.from("servizi_accessori").delete().eq("servizio_id", servizioId);
-  const clean = rows.filter(r => r.accessorio_id);
-  if (clean.length === 0) return;
-  await supabase.from("servizi_accessori").insert(
+  // una sola riga per (servizio, accessorio): dedup lato client + upsert
+  const map = new Map<string, AccessorioRow>();
+  for (const r of rows) {
+    if (!r.accessorio_id || (r.quantita || 0) <= 0) continue;
+    map.set(r.accessorio_id, r);
+  }
+  const clean = [...map.values()];
+
+  // rimuove gli accessori non più presenti
+  let del = supabase.from("servizi_accessori").delete().eq("servizio_id", servizioId);
+  if (clean.length) del = del.not("accessorio_id", "in", `(${clean.map(r => r.accessorio_id).join(",")})`);
+  await del;
+
+  if (!clean.length) return;
+  await supabase.from("servizi_accessori").upsert(
     clean.map(r => ({
       servizio_id: servizioId,
       accessorio_id: r.accessorio_id,
       quantita: r.quantita || 1,
       prezzo_unitario: Number(r.prezzo_unitario) || 0,
-    })) as any
+    })) as any,
+    { onConflict: "servizio_id,accessorio_id" }
   );
 }
+
 
 export async function loadServizioAccessori(servizioId: string): Promise<AccessorioRow[]> {
   const { data } = await supabase
