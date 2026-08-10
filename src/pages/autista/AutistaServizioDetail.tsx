@@ -51,15 +51,22 @@ export default function AutistaServizioDetail() {
       .from("servizi_autista_view" as any)
       .select("*").eq("id", id).maybeSingle();
     setS(data);
-    setVeicolo(null);
-    if ((data as any)?.veicolo_id) {
-      const { data: v } = await supabase.from("veicoli")
-        .select("marca,modello,tipo_macchina,targa,foto_url,km_attuale")
-        .eq("id", (data as any).veicolo_id).maybeSingle();
-      setVeicolo(v);
-    }
+    const d: any = data;
+    setVeicolo(
+      d?.veicolo_targa
+        ? {
+            marca: d.veicolo_marca,
+            modello: d.veicolo_modello,
+            targa: d.veicolo_targa,
+            foto_url: d.veicolo_foto_url,
+            km_attuale: d.veicolo_km_attuale,
+            tipo_macchina: d.veicolo_tipo,
+          }
+        : null
+    );
     setLoading(false);
   };
+
   useEffect(() => { load(); }, [id]);
 
   if (loading) return <AutistaLayout><div className="text-sm text-center py-8">Caricamento…</div></AutistaLayout>;
