@@ -208,12 +208,13 @@ export default function AutistaServizioDetail() {
             label="Veicolo"
             value={
               veicolo
-                ? `${[veicolo.marca, veicolo.modello].filter(Boolean).join(" ") || veicolo.tipo_macchina || ""} — ${veicolo.targa}`.trim()
+                ? `${[s.veicolo_tipo, [veicolo.marca, veicolo.modello].filter(Boolean).join(" ")].filter(Boolean).join(" · ")} — ${veicolo.targa}`.trim()
                 : s.veicolo_tipo
                   ? `${s.veicolo_tipo} · Veicolo da assegnare`
                   : null
             }
           />
+
           <Info label="Tipologia" value={s.tipologia} />
           {s.transfer_tipo && <Info label="Transfer" value={s.transfer_tipo} />}
           {s.disposizione_oraria && <Info label="Disposizione" value={s.disposizione_oraria} />}
