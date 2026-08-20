@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { AlertManutenzioni } from "@/components/veicoli/AlertManutenzioni";
+import { ScadenzeCostiAlert } from "@/components/ScadenzeCostiAlert";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -264,6 +265,8 @@ export default function Dashboard() {
         </div>
 
         <AlertManutenzioni />
+
+        <ScadenzeCostiAlert />
 
 
 
