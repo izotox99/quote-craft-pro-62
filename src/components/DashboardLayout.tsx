@@ -224,7 +224,38 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Magazzino dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "gap-2 rounded-lg font-medium transition-all",
+                    isMagazzinoActive && "bg-primary/10 text-primary hover:bg-primary/15"
+                  )}
+                >
+                  <Package className="h-4 w-4" />
+                  <span>Magazzino</span>
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-60">
+                {magazzinoSubItems.map((sub) => (
+                  <DropdownMenuItem
+                    key={sub.to}
+                    onClick={() => navigate(sub.to)}
+                    className={cn("gap-3 cursor-pointer", pathname === sub.to && "bg-accent")}
+                  >
+                    <sub.icon className="h-4 w-4 text-muted-foreground" />
+                    {sub.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
+
 
           <div className="flex items-center gap-2 ml-auto md:ml-0">
             <NotificheBell />
