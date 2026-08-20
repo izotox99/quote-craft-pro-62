@@ -88,7 +88,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isClientActive = pathname.startsWith("/clients");
   const isAutistiActive = pathname.startsWith("/autisti");
   const isMezziActive = pathname.startsWith("/veicoli");
+  const isMagazzinoActive = pathname.startsWith("/magazzino");
   const [mezziExpanded, setMezziExpanded] = useState(false);
+  const [magazzinoExpanded, setMagazzinoExpanded] = useState(false);
 
   return (
     <div className="min-h-screen bg-background overflow-x-clip">
