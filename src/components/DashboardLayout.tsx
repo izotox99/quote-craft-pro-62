@@ -55,6 +55,16 @@ const mezziSubItems = [
   { to: "/veicoli/adblue/nuovo", icon: PlusCircle, label: "Aggiungi AdBlue" },
 ];
 
+const magazzinoSubItems = [
+  { to: "/magazzino/ordini/nuovo", icon: FilePlus, label: "Nuovo ordine" },
+  { to: "/magazzino/ordini", icon: ClipboardList, label: "Lista ordine" },
+  { to: "/magazzino/articoli/nuovo", icon: PlusCircle, label: "Inserisci articolo" },
+  { to: "/magazzino/articoli", icon: List, label: "Lista articoli" },
+  { to: "/magazzino", icon: Package, label: "Magazzino" },
+  { to: "/magazzino/usato", icon: ClipboardCheck, label: "Lista ins. usato" },
+  { to: "/magazzino/consumo-interno", icon: Receipt, label: "Ord Consumo Interno" },
+];
+
 const mainNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
   { to: "/agenda", icon: Calendar, label: "Agenda" },
