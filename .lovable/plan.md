@@ -1,59 +1,56 @@
-# Accesso multi-utente alla tua organizzazione NCC
+# Modulo MAGAZZINO (dashboard NCC)
 
-Obiettivo: invitare altre persone (socio, collaboratore) nella TUA organizzazione con un ruolo, senza condividere credenziali. Ogni loro modifica è visibile a te perché lavorano sugli stessi dati dell'org. Nessun accesso ad altre organizzazioni.
+Nuovo menu "Magazzino" con 7 voci, dati isolati per organizzazione (org_id + RLS + GRANT + trigger + `can_write`), testi in italiano.
 
-## Ruoli
+## 1. Tabelle
 
-| Ruolo | Legge | Scrive | Gestisce membri |
-|---|---|---|---|
-| Titolare (owner) | tutto della sua org | sì | sì (unico) |
-| Admin invitato | tutto della sua org | sì | no |
-| Visualizzatore (viewer) | tutto della sua org | no | no |
+| Tabella | Campi principali |
+|---|---|
+| `fornitori_magazzino` | org_id, nome, telefono, email, indirizzo, note, attivo |
+| `articoli` | org_id, nome, unita_misura (pz/litri/kg/set), fornitore_default_id → fornitori_magazzino, prezzo_unitario, scorta_minima, attivo |
+| `ordini` | org_id, numero (progressivo per org), data, stato (`bozza`\|`convalidato`\|`ricevuto`\|`annullato`), fornitore_id, created_by, note |
+| `ordini_righe` | ordine_id, org_id, tipo_consumo (`macchine`\|`consumo_interno`), veicolo_tipo, veicolo_id (nullable → veicoli), fornitore_id, articolo_id, quantita, unita, prezzo_unitario, note |
+| `movimenti_magazzino` | org_id, articolo_id, tipo (`carico`\|`scarico`), quantita, data, ordine_riga_id, veicolo_id, consumo_interno bool, note, created_by |
 
-Il titolare è l'utente che ha creato l'organizzazione: non è rimovibile e non può essere declassato.
+Enum nuovi: `magazzino_ordine_stato`, `magazzino_tipo_consumo`, `magazzino_movimento_tipo`.
 
-## 1. Migrazioni database (in due passaggi)
+Vista `magazzino_giacenze`: per articolo → somma carichi − somma scarichi, con unità, scorta minima e flag `sotto_scorta`. Nessuna colonna denormalizzata.
 
-Migrazione A (isolata, obbligatoria per Postgres):
-- `ALTER TYPE app_role ADD VALUE 'viewer'`.
+Regole: eliminazione articolo/fornitore = disattivazione (`attivo=false`); i mezzi arrivano sempre da `veicoli` della stessa org.
 
-Migrazione B:
-- Funzione `public.can_write(_user uuid)` (SECURITY DEFINER, STABLE): vero se l'utente ha ruolo `admin` o `manager` nella propria org; falso per `viewer`.
-- Funzione `public.is_org_owner(_user uuid)`: vero solo per il creatore dell'organizzazione (nuova colonna `organizations.owner_user_id`, valorizzata retroattivamente con il primo profilo/admin dell'org).
-- Riscrittura delle policy di scrittura elencate sotto: si aggiunge `AND public.can_write(auth.uid())` a USING e WITH CHECK. Le policy di SELECT restano invariate (tutti i membri leggono).
+## 2. Funzioni database (SECURITY DEFINER, con controllo `can_write`)
 
-### Tabelle e policy di scrittura da modificare (lato ufficio/org)
+- `magazzino_prossimo_numero(_org)` — progressivo ordine per organizzazione.
+- `magazzino_convalida_righe(_ordine_id, _riga_ids[])` — sposta le righe selezionate in ordini convalidati **raggruppati per fornitore** (un ordine convalidato per fornitore, numero nuovo); le righe non selezionate restano nella bozza.
+- `magazzino_ricevi_ordine(_ordine_id)` — stato `ricevuto` + genera un movimento di **carico** per ogni riga (idempotente: niente doppi carichi).
+- `magazzino_annulla_ordine(_ordine_id)`.
+- `magazzino_registra_scarico(_articolo_id, _quantita, _data, _veicolo_id, _consumo_interno, _note)` — con blocco se la giacenza risultante andrebbe sotto zero (avviso, vedi punto ambiguo 4).
 
-accessori_catalogo, agenda_eventi, autisti, autisti_carte, autisti_esterni, autisti_feedback (policy ufficio), autisti_ore (ramo ufficio), autisti_presenze (ramo ufficio), autisti_spese (policy org), clients, client_utenze (policy org), comunicazioni, config_assenze, departments, fornitori_cs, link_utili, notifiche (update/delete), organizations (update), passeggeri_rubrica (policy org), servizi, servizi_accessori, templates, veicoli, veicoli_documenti, veicoli_gasolio, veicoli_manutenzione_ord, veicoli_manutenzione_straord, veicoli_spese.
+## 3. Schermate (menu "Magazzino" in `DashboardLayout`)
 
-Non toccate (non appartengono al perimetro ufficio): policy degli autisti su sé stessi, portale clienti/utenze, `autisti_preferenze`, `autisti_veicolo_sessioni`, `comunicazioni_letture`, `dashboard_viste` (preferenze personali, un viewer può salvarsi le proprie viste), proposals/line_items/templates personali, tabelle di log in sola lettura.
+1. **Nuovo ordine** `/magazzino/nuovo-ordine` — form nell'ordine richiesto: Tipo Consumo → Tipo macchina (tipi presenti in `veicoli` + "Tutte le macchine") → Modello ("Modello - Targa", filtrato per tipo) → Fornitore (precompilato dal default dell'articolo) → Articolo → Unità (sola lettura) → Quantità → Note. Con "Consumo interno" i campi mezzo sono disattivati. "Aggiungi all'ordine" crea/riusa la bozza e inserisce la riga; tabella sotto con Consumo interno (SI/NO), Tipo macchina, Modello, Fornitore, Articolo, Quantità, X per rimuovere. In fondo "Aggiungi" e "Convalida ordine" (dialog con checkbox per riga).
+2. **Lista ordine** `/magazzino/ordini` — ordini convalidati/ricevuti: numero, data, fornitore, n. righe, stato, totale (se prezzi valorizzati). Dettaglio con azioni "Segna come ricevuto" e "Annulla".
+3. **Inserisci articolo** `/magazzino/articoli/nuovo`.
+4. **Lista articoli** `/magazzino/articoli` — ricerca, modifica, disattivazione.
+5. **Magazzino** `/magazzino` — giacenze per articolo con righe sotto scorta in rosso; pulsante "Registra scarico" (articolo, quantità, destinazione mezzo o consumo interno, data, note).
+6. **Lista ins. usato** `/magazzino/usato` — cronologia scarichi con filtri periodo / articolo / mezzo.
+7. **Ord consumo interno** `/magazzino/consumo-interno` — stessa lista ordini filtrata su `tipo_consumo = consumo_interno`.
 
-### RPC ed edge function
+In più: sezione **"Materiali utilizzati"** nella scheda veicolo (`VeicoloDettaglio.tsx`), con gli scarichi di quel mezzo.
 
-Tutte le funzioni SECURITY DEFINER che scrivono per conto dell'ufficio ricevono un controllo iniziale `if not public.can_write(auth.uid()) then raise exception 'Permesso negato: sola lettura'`. In elenco: `approva_assenza`, `rifiuta_assenza`, `annulla_assenza`, `inserisci_assenza_ufficio`, `network_dispatch_servizio`, `network_withdraw_servizio`, `network_invite_partner`, `network_respond_invite`, `network_revoke_partnership`, `veicolo_tagliando_eseguito`, `client_portal_update_servizio` (solo ramo ufficio se presente).
+Catalogo fornitori magazzino: gestito dentro Lista articoli (dialog "Fornitori magazzino"), senza una voce di menu aggiuntiva.
 
-Le edge function che scrivono con privilegi elevati (`create-client-account`, `delete-client-account`, `create-artista-account`, invito membri) verificano il JWT del chiamante e negano se non `can_write` (per l'invito membri: solo owner).
+## 4. Punti ambigui — decisioni proposte, dimmi se cambiare
 
-## 2. Invito dei membri
+1. **Fornitori magazzino**: non hai chiesto una schermata dedicata; li gestisco in un dialog dalla Lista articoli. Vuoi invece una voce di menu?
+2. **Ordini raggruppati per fornitore alla convalida**: la tua frase "(o gli ordini, raggruppati per fornitore)" la interpreto come: se le righe selezionate hanno fornitori diversi, si generano più ordini convalidati, uno per fornitore. Confermi?
+3. **Tipo macchina "Tutte le macchine"**: lo tratto come riga senza `veicolo_id` (materiale generico per il parco mezzi), non come una riga per ogni veicolo. Confermi?
+4. **Scarico oltre giacenza**: propongo di bloccarlo con messaggio chiaro ("Giacenza insufficiente"). Alternativa: permetterlo con giacenza negativa.
+5. **Prezzi**: `prezzo_unitario` viene dall'articolo, copiato sulla riga alla creazione e modificabile lì; il totale ordine è la somma. Se non vuoi prezzi in ordine, li lascio solo in anagrafica.
+6. **Carico manuale**: prevedo solo carichi da ordine ricevuto. Serve anche un carico manuale (rettifica inventario)?
+7. **Permessi**: modulo visibile a tutti i membri dell'org; scrittura solo con `can_write` (i viewer vedono ma non modificano). Nessun accesso per autisti e portale clienti.
+8. **`veicoli.visibile_magazzino`**: esiste già questo flag. Lo uso per filtrare i mezzi selezionabili nel modulo, oppure mostro tutti i veicoli attivi?
 
-Nuova edge function `invite-org-member` (stesso pattern di `create-client-account`):
-1. Valida il JWT del chiamante e verifica che sia il titolare dell'org.
-2. Rifiuta se l'email è già usata da un cliente, un'utenza cliente, un autista o da un membro di un'altra org (errore chiaro e specifico).
-3. Se l'email non esiste: crea l'utente con password casuale non mostrata e invia un'email di invito/reset per impostarla. Se esiste già come utente NCC senza org: lo collega.
-4. Crea `profiles` con il TUO `org_id` e una riga in `user_roles` con il ruolo scelto (`admin` o `viewer`).
+## 5. Verifica finale
 
-Altre funzioni della stessa edge function (solo owner): cambio ruolo, revoca accesso (rimozione da `profiles`/`user_roles`; il titolare non è mai rimovibile).
-
-## 3. UI — Impostazioni > Team
-
-Nuova pagina `/impostazioni/team`, visibile solo al titolare: elenco membri (nome, email, ruolo, ultimo accesso), invito per email con scelta ruolo, cambio ruolo inline, revoca con conferma.
-
-Per i viewer: hook `usePermessi()` che espone `canWrite`. I pulsanti di creazione/modifica/eliminazione (Nuovo servizio, assegnazioni autista/veicolo, elimina, azioni bulk, moduli veicoli/clienti/autisti) vengono nascosti o disabilitati con badge "Sola lettura". La barriera reale resta comunque la RLS.
-
-## 4. Verifica
-
-- Test SQL con `set local role authenticated` e JWT simulato di un viewer: INSERT/UPDATE/DELETE su `servizi`, `clients`, `veicoli`, `autisti` devono fallire con errore RLS; SELECT deve funzionare.
-- Chiamata diretta alle RPC (`approva_assenza`, `network_dispatch_servizio`) come viewer: errore "Permesso negato".
-- Chiamata diretta all'edge function `create-client-account` come viewer: 403.
-- Test browser: login viewer → tabella servizi visibile, pulsanti di scrittura assenti; login admin invitato → può modificare e la modifica è visibile al titolare.
-- Un membro invitato non vede dati di altre organizzazioni (query di controllo cross-org a risultato vuoto).
+Migrazioni applicate, controllo RLS cross-org (un'altra org non vede nulla), flusso completo: articolo → ordine bozza → convalida parziale → ricezione (carico) → scarico su mezzo → giacenza aggiornata → voce visibile in Lista ins. usato e nella scheda veicolo.
