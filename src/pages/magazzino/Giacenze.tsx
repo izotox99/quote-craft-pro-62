@@ -13,10 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { formatoConfezione, pezziEConfezioni } from "@/lib/magazzino";
 
 const INTERNO = "__interno__";
 type Giacenza = { articolo_id: string; nome: string; unita_misura: string; scorta_minima: number; giacenza: number; sotto_scorta: boolean; attivo: boolean };
 type Veicolo = { id: string; targa: string; marca: string | null; modello: string | null };
+type Confez = { tipo_confezione: string | null; pezzi_per_confezione: number | null };
 
 const oggi = () => new Date().toISOString().slice(0, 10);
 
@@ -24,6 +26,7 @@ export default function Giacenze() {
   const { canWrite } = useAuth();
   const [rows, setRows] = useState<Giacenza[]>([]);
   const [veicoli, setVeicoli] = useState<Veicolo[]>([]);
+  const [confez, setConfez] = useState<Record<string, Confez>>({});
   const [scaricoOpen, setScaricoOpen] = useState(false);
   const [caricoOpen, setCaricoOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -31,12 +34,14 @@ export default function Giacenze() {
   const [carico, setCarico] = useState({ articolo_id: "", quantita: "1", motivo: "inventario_iniziale", data: oggi(), note: "" });
 
   const load = async () => {
-    const [{ data: g }, { data: v }] = await Promise.all([
+    const [{ data: g }, { data: v }, { data: a }] = await Promise.all([
       supabase.from("magazzino_giacenze").select("*").order("nome"),
       supabase.from("veicoli").select("id, targa, marca, modello").eq("attivo", true).order("targa"),
+      supabase.from("articoli").select("id, tipo_confezione, pezzi_per_confezione"),
     ]);
     setRows((g ?? []) as Giacenza[]);
     setVeicoli((v ?? []) as Veicolo[]);
+    setConfez(Object.fromEntries((a ?? []).map((x) => [x.id, { tipo_confezione: x.tipo_confezione, pezzi_per_confezione: x.pezzi_per_confezione }])));
   };
   useEffect(() => { load(); }, []);
 
