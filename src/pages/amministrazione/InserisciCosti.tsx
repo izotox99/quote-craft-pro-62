@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,7 +28,9 @@ const nomeVeicolo = (v?: Veicolo) => (v ? `${v.targa} - ${v.modello ?? v.tipo_ma
 const NESSUNO = "__nessuno__";
 
 export default function InserisciCosti() {
-  const [tab, setTab] = useState("autisti");
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") ?? "autisti";
+  const setTab = (t: string) => setParams({ tab: t });
   return (
     <DashboardLayout>
       <div className="space-y-4">
