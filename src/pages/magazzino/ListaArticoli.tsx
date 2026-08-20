@@ -109,9 +109,10 @@ export default function ListaArticoli() {
                 <TableRow>
                   <TableHead>Articolo</TableHead>
                   <TableHead>Unità</TableHead>
+                  <TableHead>Formato</TableHead>
                   <TableHead>Fornitore default</TableHead>
                   <TableHead>Prezzo</TableHead>
-                  <TableHead>Scorta minima</TableHead>
+                  <TableHead>Scorta min. (pz)</TableHead>
                   <TableHead>Stato</TableHead>
                   <TableHead />
                 </TableRow>
@@ -121,6 +122,7 @@ export default function ListaArticoli() {
                   <TableRow key={a.id} className={a.attivo ? "" : "opacity-50"}>
                     <TableCell className="font-medium">{a.nome}</TableCell>
                     <TableCell>{a.unita_misura}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatoConfezione(a.tipo_confezione, a.pezzi_per_confezione)}</TableCell>
                     <TableCell>{fornitori.find((f) => f.id === a.fornitore_default_id)?.nome ?? "—"}</TableCell>
                     <TableCell>{a.prezzo_unitario != null ? `€ ${a.prezzo_unitario}` : "—"}</TableCell>
                     <TableCell>{a.scorta_minima}</TableCell>
@@ -136,7 +138,7 @@ export default function ListaArticoli() {
                   </TableRow>
                 ))}
                 {filtrati.length === 0 && (
-                  <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">Nessun articolo</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="py-8 text-center text-muted-foreground">Nessun articolo</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
@@ -176,8 +178,20 @@ export default function ListaArticoli() {
               <Input inputMode="decimal" value={form.prezzo_unitario} onChange={(e) => setForm({ ...form, prezzo_unitario: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Scorta minima</Label>
+              <Label>Scorta minima (pezzi)</Label>
               <Input inputMode="decimal" value={form.scorta_minima} onChange={(e) => setForm({ ...form, scorta_minima: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tipo confezione</Label>
+              <Select value={form.tipo_confezione} onValueChange={(v) => setForm({ ...form, tipo_confezione: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{TIPI_CONFEZIONE.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Pezzi per confezione</Label>
+              <Input inputMode="numeric" value={form.pezzi_per_confezione} onChange={(e) => setForm({ ...form, pezzi_per_confezione: e.target.value })} />
+              <p className="text-xs text-muted-foreground">{formatoConfezione(form.tipo_confezione, Number(form.pezzi_per_confezione) || 1)}</p>
             </div>
           </div>
           <DialogFooter><Button onClick={salva} disabled={!canWrite}>Salva</Button></DialogFooter>
