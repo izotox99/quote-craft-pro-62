@@ -9,10 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PackageCheck, XCircle } from "lucide-react";
+import { formatoConfezione, numeroOrdine } from "@/lib/magazzino";
 
 type Riga = {
   id: string; articolo_id: string; quantita: number; unita: string | null; prezzo_unitario: number | null;
   tipo_consumo: "macchine" | "consumo_interno"; veicolo_tipo: string | null; veicolo_id: string | null; note: string | null;
+  tipo_confezione: string | null; pezzi_per_confezione: number | null;
 };
 type Ordine = {
   id: string; numero: number | null; data: string; stato: string; fornitore_id: string | null; note: string | null;
@@ -68,35 +70,52 @@ export default function ListaOrdini({ soloConsumoInterno = false }: { soloConsum
         <h1 className="font-display text-2xl font-bold">{soloConsumoInterno ? "Ord. consumo interno" : "Lista ordine"}</h1>
 
         <Card>
-          <CardContent className="p-0 overflow-x-auto">
-            <Table>
+          <CardContent className="p-0">
+            <Table className="table-fixed">
               <TableHeader>
                 <TableRow>
-                  <TableHead>N.</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Fornitore</TableHead>
-                  <TableHead>Righe</TableHead>
-                  <TableHead>Stato</TableHead>
-                  <TableHead>Totale</TableHead>
+                  <TableHead className="w-[110px]">Data</TableHead>
+                  <TableHead className="w-[180px]">Fornitore</TableHead>
+                  <TableHead className="w-[140px]">Numero Ordine</TableHead>
+                  <TableHead>Articoli e quantità</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {lista.map((o) => (
-                  <TableRow key={o.id} className="cursor-pointer" onClick={() => setDettaglio(o)}>
-                    <TableCell className="font-medium">#{o.numero ?? "—"}</TableCell>
-                    <TableCell>{new Date(o.data).toLocaleDateString("it-IT")}</TableCell>
+                  <TableRow key={o.id} className="align-top">
+                    <TableCell className="whitespace-nowrap">{new Date(o.data).toLocaleDateString("it-IT")}</TableCell>
                     <TableCell>{o.fornitore_id ? fornitori[o.fornitore_id] ?? "—" : "—"}</TableCell>
-                    <TableCell>{o.ordini_righe.length}</TableCell>
                     <TableCell>
-                      <Badge variant={o.stato === "ricevuto" ? "default" : o.stato === "annullato" ? "destructive" : "secondary"}>
-                        {STATO_LABEL[o.stato] ?? o.stato}
-                      </Badge>
+                      <button
+                        type="button"
+                        className="font-medium text-primary hover:underline"
+                        onClick={() => setDettaglio(o)}
+                      >
+                        {numeroOrdine(o.numero)}
+                      </button>
+                      <div className="mt-1">
+                        <Badge variant={o.stato === "ricevuto" ? "default" : o.stato === "annullato" ? "destructive" : "secondary"}>
+                          {STATO_LABEL[o.stato] ?? o.stato}
+                        </Badge>
+                      </div>
                     </TableCell>
-                    <TableCell>{totale(o) > 0 ? `€ ${totale(o).toFixed(2)}` : "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-2">
+                        {o.ordini_righe.map((r) => (
+                          <div key={r.id} className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-xs leading-tight">
+                            <div className="font-medium">{articoli[r.articolo_id] ?? "—"}</div>
+                            <div className="text-muted-foreground">
+                              {formatoConfezione(r.tipo_confezione, r.pezzi_per_confezione)} ({Number(r.quantita)})
+                            </div>
+                          </div>
+                        ))}
+                        {o.ordini_righe.length === 0 && <span className="text-muted-foreground">—</span>}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
                 {lista.length === 0 && (
-                  <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">Nessun ordine</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="py-8 text-center text-muted-foreground">Nessun ordine</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
@@ -108,7 +127,9 @@ export default function ListaOrdini({ soloConsumoInterno = false }: { soloConsum
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              Ordine #{dettaglio?.numero ?? "—"} · {dettaglio ? fornitori[dettaglio.fornitore_id ?? ""] ?? "Senza fornitore" : ""}
+              {numeroOrdine(dettaglio?.numero)} · {dettaglio ? fornitori[dettaglio.fornitore_id ?? ""] ?? "Senza fornitore" : ""}
+              {dettaglio ? ` · ${new Date(dettaglio.data).toLocaleDateString("it-IT")}` : ""}
+              {dettaglio ? ` · Totale ${totale(dettaglio) > 0 ? `€ ${totale(dettaglio).toFixed(2)}` : "—"}` : ""}
             </DialogTitle>
           </DialogHeader>
           <div className="max-h-[50vh] overflow-auto rounded-lg border border-border/60">
@@ -116,7 +137,9 @@ export default function ListaOrdini({ soloConsumoInterno = false }: { soloConsum
               <TableHeader>
                 <TableRow>
                   <TableHead>Articolo</TableHead>
-                  <TableHead>Qtà</TableHead>
+                  <TableHead>Formato</TableHead>
+                  <TableHead>Confezioni</TableHead>
+                  <TableHead>Pezzi</TableHead>
                   <TableHead>Consumo interno</TableHead>
                   <TableHead>Mezzo</TableHead>
                   <TableHead>Prezzo</TableHead>
@@ -126,7 +149,9 @@ export default function ListaOrdini({ soloConsumoInterno = false }: { soloConsum
                 {dettaglio?.ordini_righe.map((r) => (
                   <TableRow key={r.id}>
                     <TableCell>{articoli[r.articolo_id] ?? "—"}</TableCell>
-                    <TableCell>{r.quantita} {r.unita ?? ""}</TableCell>
+                    <TableCell>{formatoConfezione(r.tipo_confezione, r.pezzi_per_confezione)}</TableCell>
+                    <TableCell>{Number(r.quantita)}</TableCell>
+                    <TableCell>{Number(r.quantita) * Math.max(1, Number(r.pezzi_per_confezione ?? 1))} pz</TableCell>
                     <TableCell>{r.tipo_consumo === "consumo_interno" ? "SI" : "NO"}</TableCell>
                     <TableCell>{r.veicolo_id ? veicoli[r.veicolo_id] ?? "—" : r.veicolo_tipo ?? "—"}</TableCell>
                     <TableCell>{r.prezzo_unitario != null ? `€ ${r.prezzo_unitario}` : "—"}</TableCell>
