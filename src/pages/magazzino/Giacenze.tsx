@@ -118,9 +118,9 @@ export default function Giacenze() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Articolo</TableHead>
-                  <TableHead>Disponibile</TableHead>
-                  <TableHead>Unità</TableHead>
-                  <TableHead>Scorta minima</TableHead>
+                  <TableHead>Disponibile (pezzi)</TableHead>
+                  <TableHead>Formato</TableHead>
+                  <TableHead>Scorta min. (pz)</TableHead>
                   <TableHead>Stato</TableHead>
                 </TableRow>
               </TableHeader>
@@ -128,8 +128,12 @@ export default function Giacenze() {
                 {rows.map((r) => (
                   <TableRow key={r.articolo_id} className={r.sotto_scorta ? "bg-destructive/5" : ""}>
                     <TableCell className="font-medium">{r.nome}</TableCell>
-                    <TableCell className={r.sotto_scorta ? "font-semibold text-destructive" : ""}>{r.giacenza}</TableCell>
-                    <TableCell>{r.unita_misura}</TableCell>
+                    <TableCell className={r.sotto_scorta ? "font-semibold text-destructive" : ""}>
+                      {pezziEConfezioni(Number(r.giacenza), confez[r.articolo_id]?.pezzi_per_confezione)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatoConfezione(confez[r.articolo_id]?.tipo_confezione, confez[r.articolo_id]?.pezzi_per_confezione)}
+                    </TableCell>
                     <TableCell>{r.scorta_minima}</TableCell>
                     <TableCell>
                       {r.sotto_scorta ? <Badge variant="destructive">Sotto scorta</Badge> : <Badge variant="secondary">Ok</Badge>}
@@ -155,13 +159,13 @@ export default function Giacenze() {
                 <SelectTrigger><SelectValue placeholder="Seleziona articolo" /></SelectTrigger>
                 <SelectContent>
                   {opzioniArticoli.map((a) => (
-                    <SelectItem key={a.articolo_id} value={a.articolo_id}>{a.nome} (disp. {a.giacenza} {a.unita_misura})</SelectItem>
+                    <SelectItem key={a.articolo_id} value={a.articolo_id}>{a.nome} (disp. {a.giacenza} pz · {formatoConfezione(confez[a.articolo_id]?.tipo_confezione, confez[a.articolo_id]?.pezzi_per_confezione)})</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Quantità</Label>
+              <Label>Quantità (pezzi)</Label>
               <Input inputMode="decimal" value={scarico.quantita} onChange={(e) => setScarico({ ...scarico, quantita: e.target.value })} />
             </div>
             <div className="space-y-1.5">
@@ -203,7 +207,7 @@ export default function Giacenze() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Quantità</Label>
+              <Label>Quantità (pezzi)</Label>
               <Input inputMode="decimal" value={carico.quantita} onChange={(e) => setCarico({ ...carico, quantita: e.target.value })} />
             </div>
             <div className="space-y-1.5">
