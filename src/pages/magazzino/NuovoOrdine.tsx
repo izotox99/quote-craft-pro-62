@@ -15,11 +15,12 @@ import { toast } from "sonner";
 import { Plus, X, Check, Settings2 } from "lucide-react";
 import { FornitoriMagazzinoDialog, fetchFornitoriMagazzino, type FornitoreMagazzino } from "@/components/magazzino/FornitoriMagazzinoDialog";
 import { useNavigate } from "react-router-dom";
+import { formatoConfezione } from "@/lib/magazzino";
 
 const TUTTE = "__tutte__";
 const NESSUNO = "__nessuno__";
 
-type Articolo = { id: string; nome: string; unita_misura: string; fornitore_default_id: string | null; prezzo_unitario: number | null };
+type Articolo = { id: string; nome: string; unita_misura: string; fornitore_default_id: string | null; prezzo_unitario: number | null; tipo_confezione: string | null; pezzi_per_confezione: number | null };
 type Veicolo = { id: string; targa: string; modello: string | null; marca: string | null; tipo_macchina: string | null };
 type Riga = {
   id: string;
@@ -32,6 +33,8 @@ type Riga = {
   unita: string | null;
   prezzo_unitario: number | null;
   note: string | null;
+  tipo_confezione: string | null;
+  pezzi_per_confezione: number | null;
 };
 
 export default function NuovoOrdine() {
@@ -60,7 +63,7 @@ export default function NuovoOrdine() {
 
   const loadBase = async () => {
     const [{ data: art }, forn, { data: vei }] = await Promise.all([
-      supabase.from("articoli").select("id, nome, unita_misura, fornitore_default_id, prezzo_unitario").eq("attivo", true).order("nome"),
+      supabase.from("articoli").select("id, nome, unita_misura, fornitore_default_id, prezzo_unitario, tipo_confezione, pezzi_per_confezione").eq("attivo", true).order("nome"),
       fetchFornitoriMagazzino(),
       supabase.from("veicoli").select("id, targa, modello, marca, tipo_macchina").eq("attivo", true).order("targa"),
     ]);
@@ -136,6 +139,8 @@ export default function NuovoOrdine() {
       articolo_id: articoloId,
       quantita: q,
       unita: articolo?.unita_misura ?? null,
+      tipo_confezione: articolo?.tipo_confezione ?? "singolo",
+      pezzi_per_confezione: Math.max(1, Number(articolo?.pezzi_per_confezione ?? 1)),
       prezzo_unitario: prezzo ? Number(prezzo.replace(",", ".")) : null,
       note: note || null,
     } as never);
