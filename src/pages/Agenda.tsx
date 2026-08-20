@@ -13,6 +13,7 @@ import { it } from "date-fns/locale";
 import { EventoDialog, AgendaEvento, CATEGORIA_COLOR } from "@/components/agenda/EventoDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { fetchScadenzeCosti, type ScadenzaCosto } from "@/components/ScadenzeCostiAlert";
 
 type ViewMode = "giorno" | "settimana" | "mese";
 
@@ -30,6 +31,8 @@ export default function Agenda() {
   const [eventi, setEventi] = useState<AgendaEvento[]>([]);
   const [assenze, setAssenze] = useState<Assenza[]>([]);
   const [showAssenze, setShowAssenze] = useState(true);
+  const [scadenze, setScadenze] = useState<ScadenzaCosto[]>([]);
+  const [showScadenze, setShowScadenze] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEvento, setSelectedEvento] = useState<AgendaEvento | null>(null);
   const [defaultStart, setDefaultStart] = useState<Date | null>(null);
@@ -67,6 +70,8 @@ export default function Agenda() {
       setAssenze((aRows as any) ?? []);
     }
   };
+
+  useEffect(() => { fetchScadenzeCosti().then(setScadenze); }, []);
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user, organization?.id, rangeStart.getTime(), rangeEnd.getTime()]);
 
@@ -121,13 +126,17 @@ export default function Agenda() {
               <input type="checkbox" checked={showAssenze} onChange={e => setShowAssenze(e.target.checked)} />
               Assenze autisti
             </label>
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer select-none border rounded px-2 py-1.5">
+              <input type="checkbox" checked={showScadenze} onChange={e => setShowScadenze(e.target.checked)} />
+              Scadenze
+            </label>
             <Button size="sm" onClick={() => openNew(new Date())} className="gap-1"><Plus className="h-4 w-4" /> Nuovo</Button>
           </div>
         </div>
 
-        {view === "giorno" && <DayView date={cursor} eventi={eventi} assenze={showAssenze ? assenze : []} onNew={openNew} onOpen={openEvento} />}
-        {view === "settimana" && <WeekView start={rangeStart} eventi={eventi} assenze={showAssenze ? assenze : []} onNew={openNew} onOpen={openEvento} />}
-        {view === "mese" && <MonthView cursor={cursor} start={rangeStart} end={rangeEnd} eventi={eventi} assenze={showAssenze ? assenze : []} onNew={openNew} onOpen={openEvento} />}
+        {view === "giorno" && <DayView date={cursor} eventi={eventi} scadenze={showScadenze ? scadenze : []} assenze={showAssenze ? assenze : []} onNew={openNew} onOpen={openEvento} />}
+        {view === "settimana" && <WeekView start={rangeStart} eventi={eventi} scadenze={showScadenze ? scadenze : []} assenze={showAssenze ? assenze : []} onNew={openNew} onOpen={openEvento} />}
+        {view === "mese" && <MonthView cursor={cursor} start={rangeStart} end={rangeEnd} eventi={eventi} scadenze={showScadenze ? scadenze : []} assenze={showAssenze ? assenze : []} onNew={openNew} onOpen={openEvento} />}
       </div>
 
       <EventoDialog
@@ -177,6 +186,22 @@ function AssenzaChip({ a }: { a: Assenza }) {
   );
 }
 
+function ScadenzaChip({ s }: { s: ScadenzaCosto }) {
+  const color = s.stato === "scaduto" ? "#dc2626" : "#ea580c";
+  return (
+    <div
+      className="block w-full text-left rounded px-1.5 py-0.5 text-[11px] font-medium truncate border-l-2"
+      style={{ backgroundColor: color + "22", borderLeftColor: color, color }}
+      title={`${s.riferimento} — ${s.tipo}`}
+    >
+      <span className="opacity-70 mr-1 uppercase text-[9px]">scad.</span>{s.riferimento} · {s.tipo}
+    </div>
+  );
+}
+
+const scadenzeOfDay = (rows: ScadenzaCosto[], d: Date) =>
+  rows.filter(r => isSameDay(new Date(`${r.data_scadenza}T12:00:00`), d));
+
 const assenzeOfDay = (assenze: Assenza[], d: Date) =>
   assenze.filter(a => {
     const di = new Date(a.data_inizio), df = new Date(a.data_fine);
@@ -184,9 +209,10 @@ const assenzeOfDay = (assenze: Assenza[], d: Date) =>
     return day >= new Date(di.setHours(0,0,0,0)) && day <= new Date(df.setHours(23,59,59,999));
   });
 
-function DayView({ date, eventi, assenze, onNew, onOpen }: { date: Date; eventi: AgendaEvento[]; assenze: Assenza[]; onNew: (d: Date) => void; onOpen: (e: AgendaEvento) => void }) {
+function DayView({ date, eventi, assenze, scadenze, onNew, onOpen }: { date: Date; eventi: AgendaEvento[]; assenze: Assenza[]; scadenze: ScadenzaCosto[]; onNew: (d: Date) => void; onOpen: (e: AgendaEvento) => void }) {
   const dayEventi = eventi.filter(e => isSameDay(new Date(e.data_inizio), date));
   const dayAss = assenzeOfDay(assenze, date);
+  const dayScad = scadenzeOfDay(scadenze, date);
   const hours = Array.from({ length: 24 }, (_, i) => i);
   return (
     <div className="rounded-lg border bg-card overflow-hidden">
@@ -194,6 +220,12 @@ function DayView({ date, eventi, assenze, onNew, onOpen }: { date: Date; eventi:
         <div className="p-2 bg-muted/30 space-y-1 border-b">
           <div className="text-[10px] uppercase text-muted-foreground font-semibold">Assenze autisti</div>
           {dayAss.map(a => <AssenzaChip key={a.id} a={a} />)}
+        </div>
+      )}
+      {dayScad.length > 0 && (
+        <div className="p-2 bg-muted/30 space-y-1 border-b">
+          <div className="text-[10px] uppercase text-muted-foreground font-semibold">Scadenze</div>
+          {dayScad.map(x => <ScadenzaChip key={`${x.origine}-${x.riga_id}`} s={x} />)}
         </div>
       )}
       <div className="max-h-[calc(100vh-260px)] overflow-y-auto">
@@ -226,7 +258,7 @@ function DayView({ date, eventi, assenze, onNew, onOpen }: { date: Date; eventi:
   );
 }
 
-function WeekView({ start, eventi, assenze, onNew, onOpen }: { start: Date; eventi: AgendaEvento[]; assenze: Assenza[]; onNew: (d: Date) => void; onOpen: (e: AgendaEvento) => void }) {
+function WeekView({ start, eventi, assenze, scadenze, onNew, onOpen }: { start: Date; eventi: AgendaEvento[]; assenze: Assenza[]; scadenze: ScadenzaCosto[]; onNew: (d: Date) => void; onOpen: (e: AgendaEvento) => void }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   return (
     <div className="grid grid-cols-7 gap-1 rounded-lg border bg-card p-2">
@@ -234,6 +266,7 @@ function WeekView({ start, eventi, assenze, onNew, onOpen }: { start: Date; even
         const isToday = isSameDay(d, new Date());
         const dayEventi = eventi.filter(e => isSameDay(new Date(e.data_inizio), d));
         const dayAss = assenzeOfDay(assenze, d);
+        const dayScad = scadenzeOfDay(scadenze, d);
         return (
           <div
             key={d.toISOString()}
@@ -250,6 +283,7 @@ function WeekView({ start, eventi, assenze, onNew, onOpen }: { start: Date; even
               {format(d, "d")}
             </div>
             <div className="mt-1 space-y-1 flex-1 overflow-hidden">
+              {dayScad.map(x => <ScadenzaChip key={`${x.origine}-${x.riga_id}`} s={x} />)}
               {dayAss.map(a => <AssenzaChip key={a.id} a={a} />)}
               {dayEventi.slice(0, 6).map(e => <EventoChip key={e.id} e={e} onClick={() => onOpen(e)} />)}
               {dayEventi.length > 6 && <div className="text-[10px] text-muted-foreground">+{dayEventi.length - 6} altri</div>}
@@ -261,8 +295,8 @@ function WeekView({ start, eventi, assenze, onNew, onOpen }: { start: Date; even
   );
 }
 
-function MonthView({ cursor, start, end, eventi, assenze, onNew, onOpen }: {
-  cursor: Date; start: Date; end: Date; eventi: AgendaEvento[]; assenze: Assenza[];
+function MonthView({ cursor, start, end, eventi, assenze, scadenze, onNew, onOpen }: {
+  cursor: Date; start: Date; end: Date; eventi: AgendaEvento[]; assenze: Assenza[]; scadenze: ScadenzaCosto[];
   onNew: (d: Date) => void; onOpen: (e: AgendaEvento) => void;
 }) {
   const days: Date[] = [];
@@ -279,6 +313,7 @@ function MonthView({ cursor, start, end, eventi, assenze, onNew, onOpen }: {
           const isToday = isSameDay(d, new Date());
           const dayEventi = eventi.filter(e => isSameDay(new Date(e.data_inizio), d));
           const dayAss = assenzeOfDay(assenze, d);
+          const dayScad = scadenzeOfDay(scadenze, d);
           return (
             <div
               key={d.toISOString()}
@@ -293,6 +328,7 @@ function MonthView({ cursor, start, end, eventi, assenze, onNew, onOpen }: {
                 {format(d, "d")}
               </div>
               <div className="space-y-0.5">
+                {dayScad.slice(0, 2).map(x => <ScadenzaChip key={`${x.origine}-${x.riga_id}`} s={x} />)}
                 {dayAss.slice(0, 2).map(a => <AssenzaChip key={a.id} a={a} />)}
                 {dayEventi.slice(0, 3).map(e => <EventoChip key={e.id} e={e} onClick={() => onOpen(e)} />)}
                 {(dayEventi.length + dayAss.length) > 5 && <div className="text-[10px] text-muted-foreground">+{(dayEventi.length + dayAss.length) - 5}</div>}

@@ -13,7 +13,7 @@ import {
   FileText, LayoutDashboard, Users, Car, UserCheck, Truck, Settings, LogOut, User, Menu,
   ChevronDown, List, Receipt, Star, Package, UserPlus, StickyNote, Clock, FileSpreadsheet,
   Users2, Fuel, ClipboardCheck, ClipboardList, TrendingUp, FilePlus, FileText as FileTextIcon, CalendarDays,
-  AlertTriangle, Wrench, Droplet, PlusCircle, Calendar, Megaphone, Link2, Eye,
+  AlertTriangle, Wrench, Droplet, PlusCircle, Calendar, Megaphone, Link2, Eye, Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NotificheBell } from "@/components/NotificheBell";
@@ -65,6 +65,10 @@ const magazzinoSubItems = [
   { to: "/magazzino/consumo-interno", icon: Receipt, label: "Ord Consumo Interno" },
 ];
 
+const amministrazioneSubItems = [
+  { to: "/amministrazione/costi", icon: Wallet, label: "Inserisci Costi" },
+];
+
 const mainNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
   { to: "/agenda", icon: Calendar, label: "Agenda" },
@@ -89,8 +93,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isAutistiActive = pathname.startsWith("/autisti");
   const isMezziActive = pathname.startsWith("/veicoli");
   const isMagazzinoActive = pathname.startsWith("/magazzino");
+  const isAmmActive = pathname.startsWith("/amministrazione");
   const [mezziExpanded, setMezziExpanded] = useState(false);
   const [magazzinoExpanded, setMagazzinoExpanded] = useState(false);
+  const [ammExpanded, setAmmExpanded] = useState(false);
 
   return (
     <div className="min-h-screen bg-background overflow-x-clip">
@@ -243,6 +249,36 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-60">
                 {magazzinoSubItems.map((sub) => (
+                  <DropdownMenuItem
+                    key={sub.to}
+                    onClick={() => navigate(sub.to)}
+                    className={cn("gap-3 cursor-pointer", pathname === sub.to && "bg-accent")}
+                  >
+                    <sub.icon className="h-4 w-4 text-muted-foreground" />
+                    {sub.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Amministrazione dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "gap-2 rounded-lg font-medium transition-all",
+                    isAmmActive && "bg-primary/10 text-primary hover:bg-primary/15"
+                  )}
+                >
+                  <Wallet className="h-4 w-4" />
+                  <span>Amministrazione</span>
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-60">
+                {amministrazioneSubItems.map((sub) => (
                   <DropdownMenuItem
                     key={sub.to}
                     onClick={() => navigate(sub.to)}
@@ -454,7 +490,41 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </CollapsibleContent>
             </Collapsible>
 
-
+            {/* Amministrazione collapsible on mobile */}
+            <Collapsible open={ammExpanded || isAmmActive} onOpenChange={setAmmExpanded}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between gap-3 h-11 rounded-lg font-medium",
+                    isAmmActive && "bg-primary/10 text-primary"
+                  )}
+                >
+                  <span className="flex items-center gap-3">
+                    <Wallet className="h-5 w-5" />
+                    Amministrazione
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", (ammExpanded || isAmmActive) && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-border/30 pl-4">
+                {amministrazioneSubItems.map((sub) => (
+                  <Link key={sub.to} to={sub.to} onClick={() => setMobileOpen(false)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "w-full justify-start gap-3 h-9 rounded-lg text-sm font-normal",
+                        pathname === sub.to && "bg-accent text-accent-foreground font-medium"
+                      )}
+                    >
+                      <sub.icon className="h-4 w-4" />
+                      {sub.label}
+                    </Button>
+                  </Link>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
 
             <div className="my-3 border-t border-border/30" />
             <Button variant="ghost" className="w-full justify-start gap-3 h-11 rounded-lg font-medium" onClick={() => { setMobileOpen(false); navigate("/settings"); }}>

@@ -14,3 +14,4 @@ Security: SECURITY DEFINER for org/role checks. Rate-limiting and JWT mandatory 
 - [Architecture & DB Strategy](mem://architecture/database-strategy) — NCC multi-tenant, servizi/autisti/veicoli/fornitori tables
 - [Security Hardening](mem://security/hardening-protocols) — Edge function validation, pgcrypto hashing, JWT requirements, rate limiting
 - [UI/UX Guidelines](mem://style/design-direction) — Minimal Notion-like aesthetic, Plus Jakarta/DM Sans, mobile-first rules
+- [Costi e scadenze](mem://features/costi-scadenze) — Inserisci Costi (autisti/mezzi/altri), fonte unica scadenze, notifiche dedup, tipi configurabili per org

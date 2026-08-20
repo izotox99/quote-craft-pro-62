@@ -896,10 +896,12 @@ export type Database = {
         Row: {
           autista_id: string
           categoria: string | null
+          centro_costo: string
           created_at: string
           data_intervento: string | null
           data_scadenza: string | null
           foto_path: string | null
+          giorni_preavviso: number
           id: string
           importo_spese: number | null
           note: string | null
@@ -907,6 +909,7 @@ export type Database = {
           origine: string
           servizio_id: string | null
           tipo: string
+          tipo_pagamento: string | null
           totale_fattura: number | null
           updated_at: string
           veicolo_id: string | null
@@ -914,10 +917,12 @@ export type Database = {
         Insert: {
           autista_id: string
           categoria?: string | null
+          centro_costo?: string
           created_at?: string
           data_intervento?: string | null
           data_scadenza?: string | null
           foto_path?: string | null
+          giorni_preavviso?: number
           id?: string
           importo_spese?: number | null
           note?: string | null
@@ -925,6 +930,7 @@ export type Database = {
           origine?: string
           servizio_id?: string | null
           tipo: string
+          tipo_pagamento?: string | null
           totale_fattura?: number | null
           updated_at?: string
           veicolo_id?: string | null
@@ -932,10 +938,12 @@ export type Database = {
         Update: {
           autista_id?: string
           categoria?: string | null
+          centro_costo?: string
           created_at?: string
           data_intervento?: string | null
           data_scadenza?: string | null
           foto_path?: string | null
+          giorni_preavviso?: number
           id?: string
           importo_spese?: number | null
           note?: string | null
@@ -943,6 +951,7 @@ export type Database = {
           origine?: string
           servizio_id?: string | null
           tipo?: string
+          tipo_pagamento?: string | null
           totale_fattura?: number | null
           updated_at?: string
           veicolo_id?: string | null
@@ -1375,6 +1384,90 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      config_tipi_costo: {
+        Row: {
+          ambito: string
+          attivo: boolean
+          created_at: string
+          id: string
+          ordine: number
+          org_id: string
+          ricorrente: boolean
+          valore: string
+        }
+        Insert: {
+          ambito: string
+          attivo?: boolean
+          created_at?: string
+          id?: string
+          ordine?: number
+          org_id: string
+          ricorrente?: boolean
+          valore: string
+        }
+        Update: {
+          ambito?: string
+          attivo?: boolean
+          created_at?: string
+          id?: string
+          ordine?: number
+          org_id?: string
+          ricorrente?: boolean
+          valore?: string
+        }
+        Relationships: []
+      }
+      costi_generali: {
+        Row: {
+          categoria: string | null
+          centro_costo: string
+          created_at: string
+          data: string | null
+          data_scadenza: string | null
+          descrizione: string
+          fornitore: string | null
+          giorni_preavviso: number
+          id: string
+          importo: number
+          note: string | null
+          org_id: string
+          tipo_pagamento: string | null
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string | null
+          centro_costo?: string
+          created_at?: string
+          data?: string | null
+          data_scadenza?: string | null
+          descrizione: string
+          fornitore?: string | null
+          giorni_preavviso?: number
+          id?: string
+          importo?: number
+          note?: string | null
+          org_id: string
+          tipo_pagamento?: string | null
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string | null
+          centro_costo?: string
+          created_at?: string
+          data?: string | null
+          data_scadenza?: string | null
+          descrizione?: string
+          fornitore?: string | null
+          giorni_preavviso?: number
+          id?: string
+          importo?: number
+          note?: string | null
+          org_id?: string
+          tipo_pagamento?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       dashboard_viste: {
         Row: {
@@ -2444,6 +2537,33 @@ export type Database = {
           },
         ]
       }
+      scadenze_notificate: {
+        Row: {
+          created_at: string
+          data_scadenza: string
+          fase: string
+          id: string
+          origine: string
+          riga_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_scadenza: string
+          fase: string
+          id?: string
+          origine: string
+          riga_id: string
+        }
+        Update: {
+          created_at?: string
+          data_scadenza?: string
+          fase?: string
+          id?: string
+          origine?: string
+          riga_id?: string
+        }
+        Relationships: []
+      }
       servizi: {
         Row: {
           accessori: string | null
@@ -3361,40 +3481,55 @@ export type Database = {
       }
       veicoli_spese: {
         Row: {
+          centro_costo: string
           created_at: string
           data_intervento: string | null
           data_scadenza: string | null
+          fornitore: string | null
+          giorni_preavviso: number
           id: string
           importo_spese: number | null
           note: string | null
           org_id: string
+          ricorrenza: string | null
           tipo: string
+          tipo_pagamento: string | null
           totale_fattura: number | null
           updated_at: string
           veicolo_id: string
         }
         Insert: {
+          centro_costo?: string
           created_at?: string
           data_intervento?: string | null
           data_scadenza?: string | null
+          fornitore?: string | null
+          giorni_preavviso?: number
           id?: string
           importo_spese?: number | null
           note?: string | null
           org_id: string
+          ricorrenza?: string | null
           tipo: string
+          tipo_pagamento?: string | null
           totale_fattura?: number | null
           updated_at?: string
           veicolo_id: string
         }
         Update: {
+          centro_costo?: string
           created_at?: string
           data_intervento?: string | null
           data_scadenza?: string | null
+          fornitore?: string | null
+          giorni_preavviso?: number
           id?: string
           importo_spese?: number | null
           note?: string | null
           org_id?: string
+          ricorrenza?: string | null
           tipo?: string
+          tipo_pagamento?: string | null
           totale_fattura?: number | null
           updated_at?: string
           veicolo_id?: string
@@ -3432,6 +3567,22 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      scadenze_costi: {
+        Row: {
+          autista_id: string | null
+          data_scadenza: string | null
+          giorni_mancanti: number | null
+          giorni_preavviso: number | null
+          org_id: string | null
+          origine: string | null
+          riferimento: string | null
+          riga_id: string | null
+          stato: string | null
+          tipo: string | null
+          veicolo_id: string | null
+        }
+        Relationships: []
       }
       servizi_autista_view: {
         Row: {
@@ -4422,6 +4573,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      scadenze_costi_process: { Args: never; Returns: undefined }
+      seed_config_tipi_costo: { Args: { _org: string }; Returns: undefined }
       servizi_autista_rows: {
         Args: never
         Returns: {

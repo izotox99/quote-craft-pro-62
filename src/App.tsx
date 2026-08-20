@@ -34,6 +34,7 @@ import ListaUsato from "./pages/magazzino/ListaUsato";
 import VeicoloDettaglio from "./pages/VeicoloDettaglio";
 import { AllertMezzi, BilancioVettura, DettagliCarburante, DettagliAdBlue, AggiungiAdBlue } from "./pages/mezzi/Stub";
 import ManutenzioneStraordPage from "./pages/mezzi/ManutenzioneStraord";
+import InserisciCosti from "./pages/amministrazione/InserisciCosti";
 import Autisti from "./pages/Autisti";
 import AutistiCollaboratori from "./pages/AutistiCollaboratori";
 import FornitoriCS from "./pages/FornitoriCS";
@@ -130,6 +131,7 @@ const App = () => (
             <Route path="/fornitori" element={<ProtectedRoute><FornitoriCS /></ProtectedRoute>} />
             <Route path="/network" element={<ProtectedRoute><Network /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/amministrazione/costi" element={<ProtectedRoute><InserisciCosti /></ProtectedRoute>} />
             <Route path="/agenda" element={<ProtectedRoute><Agenda /></ProtectedRoute>} />
 
             {/* Client portal */}
