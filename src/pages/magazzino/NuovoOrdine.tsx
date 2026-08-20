@@ -15,11 +15,12 @@ import { toast } from "sonner";
 import { Plus, X, Check, Settings2 } from "lucide-react";
 import { FornitoriMagazzinoDialog, fetchFornitoriMagazzino, type FornitoreMagazzino } from "@/components/magazzino/FornitoriMagazzinoDialog";
 import { useNavigate } from "react-router-dom";
+import { formatoConfezione } from "@/lib/magazzino";
 
 const TUTTE = "__tutte__";
 const NESSUNO = "__nessuno__";
 
-type Articolo = { id: string; nome: string; unita_misura: string; fornitore_default_id: string | null; prezzo_unitario: number | null };
+type Articolo = { id: string; nome: string; unita_misura: string; fornitore_default_id: string | null; prezzo_unitario: number | null; tipo_confezione: string | null; pezzi_per_confezione: number | null };
 type Veicolo = { id: string; targa: string; modello: string | null; marca: string | null; tipo_macchina: string | null };
 type Riga = {
   id: string;
@@ -32,6 +33,8 @@ type Riga = {
   unita: string | null;
   prezzo_unitario: number | null;
   note: string | null;
+  tipo_confezione: string | null;
+  pezzi_per_confezione: number | null;
 };
 
 export default function NuovoOrdine() {
@@ -60,7 +63,7 @@ export default function NuovoOrdine() {
 
   const loadBase = async () => {
     const [{ data: art }, forn, { data: vei }] = await Promise.all([
-      supabase.from("articoli").select("id, nome, unita_misura, fornitore_default_id, prezzo_unitario").eq("attivo", true).order("nome"),
+      supabase.from("articoli").select("id, nome, unita_misura, fornitore_default_id, prezzo_unitario, tipo_confezione, pezzi_per_confezione").eq("attivo", true).order("nome"),
       fetchFornitoriMagazzino(),
       supabase.from("veicoli").select("id, targa, modello, marca, tipo_macchina").eq("attivo", true).order("targa"),
     ]);
@@ -136,6 +139,8 @@ export default function NuovoOrdine() {
       articolo_id: articoloId,
       quantita: q,
       unita: articolo?.unita_misura ?? null,
+      tipo_confezione: articolo?.tipo_confezione ?? "singolo",
+      pezzi_per_confezione: Math.max(1, Number(articolo?.pezzi_per_confezione ?? 1)),
       prezzo_unitario: prezzo ? Number(prezzo.replace(",", ".")) : null,
       note: note || null,
     } as never);
@@ -251,7 +256,7 @@ export default function NuovoOrdine() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Quantità</Label>
+              <Label>Quantità (confezioni)</Label>
               <Input inputMode="decimal" value={quantita} onChange={(e) => setQuantita(e.target.value)} />
             </div>
 
@@ -287,6 +292,7 @@ export default function NuovoOrdine() {
                     <TableHead>Modello</TableHead>
                     <TableHead>Fornitore</TableHead>
                     <TableHead>Articolo</TableHead>
+                    <TableHead>Formato</TableHead>
                     <TableHead>Quantità</TableHead>
                     <TableHead />
                   </TableRow>
@@ -299,7 +305,13 @@ export default function NuovoOrdine() {
                       <TableCell>{labelVeicolo(r.veicolo_id)}</TableCell>
                       <TableCell>{nomeFornitore(r.fornitore_id)}</TableCell>
                       <TableCell>{nomeArticolo(r.articolo_id)}</TableCell>
-                      <TableCell>{r.quantita} {r.unita ?? ""}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatoConfezione(r.tipo_confezione, r.pezzi_per_confezione)}</TableCell>
+                      <TableCell>
+                        {r.quantita} conf.
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          ({Number(r.quantita) * Math.max(1, Number(r.pezzi_per_confezione ?? 1))} pz)
+                        </span>
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button size="icon" variant="ghost" onClick={() => rimuoviRiga(r.id)} disabled={!canWrite}>
                           <X className="h-4 w-4 text-destructive" />
@@ -309,7 +321,7 @@ export default function NuovoOrdine() {
                   ))}
                   {righe.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="py-6 text-center text-muted-foreground">Nessuna riga nell'ordine</TableCell>
+                      <TableCell colSpan={8} className="py-6 text-center text-muted-foreground">Nessuna riga nell'ordine</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -346,7 +358,7 @@ export default function NuovoOrdine() {
                   onCheckedChange={(c) => setSelezionate((s) => (c ? [...s, r.id] : s.filter((x) => x !== r.id)))}
                 />
                 <span className="flex-1">
-                  {nomeArticolo(r.articolo_id)} · {r.quantita} {r.unita ?? ""} · {nomeFornitore(r.fornitore_id)}
+                  {nomeArticolo(r.articolo_id)} · {r.quantita} × {formatoConfezione(r.tipo_confezione, r.pezzi_per_confezione)} · {nomeFornitore(r.fornitore_id)}
                 </span>
               </label>
             ))}

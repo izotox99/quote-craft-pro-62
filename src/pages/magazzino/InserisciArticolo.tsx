@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { FornitoriMagazzinoDialog, fetchFornitoriMagazzino, type FornitoreMagazzino } from "@/components/magazzino/FornitoriMagazzinoDialog";
 import { Settings2 } from "lucide-react";
+import { TIPI_CONFEZIONE, formatoConfezione } from "@/lib/magazzino";
 
 export const UNITA = ["pz", "litri", "kg", "set", "m", "conf"];
 const NESSUNO = "__nessuno__";
@@ -22,7 +23,7 @@ export default function InserisciArticolo() {
   const [fornitori, setFornitori] = useState<FornitoreMagazzino[]>([]);
   const [fornDialog, setFornDialog] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ nome: "", unita_misura: "pz", fornitore_default_id: NESSUNO, prezzo_unitario: "", scorta_minima: "0", note: "" });
+  const [form, setForm] = useState({ nome: "", unita_misura: "pz", tipo_confezione: "singolo", pezzi_per_confezione: "1", fornitore_default_id: NESSUNO, prezzo_unitario: "", scorta_minima: "0", note: "" });
 
   const load = async () => setFornitori((await fetchFornitoriMagazzino()).filter((f) => f.attivo));
   useEffect(() => { load(); }, []);
@@ -33,6 +34,8 @@ export default function InserisciArticolo() {
     const { error } = await supabase.from("articoli").insert({
       nome: form.nome.trim(),
       unita_misura: form.unita_misura,
+      tipo_confezione: form.tipo_confezione,
+      pezzi_per_confezione: Math.max(1, parseInt(form.pezzi_per_confezione || "1", 10)),
       fornitore_default_id: form.fornitore_default_id !== NESSUNO ? form.fornitore_default_id : null,
       prezzo_unitario: form.prezzo_unitario ? Number(form.prezzo_unitario.replace(",", ".")) : null,
       scorta_minima: Number((form.scorta_minima || "0").replace(",", ".")),
@@ -63,6 +66,18 @@ export default function InserisciArticolo() {
               </Select>
             </div>
             <div className="space-y-1.5">
+              <Label>Tipo confezione</Label>
+              <Select value={form.tipo_confezione} onValueChange={(v) => setForm({ ...form, tipo_confezione: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{TIPI_CONFEZIONE.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Pezzi per confezione</Label>
+              <Input inputMode="numeric" value={form.pezzi_per_confezione} onChange={(e) => setForm({ ...form, pezzi_per_confezione: e.target.value })} />
+              <p className="text-xs text-muted-foreground">{formatoConfezione(form.tipo_confezione, Number(form.pezzi_per_confezione) || 1)}</p>
+            </div>
+            <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label>Fornitore di default</Label>
                 <button type="button" className="text-xs text-primary hover:underline inline-flex items-center gap-1" onClick={() => setFornDialog(true)}>
@@ -82,7 +97,7 @@ export default function InserisciArticolo() {
               <Input inputMode="decimal" value={form.prezzo_unitario} onChange={(e) => setForm({ ...form, prezzo_unitario: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Scorta minima</Label>
+              <Label>Scorta minima (pezzi)</Label>
               <Input inputMode="decimal" value={form.scorta_minima} onChange={(e) => setForm({ ...form, scorta_minima: e.target.value })} />
             </div>
             <div className="space-y-1.5 sm:col-span-2">

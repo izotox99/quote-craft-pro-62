@@ -14,11 +14,13 @@ import { Link } from "react-router-dom";
 import { Pencil, Plus, Power, Search, Truck } from "lucide-react";
 import { FornitoriMagazzinoDialog, fetchFornitoriMagazzino, type FornitoreMagazzino } from "@/components/magazzino/FornitoriMagazzinoDialog";
 import { UNITA } from "./InserisciArticolo";
+import { TIPI_CONFEZIONE, formatoConfezione } from "@/lib/magazzino";
 
 const NESSUNO = "__nessuno__";
 type Articolo = {
   id: string; nome: string; unita_misura: string; fornitore_default_id: string | null;
   prezzo_unitario: number | null; scorta_minima: number; note: string | null; attivo: boolean;
+  tipo_confezione: string | null; pezzi_per_confezione: number | null;
 };
 
 export default function ListaArticoli() {
@@ -28,7 +30,7 @@ export default function ListaArticoli() {
   const [q, setQ] = useState("");
   const [fornDialog, setFornDialog] = useState(false);
   const [editing, setEditing] = useState<Articolo | null>(null);
-  const [form, setForm] = useState({ nome: "", unita_misura: "pz", fornitore_default_id: NESSUNO, prezzo_unitario: "", scorta_minima: "0" });
+  const [form, setForm] = useState({ nome: "", unita_misura: "pz", tipo_confezione: "singolo", pezzi_per_confezione: "1", fornitore_default_id: NESSUNO, prezzo_unitario: "", scorta_minima: "0" });
 
   const load = async () => {
     const [{ data }, forn] = await Promise.all([
@@ -49,6 +51,8 @@ export default function ListaArticoli() {
     setEditing(a);
     setForm({
       nome: a.nome, unita_misura: a.unita_misura,
+      tipo_confezione: a.tipo_confezione ?? "singolo",
+      pezzi_per_confezione: String(a.pezzi_per_confezione ?? 1),
       fornitore_default_id: a.fornitore_default_id ?? NESSUNO,
       prezzo_unitario: a.prezzo_unitario != null ? String(a.prezzo_unitario) : "",
       scorta_minima: String(a.scorta_minima ?? 0),
@@ -60,6 +64,8 @@ export default function ListaArticoli() {
     const { error } = await supabase.from("articoli").update({
       nome: form.nome.trim(),
       unita_misura: form.unita_misura,
+      tipo_confezione: form.tipo_confezione as "singolo" | "scatola" | "set" | "fusto",
+      pezzi_per_confezione: Math.max(1, parseInt(form.pezzi_per_confezione || "1", 10)),
       fornitore_default_id: form.fornitore_default_id !== NESSUNO ? form.fornitore_default_id : null,
       prezzo_unitario: form.prezzo_unitario ? Number(form.prezzo_unitario.replace(",", ".")) : null,
       scorta_minima: Number((form.scorta_minima || "0").replace(",", ".")),
@@ -103,9 +109,10 @@ export default function ListaArticoli() {
                 <TableRow>
                   <TableHead>Articolo</TableHead>
                   <TableHead>Unità</TableHead>
+                  <TableHead>Formato</TableHead>
                   <TableHead>Fornitore default</TableHead>
                   <TableHead>Prezzo</TableHead>
-                  <TableHead>Scorta minima</TableHead>
+                  <TableHead>Scorta min. (pz)</TableHead>
                   <TableHead>Stato</TableHead>
                   <TableHead />
                 </TableRow>
@@ -115,6 +122,7 @@ export default function ListaArticoli() {
                   <TableRow key={a.id} className={a.attivo ? "" : "opacity-50"}>
                     <TableCell className="font-medium">{a.nome}</TableCell>
                     <TableCell>{a.unita_misura}</TableCell>
+                    <TableCell className="text-muted-foreground">{formatoConfezione(a.tipo_confezione, a.pezzi_per_confezione)}</TableCell>
                     <TableCell>{fornitori.find((f) => f.id === a.fornitore_default_id)?.nome ?? "—"}</TableCell>
                     <TableCell>{a.prezzo_unitario != null ? `€ ${a.prezzo_unitario}` : "—"}</TableCell>
                     <TableCell>{a.scorta_minima}</TableCell>
@@ -130,7 +138,7 @@ export default function ListaArticoli() {
                   </TableRow>
                 ))}
                 {filtrati.length === 0 && (
-                  <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">Nessun articolo</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={8} className="py-8 text-center text-muted-foreground">Nessun articolo</TableCell></TableRow>
                 )}
               </TableBody>
             </Table>
@@ -170,8 +178,20 @@ export default function ListaArticoli() {
               <Input inputMode="decimal" value={form.prezzo_unitario} onChange={(e) => setForm({ ...form, prezzo_unitario: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <Label>Scorta minima</Label>
+              <Label>Scorta minima (pezzi)</Label>
               <Input inputMode="decimal" value={form.scorta_minima} onChange={(e) => setForm({ ...form, scorta_minima: e.target.value })} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tipo confezione</Label>
+              <Select value={form.tipo_confezione} onValueChange={(v) => setForm({ ...form, tipo_confezione: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{TIPI_CONFEZIONE.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Pezzi per confezione</Label>
+              <Input inputMode="numeric" value={form.pezzi_per_confezione} onChange={(e) => setForm({ ...form, pezzi_per_confezione: e.target.value })} />
+              <p className="text-xs text-muted-foreground">{formatoConfezione(form.tipo_confezione, Number(form.pezzi_per_confezione) || 1)}</p>
             </div>
           </div>
           <DialogFooter><Button onClick={salva} disabled={!canWrite}>Salva</Button></DialogFooter>

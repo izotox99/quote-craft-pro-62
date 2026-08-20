@@ -13,10 +13,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { formatoConfezione, pezziEConfezioni } from "@/lib/magazzino";
 
 const INTERNO = "__interno__";
 type Giacenza = { articolo_id: string; nome: string; unita_misura: string; scorta_minima: number; giacenza: number; sotto_scorta: boolean; attivo: boolean };
 type Veicolo = { id: string; targa: string; marca: string | null; modello: string | null };
+type Confez = { tipo_confezione: string | null; pezzi_per_confezione: number | null };
 
 const oggi = () => new Date().toISOString().slice(0, 10);
 
@@ -24,6 +26,7 @@ export default function Giacenze() {
   const { canWrite } = useAuth();
   const [rows, setRows] = useState<Giacenza[]>([]);
   const [veicoli, setVeicoli] = useState<Veicolo[]>([]);
+  const [confez, setConfez] = useState<Record<string, Confez>>({});
   const [scaricoOpen, setScaricoOpen] = useState(false);
   const [caricoOpen, setCaricoOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -31,12 +34,14 @@ export default function Giacenze() {
   const [carico, setCarico] = useState({ articolo_id: "", quantita: "1", motivo: "inventario_iniziale", data: oggi(), note: "" });
 
   const load = async () => {
-    const [{ data: g }, { data: v }] = await Promise.all([
+    const [{ data: g }, { data: v }, { data: a }] = await Promise.all([
       supabase.from("magazzino_giacenze").select("*").order("nome"),
       supabase.from("veicoli").select("id, targa, marca, modello").eq("attivo", true).order("targa"),
+      supabase.from("articoli").select("id, tipo_confezione, pezzi_per_confezione"),
     ]);
     setRows((g ?? []) as Giacenza[]);
     setVeicoli((v ?? []) as Veicolo[]);
+    setConfez(Object.fromEntries((a ?? []).map((x) => [x.id, { tipo_confezione: x.tipo_confezione, pezzi_per_confezione: x.pezzi_per_confezione }])));
   };
   useEffect(() => { load(); }, []);
 
@@ -113,9 +118,9 @@ export default function Giacenze() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Articolo</TableHead>
-                  <TableHead>Disponibile</TableHead>
-                  <TableHead>Unità</TableHead>
-                  <TableHead>Scorta minima</TableHead>
+                  <TableHead>Disponibile (pezzi)</TableHead>
+                  <TableHead>Formato</TableHead>
+                  <TableHead>Scorta min. (pz)</TableHead>
                   <TableHead>Stato</TableHead>
                 </TableRow>
               </TableHeader>
@@ -123,8 +128,12 @@ export default function Giacenze() {
                 {rows.map((r) => (
                   <TableRow key={r.articolo_id} className={r.sotto_scorta ? "bg-destructive/5" : ""}>
                     <TableCell className="font-medium">{r.nome}</TableCell>
-                    <TableCell className={r.sotto_scorta ? "font-semibold text-destructive" : ""}>{r.giacenza}</TableCell>
-                    <TableCell>{r.unita_misura}</TableCell>
+                    <TableCell className={r.sotto_scorta ? "font-semibold text-destructive" : ""}>
+                      {pezziEConfezioni(Number(r.giacenza), confez[r.articolo_id]?.pezzi_per_confezione)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatoConfezione(confez[r.articolo_id]?.tipo_confezione, confez[r.articolo_id]?.pezzi_per_confezione)}
+                    </TableCell>
                     <TableCell>{r.scorta_minima}</TableCell>
                     <TableCell>
                       {r.sotto_scorta ? <Badge variant="destructive">Sotto scorta</Badge> : <Badge variant="secondary">Ok</Badge>}
@@ -150,13 +159,13 @@ export default function Giacenze() {
                 <SelectTrigger><SelectValue placeholder="Seleziona articolo" /></SelectTrigger>
                 <SelectContent>
                   {opzioniArticoli.map((a) => (
-                    <SelectItem key={a.articolo_id} value={a.articolo_id}>{a.nome} (disp. {a.giacenza} {a.unita_misura})</SelectItem>
+                    <SelectItem key={a.articolo_id} value={a.articolo_id}>{a.nome} (disp. {a.giacenza} pz · {formatoConfezione(confez[a.articolo_id]?.tipo_confezione, confez[a.articolo_id]?.pezzi_per_confezione)})</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Quantità</Label>
+              <Label>Quantità (pezzi)</Label>
               <Input inputMode="decimal" value={scarico.quantita} onChange={(e) => setScarico({ ...scarico, quantita: e.target.value })} />
             </div>
             <div className="space-y-1.5">
@@ -198,7 +207,7 @@ export default function Giacenze() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Quantità</Label>
+              <Label>Quantità (pezzi)</Label>
               <Input inputMode="decimal" value={carico.quantita} onChange={(e) => setCarico({ ...carico, quantita: e.target.value })} />
             </div>
             <div className="space-y-1.5">
