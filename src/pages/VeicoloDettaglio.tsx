@@ -46,12 +46,13 @@ export default function VeicoloDettaglio() {
         </div>
 
         <Tabs value={tab} onValueChange={(t) => setParams({ tab: t })}>
-          <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full max-w-3xl">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-6 w-full max-w-4xl">
             <TabsTrigger value="documenti" className="gap-1.5"><FileText className="h-4 w-4" />Documenti</TabsTrigger>
             <TabsTrigger value="man-ord" className="gap-1.5"><Wrench className="h-4 w-4" />M. Ord</TabsTrigger>
             <TabsTrigger value="man-str" className="gap-1.5"><Hammer className="h-4 w-4" />M. Straord</TabsTrigger>
             <TabsTrigger value="gasolio" className="gap-1.5"><Fuel className="h-4 w-4" />Gasolio</TabsTrigger>
             <TabsTrigger value="spese" className="gap-1.5"><Receipt className="h-4 w-4" />Spese</TabsTrigger>
+            <TabsTrigger value="materiali" className="gap-1.5"><Package className="h-4 w-4" />Materiali</TabsTrigger>
           </TabsList>
 
           <TabsContent value="documenti" className="mt-6"><SectionDocumenti veicoloId={id} /></TabsContent>
@@ -59,6 +60,7 @@ export default function VeicoloDettaglio() {
           <TabsContent value="man-str" className="mt-6"><SectionManutenzione veicoloId={id} mode="straord" /></TabsContent>
           <TabsContent value="gasolio" className="mt-6"><SectionGasolio veicoloId={id} /></TabsContent>
           <TabsContent value="spese" className="mt-6"><SectionSpese veicoloId={id} /></TabsContent>
+          <TabsContent value="materiali" className="mt-6"><SectionMateriali veicoloId={id} /></TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
