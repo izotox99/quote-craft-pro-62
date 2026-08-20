@@ -256,7 +256,7 @@ export default function NuovoOrdine() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Quantità</Label>
+              <Label>Quantità (confezioni)</Label>
               <Input inputMode="decimal" value={quantita} onChange={(e) => setQuantita(e.target.value)} />
             </div>
 
@@ -292,6 +292,7 @@ export default function NuovoOrdine() {
                     <TableHead>Modello</TableHead>
                     <TableHead>Fornitore</TableHead>
                     <TableHead>Articolo</TableHead>
+                    <TableHead>Formato</TableHead>
                     <TableHead>Quantità</TableHead>
                     <TableHead />
                   </TableRow>
@@ -304,7 +305,13 @@ export default function NuovoOrdine() {
                       <TableCell>{labelVeicolo(r.veicolo_id)}</TableCell>
                       <TableCell>{nomeFornitore(r.fornitore_id)}</TableCell>
                       <TableCell>{nomeArticolo(r.articolo_id)}</TableCell>
-                      <TableCell>{r.quantita} {r.unita ?? ""}</TableCell>
+                      <TableCell className="text-muted-foreground">{formatoConfezione(r.tipo_confezione, r.pezzi_per_confezione)}</TableCell>
+                      <TableCell>
+                        {r.quantita} conf.
+                        <span className="ml-1 text-xs text-muted-foreground">
+                          ({Number(r.quantita) * Math.max(1, Number(r.pezzi_per_confezione ?? 1))} pz)
+                        </span>
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button size="icon" variant="ghost" onClick={() => rimuoviRiga(r.id)} disabled={!canWrite}>
                           <X className="h-4 w-4 text-destructive" />
@@ -314,7 +321,7 @@ export default function NuovoOrdine() {
                   ))}
                   {righe.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="py-6 text-center text-muted-foreground">Nessuna riga nell'ordine</TableCell>
+                      <TableCell colSpan={8} className="py-6 text-center text-muted-foreground">Nessuna riga nell'ordine</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -351,7 +358,7 @@ export default function NuovoOrdine() {
                   onCheckedChange={(c) => setSelezionate((s) => (c ? [...s, r.id] : s.filter((x) => x !== r.id)))}
                 />
                 <span className="flex-1">
-                  {nomeArticolo(r.articolo_id)} · {r.quantita} {r.unita ?? ""} · {nomeFornitore(r.fornitore_id)}
+                  {nomeArticolo(r.articolo_id)} · {r.quantita} × {formatoConfezione(r.tipo_confezione, r.pezzi_per_confezione)} · {nomeFornitore(r.fornitore_id)}
                 </span>
               </label>
             ))}
