@@ -262,6 +262,10 @@ export default function Dashboard() {
           )}
         </div>
 
+        <AlertManutenzioni />
+
+
+
         {/* Banner annullamenti recenti (ultimi 3 giorni) */}
         {annullatiRecenti.length > 0 && (
           <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/30 dark:border-red-900 p-3">
