@@ -1,15 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "sonner";
-import { PlusCircle, Pencil, Trash2, Wrench } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Wrench, X, Users } from "lucide-react";
 import { romeToday } from "@/lib/romeDate";
+import { OperaiDialog, nomeOperaio, type Operaio } from "@/components/veicoli/OperaiDialog";
 
 type Mode = "ord" | "straord";
 
@@ -25,70 +29,209 @@ type Row = {
   fornitore?: string | null;
   ordine?: string | null;
   totale: number;
+  intervento_tipo?: string | null;
+  operaio_id?: string | null;
+  ora_inizio?: string | null;
+  ora_fine?: string | null;
+  costo_materiale?: number | null;
+  costo_manodopera?: number | null;
 };
 
+type Articolo = { id: string; nome: string; unita_misura: string; prezzo_unitario: number | null };
+type Riga = { articolo_id: string; quantita: string; prezzo_unitario: string };
+
+const NESSUNO = "__nessuno__";
+const hhmm = (t?: string | null) => (t ? t.slice(0, 5) : "");
+
 export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mode: Mode }) {
-  const table = mode === "ord" ? "veicoli_manutenzione_ord" : "veicoli_manutenzione_straord";
-  const kmField = mode === "ord" ? "km" : "km_attuale";
+  const isOrd = mode === "ord";
+  const table = isOrd ? "veicoli_manutenzione_ord" : "veicoli_manutenzione_straord";
+  const kmField = isOrd ? "km" : "km_attuale";
   const [rows, setRows] = useState<Row[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Row | null>(null);
   const [form, setForm] = useState<any>({});
+  const [saving, setSaving] = useState(false);
+
+  // magazzino / operai
+  const [operai, setOperai] = useState<Operaio[]>([]);
+  const [operaiOpen, setOperaiOpen] = useState(false);
+  const [articoli, setArticoli] = useState<Articolo[]>([]);
+  const [giacenze, setGiacenze] = useState<Record<string, number>>({});
+  const [righe, setRighe] = useState<Riga[]>([]);
+  const [righeOriginali, setRigheOriginali] = useState<Record<string, number>>({});
 
   const load = async () => {
     const { data } = await supabase.from(table).select("*").eq("veicolo_id", veicoloId).order("data", { ascending: false });
     setRows((data ?? []) as Row[]);
   };
+
+  const loadMagazzino = async () => {
+    const [{ data: a }, { data: m }, { data: o }] = await Promise.all([
+      supabase.from("articoli").select("id, nome, unita_misura, prezzo_unitario").eq("attivo", true).order("nome"),
+      supabase.from("movimenti_magazzino").select("articolo_id, tipo, quantita"),
+      supabase.from("operai").select("id, nome, cognome, mansione, costo_orario, attivo").eq("attivo", true).order("nome"),
+    ]);
+    setArticoli((a ?? []) as Articolo[]);
+    const g: Record<string, number> = {};
+    (m ?? []).forEach((x: any) => {
+      g[x.articolo_id] = (g[x.articolo_id] ?? 0) + (x.tipo === "carico" ? Number(x.quantita) : -Number(x.quantita));
+    });
+    setGiacenze(g);
+    setOperai((o ?? []) as Operaio[]);
+  };
+
   useEffect(() => { load(); }, [veicoloId, mode]);
+  useEffect(() => { if (isOrd) loadMagazzino(); }, [isOrd]);
+
+  const giacenzaDisponibile = (articoloId: string) =>
+    (giacenze[articoloId] ?? 0) + (righeOriginali[articoloId] ?? 0);
 
   const openNew = () => {
     setEditing(null);
-    setForm({ data: romeToday(), totale: "" });
+    setForm({ data: romeToday(), totale: "", intervento_tipo: "esterno" });
+    setRighe([]);
+    setRigheOriginali({});
     setOpen(true);
   };
-  const openEdit = (r: Row) => {
+
+  const openEdit = async (r: Row) => {
     setEditing(r);
-    setForm({ ...r });
+    setForm({ ...r, ora_inizio: hhmm(r.ora_inizio), ora_fine: hhmm(r.ora_fine), intervento_tipo: r.intervento_tipo ?? "esterno" });
+    setRighe([]);
+    setRigheOriginali({});
+    if (isOrd) {
+      const { data } = await supabase
+        .from("movimenti_magazzino")
+        .select("articolo_id, quantita, prezzo_unitario")
+        .eq("manutenzione_ord_id", r.id);
+      const rr = (data ?? []).map((x: any) => ({
+        articolo_id: x.articolo_id,
+        quantita: String(x.quantita),
+        prezzo_unitario: x.prezzo_unitario != null ? String(x.prezzo_unitario) : "",
+      }));
+      setRighe(rr);
+      const orig: Record<string, number> = {};
+      (data ?? []).forEach((x: any) => { orig[x.articolo_id] = (orig[x.articolo_id] ?? 0) + Number(x.quantita); });
+      setRigheOriginali(orig);
+    }
     setOpen(true);
   };
-  const handleSave = async () => {
-    const payload: any = {
-      veicolo_id: veicoloId,
-      data: form.data,
-      [kmField]: form[kmField] ? Number(form[kmField]) : null,
-      tipo: form.tipo || null,
-      note: form.note || null,
-      ricambi: form.ricambi || null,
-      fornitore: form.fornitore || null,
-      totale: form.totale ? Number(form.totale) : 0,
+
+  const totaleMateriale = useMemo(
+    () => righe.reduce((s, r) => s + (Number(r.quantita) || 0) * (Number(r.prezzo_unitario) || 0), 0),
+    [righe]
+  );
+
+  const oreIntervento = useMemo(() => {
+    if (!form.ora_inizio || !form.ora_fine) return 0;
+    const [h1, m1] = form.ora_inizio.split(":").map(Number);
+    const [h2, m2] = form.ora_fine.split(":").map(Number);
+    let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+    if (diff < 0) diff += 24 * 60;
+    return diff / 60;
+  }, [form.ora_inizio, form.ora_fine]);
+
+  const operaioSel = operai.find((o) => o.id === form.operaio_id);
+  const totaleManodopera = (operaioSel?.costo_orario ?? 0) * oreIntervento;
+
+  const salvaOrd = async (forza: boolean): Promise<boolean> => {
+    const payload = {
+      _id: editing?.id ?? null,
+      _veicolo_id: veicoloId,
+      _data: form.data || romeToday(),
+      _km: form.km ? Number(form.km) : null,
+      _intervento_tipo: form.intervento_tipo ?? "esterno",
+      _tipo: form.tipo || null,
+      _note: form.note || null,
+      _ricambi: form.ricambi || null,
+      _fornitore: form.fornitore || null,
+      _operaio_id: form.intervento_tipo === "interno" ? (form.operaio_id || null) : null,
+      _ora_inizio: form.intervento_tipo === "interno" && form.ora_inizio ? form.ora_inizio : null,
+      _ora_fine: form.intervento_tipo === "interno" && form.ora_fine ? form.ora_fine : null,
+      _righe: form.intervento_tipo === "interno"
+        ? righe
+            .filter((r) => r.articolo_id && Number(r.quantita) > 0)
+            .map((r) => ({ articolo_id: r.articolo_id, quantita: Number(r.quantita), prezzo_unitario: r.prezzo_unitario === "" ? null : Number(r.prezzo_unitario) }))
+        : [],
+      _totale_esterno: form.intervento_tipo === "esterno" ? (form.totale ? Number(form.totale) : 0) : null,
+      _forza: forza,
     };
-    if (mode === "straord") {
-      payload.tipo_riparazione = form.tipo_riparazione || null;
-      payload.ordine = form.ordine || null;
+    const { error } = await supabase.rpc("manutenzione_ord_salva" as any, payload as any);
+    if (error) {
+      if (/Giacenza insufficiente/.test(error.message) && !forza) {
+        if (confirm(`${error.message}. Procedere comunque? Il movimento sarà marcato come anomalia.`)) {
+          return salvaOrd(true);
+        }
+        return false;
+      }
+      toast.error(error.message);
+      return false;
     }
-    const { error } = editing
-      ? await supabase.from(table as any).update(payload as any).eq("id", editing.id)
-      : await supabase.from(table as any).insert([payload] as any);
-    if (error) return toast.error(error.message);
-    toast.success(editing ? "Aggiornato" : "Aggiunto");
-    setOpen(false); load();
+    return true;
   };
+
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      if (isOrd) {
+        const ok = await salvaOrd(false);
+        if (!ok) return;
+      } else {
+        const payload: any = {
+          veicolo_id: veicoloId,
+          data: form.data,
+          [kmField]: form[kmField] ? Number(form[kmField]) : null,
+          tipo: form.tipo || null,
+          tipo_riparazione: form.tipo_riparazione || null,
+          ordine: form.ordine || null,
+          note: form.note || null,
+          ricambi: form.ricambi || null,
+          fornitore: form.fornitore || null,
+          totale: form.totale ? Number(form.totale) : 0,
+        };
+        const { error } = editing
+          ? await supabase.from(table as any).update(payload as any).eq("id", editing.id)
+          : await supabase.from(table as any).insert([payload] as any);
+        if (error) { toast.error(error.message); return; }
+      }
+      toast.success(editing ? "Aggiornato" : "Aggiunto");
+      setOpen(false);
+      load();
+      if (isOrd) loadMagazzino();
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleDelete = async (r: Row) => {
-    if (!confirm("Eliminare questo intervento?")) return;
+    if (!confirm("Eliminare questo intervento? Gli eventuali scarichi di magazzino collegati verranno stornati.")) return;
     const { error } = await supabase.from(table).delete().eq("id", r.id);
     if (error) return toast.error(error.message);
-    toast.success("Eliminato"); load();
+    toast.success("Eliminato");
+    load();
+    if (isOrd) loadMagazzino();
   };
 
   const totale = rows.reduce((sum, r) => sum + (Number(r.totale) || 0), 0);
+  const eur = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+  const interno = isOrd && form.intervento_tipo === "interno";
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div className="text-sm text-muted-foreground">
-          Totale: <span className="font-semibold text-foreground">{totale.toLocaleString("it-IT", { style: "currency", currency: "EUR" })}</span>
+          Totale: <span className="font-semibold text-foreground">{eur(totale)}</span>
         </div>
-        <Button onClick={openNew} className="gap-2"><PlusCircle className="h-4 w-4" /> Aggiungi intervento</Button>
+        <div className="flex gap-2">
+          {isOrd && (
+            <Button variant="outline" onClick={() => setOperaiOpen(true)} className="gap-2">
+              <Users className="h-4 w-4" /> Operai
+            </Button>
+          )}
+          <Button onClick={openNew} className="gap-2"><PlusCircle className="h-4 w-4" /> Aggiungi intervento</Button>
+        </div>
       </div>
 
       <Card>
@@ -99,6 +242,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
               <TableHead className="text-right">Km</TableHead>
               {mode === "straord" && <TableHead>Tipo riparazione</TableHead>}
               <TableHead>Tipo</TableHead>
+              {isOrd && <TableHead className="hidden md:table-cell">Operaio</TableHead>}
               <TableHead className="hidden md:table-cell">Note</TableHead>
               <TableHead className="hidden lg:table-cell">Ricambi</TableHead>
               <TableHead className="hidden lg:table-cell">Fornitore</TableHead>
@@ -109,7 +253,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <TableRow><TableCell colSpan={mode === "straord" ? 10 : 8} className="text-center py-10 text-muted-foreground">
+              <TableRow><TableCell colSpan={mode === "straord" ? 10 : 9} className="text-center py-10 text-muted-foreground">
                 <Wrench className="h-8 w-8 mx-auto mb-2 opacity-40" />Nessun intervento registrato
               </TableCell></TableRow>
             )}
@@ -118,13 +262,29 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
                 <TableCell>{new Date(r.data).toLocaleDateString("it-IT")}</TableCell>
                 <TableCell className="text-right tabular-nums">{(r.km ?? r.km_attuale)?.toLocaleString("it-IT") ?? "—"}</TableCell>
                 {mode === "straord" && <TableCell>{r.tipo_riparazione ?? "—"}</TableCell>}
-                <TableCell>{r.tipo ?? "—"}</TableCell>
+                <TableCell>
+                  {isOrd ? (
+                    <Badge variant={r.intervento_tipo === "interno" ? "default" : "secondary"}>
+                      {r.intervento_tipo === "interno" ? "Intervento interno" : "Intervento esterno"}
+                    </Badge>
+                  ) : (r.tipo ?? "—")}
+                </TableCell>
+                {isOrd && (
+                  <TableCell className="hidden md:table-cell text-sm">
+                    {operai.find((o) => o.id === r.operaio_id) ? nomeOperaio(operai.find((o) => o.id === r.operaio_id)!) : "—"}
+                  </TableCell>
+                )}
                 <TableCell className="hidden md:table-cell text-sm text-muted-foreground max-w-[240px] truncate">{r.note ?? "—"}</TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground max-w-[200px] truncate">{r.ricambi ?? "—"}</TableCell>
                 <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">{r.fornitore ?? "—"}</TableCell>
                 {mode === "straord" && <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">{r.ordine ?? "—"}</TableCell>}
                 <TableCell className="text-right tabular-nums font-medium">
-                  {Number(r.totale).toLocaleString("it-IT", { style: "currency", currency: "EUR" })}
+                  {eur(Number(r.totale) || 0)}
+                  {isOrd && r.intervento_tipo === "interno" && (
+                    <div className="text-[11px] font-normal text-muted-foreground">
+                      mat. {eur(Number(r.costo_materiale) || 0)} · mdo {eur(Number(r.costo_manodopera) || 0)}
+                    </div>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
@@ -137,32 +297,163 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
       </Card>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? "Modifica intervento" : "Nuovo intervento"}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Data</Label><Input type="date" value={form.data ?? ""} onChange={(e) => setForm({ ...form, data: e.target.value })} /></div>
-            <div><Label>Km {mode === "ord" ? "manutenzione" : "attuale"}</Label>
+            <div><Label>Km {isOrd ? "manutenzione" : "attuale"}</Label>
               <Input inputMode="numeric" value={form[kmField] ?? ""} onChange={(e) => setForm({ ...form, [kmField]: e.target.value })} /></div>
             {mode === "straord" && (
               <div><Label>Tipo riparazione</Label><Input value={form.tipo_riparazione ?? ""} onChange={(e) => setForm({ ...form, tipo_riparazione: e.target.value })} placeholder="es. Reparazione meccanica" /></div>
             )}
-            <div><Label>Tipo</Label><Input value={form.tipo ?? ""} onChange={(e) => setForm({ ...form, tipo: e.target.value })} placeholder="es. Intervento intero" /></div>
+            <div>
+              <Label>Tipo</Label>
+              {isOrd ? (
+                <Select value={form.intervento_tipo ?? "esterno"} onValueChange={(v) => setForm({ ...form, intervento_tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="interno">Intervento interno</SelectItem>
+                    <SelectItem value="esterno">Intervento esterno</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input value={form.tipo ?? ""} onChange={(e) => setForm({ ...form, tipo: e.target.value })} placeholder="es. Intervento intero" />
+              )}
+            </div>
             <div className="sm:col-span-2"><Label>Note</Label><Textarea value={form.note ?? ""} onChange={(e) => setForm({ ...form, note: e.target.value })} rows={2} /></div>
             <div className="sm:col-span-2"><Label>Ricambi</Label><Textarea value={form.ricambi ?? ""} onChange={(e) => setForm({ ...form, ricambi: e.target.value })} rows={2} placeholder="es. Filtro aria [1], Filtro olio [1]" /></div>
             <div><Label>Fornitore</Label><Input value={form.fornitore ?? ""} onChange={(e) => setForm({ ...form, fornitore: e.target.value })} /></div>
             {mode === "straord" && (
               <div><Label>Ordine</Label><Input value={form.ordine ?? ""} onChange={(e) => setForm({ ...form, ordine: e.target.value })} placeholder="es. ORD-595" /></div>
             )}
-            <div><Label>Totale (€)</Label><Input inputMode="decimal" value={form.totale ?? ""} onChange={(e) => setForm({ ...form, totale: e.target.value })} /></div>
+            {!interno && (
+              <div><Label>Totale (€)</Label><Input inputMode="decimal" value={form.totale ?? ""} onChange={(e) => setForm({ ...form, totale: e.target.value })} /></div>
+            )}
           </div>
+
+          {interno && (
+            <div className="space-y-3 rounded-lg border p-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-display font-semibold">Magazzino</h3>
+                <Button variant="outline" size="sm" onClick={() => setOperaiOpen(true)} className="gap-1.5">
+                  <PlusCircle className="h-4 w-4" /> Nuovo operaio
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <Label>Operaio</Label>
+                  <Select value={form.operaio_id ?? NESSUNO} onValueChange={(v) => setForm({ ...form, operaio_id: v === NESSUNO ? null : v })}>
+                    <SelectTrigger><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NESSUNO}>Nessuno</SelectItem>
+                      {operai.map((o) => (
+                        <SelectItem key={o.id} value={o.id}>{nomeOperaio(o)}{o.mansione ? ` — ${o.mansione}` : ""}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Ora inizio</Label><TimePicker value={form.ora_inizio ?? ""} onChange={(v) => setForm({ ...form, ora_inizio: v })} /></div>
+                <div><Label>Ora fine</Label><TimePicker value={form.ora_fine ?? ""} onChange={(v) => setForm({ ...form, ora_fine: v })} /></div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[180px]">Articolo</TableHead>
+                      <TableHead className="text-right">Qta Mag</TableHead>
+                      <TableHead className="text-right">Qta richiesta</TableHead>
+                      <TableHead className="text-right">Prezzo Unità</TableHead>
+                      <TableHead />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {righe.length === 0 && (
+                      <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground text-sm">Nessun materiale</TableCell></TableRow>
+                    )}
+                    {righe.map((r, i) => {
+                      const art = articoli.find((a) => a.id === r.articolo_id);
+                      const disp = r.articolo_id ? giacenzaDisponibile(r.articolo_id) : 0;
+                      const eccede = Number(r.quantita) > disp;
+                      return (
+                        <TableRow key={i}>
+                          <TableCell>
+                            <Select
+                              value={r.articolo_id || undefined}
+                              onValueChange={(v) => {
+                                const a = articoli.find((x) => x.id === v);
+                                setRighe(righe.map((x, j) => j === i
+                                  ? { ...x, articolo_id: v, prezzo_unitario: x.prezzo_unitario || (a?.prezzo_unitario != null ? String(a.prezzo_unitario) : "") }
+                                  : x));
+                              }}
+                            >
+                              <SelectTrigger><SelectValue placeholder="Seleziona articolo" /></SelectTrigger>
+                              <SelectContent>
+                                {articoli.map((a) => <SelectItem key={a.id} value={a.id}>{a.nome}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums text-muted-foreground">
+                            {r.articolo_id ? `${disp} pz` : "—"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Input
+                              inputMode="decimal"
+                              className={`text-right ${eccede ? "border-destructive" : ""}`}
+                              value={r.quantita}
+                              onChange={(e) => setRighe(righe.map((x, j) => j === i ? { ...x, quantita: e.target.value } : x))}
+                            />
+                            {eccede && <div className="text-[11px] text-destructive mt-1">Giacenza insufficiente (disponibili {disp})</div>}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Input
+                              inputMode="decimal"
+                              className="text-right"
+                              value={r.prezzo_unitario}
+                              onChange={(e) => setRighe(righe.map((x, j) => j === i ? { ...x, prezzo_unitario: e.target.value } : x))}
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" onClick={() => setRighe(righe.filter((_, j) => j !== i))}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Button variant="outline" size="sm" onClick={() => setRighe([...righe, { articolo_id: "", quantita: "", prezzo_unitario: "" }])} className="gap-1.5">
+                  <PlusCircle className="h-4 w-4" /> Aggiungi materiale
+                </Button>
+                <div className="text-sm text-muted-foreground">
+                  Materiale <span className="font-semibold text-foreground">{eur(totaleMateriale)}</span>
+                  {" · "}Manodopera <span className="font-semibold text-foreground">{eur(totaleManodopera)}</span>
+                  {" · "}Totale <span className="font-semibold text-foreground">{eur(totaleMateriale + totaleManodopera)}</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">Le quantità sono espresse in PEZZI (non in confezioni).</p>
+            </div>
+          )}
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Annulla</Button>
-            <Button onClick={handleSave}>{editing ? "Salva" : "Aggiungi"}</Button>
+            <Button onClick={handleSave} disabled={saving}>{editing ? "Salva" : "Aggiungi"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <OperaiDialog
+        open={operaiOpen}
+        onOpenChange={setOperaiOpen}
+        onSaved={(nuovo) => { loadMagazzino(); if (nuovo) setForm((f: any) => ({ ...f, operaio_id: nuovo.id })); }}
+      />
     </div>
   );
 }
