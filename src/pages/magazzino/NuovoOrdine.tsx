@@ -67,7 +67,7 @@ export default function NuovoOrdine() {
       fetchFornitoriMagazzino(),
       supabase.from("veicoli").select("id, targa, modello, marca, tipo_macchina").eq("attivo", true).order("targa"),
     ]);
-    setArticoli((art ?? []) as Articolo[]);
+    setArticoli((art ?? []) as unknown as Articolo[]);
     setFornitori(forn.filter((f) => f.attivo));
     setVeicoli((vei ?? []) as Veicolo[]);
   };
