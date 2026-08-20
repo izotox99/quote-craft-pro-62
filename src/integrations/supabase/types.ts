@@ -145,46 +145,55 @@ export type Database = {
       articoli: {
         Row: {
           attivo: boolean
+          categorie: string[]
           created_at: string
           fornitore_default_id: string | null
           id: string
+          mostra_in_ordini: boolean
           nome: string
           note: string | null
           org_id: string
-          pezzi_per_confezione: number
           prezzo_unitario: number | null
+          quantita_per_confezione: number
           scorta_minima: number
           tipo_confezione: Database["public"]["Enums"]["magazzino_tipo_confezione"]
+          unita_base: string
           unita_misura: string
           updated_at: string
         }
         Insert: {
           attivo?: boolean
+          categorie?: string[]
           created_at?: string
           fornitore_default_id?: string | null
           id?: string
+          mostra_in_ordini?: boolean
           nome: string
           note?: string | null
           org_id: string
-          pezzi_per_confezione?: number
           prezzo_unitario?: number | null
+          quantita_per_confezione?: number
           scorta_minima?: number
           tipo_confezione?: Database["public"]["Enums"]["magazzino_tipo_confezione"]
+          unita_base?: string
           unita_misura?: string
           updated_at?: string
         }
         Update: {
           attivo?: boolean
+          categorie?: string[]
           created_at?: string
           fornitore_default_id?: string | null
           id?: string
+          mostra_in_ordini?: boolean
           nome?: string
           note?: string | null
           org_id?: string
-          pezzi_per_confezione?: number
           prezzo_unitario?: number | null
+          quantita_per_confezione?: number
           scorta_minima?: number
           tipo_confezione?: Database["public"]["Enums"]["magazzino_tipo_confezione"]
+          unita_base?: string
           unita_misura?: string
           updated_at?: string
         }
@@ -1657,6 +1666,7 @@ export type Database = {
           data: string
           id: string
           manutenzione_ord_id: string | null
+          manutenzione_straord_id: string | null
           motivo: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
           note: string | null
           ordine_riga_id: string | null
@@ -1677,6 +1687,7 @@ export type Database = {
           data?: string
           id?: string
           manutenzione_ord_id?: string | null
+          manutenzione_straord_id?: string | null
           motivo?: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
           note?: string | null
           ordine_riga_id?: string | null
@@ -1697,6 +1708,7 @@ export type Database = {
           data?: string
           id?: string
           manutenzione_ord_id?: string | null
+          manutenzione_straord_id?: string | null
           motivo?: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
           note?: string | null
           ordine_riga_id?: string | null
@@ -1727,6 +1739,13 @@ export type Database = {
             columns: ["manutenzione_ord_id"]
             isOneToOne: false
             referencedRelation: "veicoli_manutenzione_ord"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimenti_magazzino_manutenzione_straord_id_fkey"
+            columns: ["manutenzione_straord_id"]
+            isOneToOne: false
+            referencedRelation: "veicoli_manutenzione_straord"
             referencedColumns: ["id"]
           },
           {
@@ -3258,12 +3277,18 @@ export type Database = {
       }
       veicoli_manutenzione_straord: {
         Row: {
+          costo_manodopera: number
+          costo_materiale: number
           created_at: string
           data: string
           fornitore: string | null
           id: string
+          intervento_tipo: string
           km_attuale: number | null
           note: string | null
+          operaio_id: string | null
+          ora_fine: string | null
+          ora_inizio: string | null
           ordine: string | null
           org_id: string
           ricambi: string | null
@@ -3274,12 +3299,18 @@ export type Database = {
           veicolo_id: string
         }
         Insert: {
+          costo_manodopera?: number
+          costo_materiale?: number
           created_at?: string
           data?: string
           fornitore?: string | null
           id?: string
+          intervento_tipo?: string
           km_attuale?: number | null
           note?: string | null
+          operaio_id?: string | null
+          ora_fine?: string | null
+          ora_inizio?: string | null
           ordine?: string | null
           org_id: string
           ricambi?: string | null
@@ -3290,12 +3321,18 @@ export type Database = {
           veicolo_id: string
         }
         Update: {
+          costo_manodopera?: number
+          costo_materiale?: number
           created_at?: string
           data?: string
           fornitore?: string | null
           id?: string
+          intervento_tipo?: string
           km_attuale?: number | null
           note?: string | null
+          operaio_id?: string | null
+          ora_fine?: string | null
+          ora_inizio?: string | null
           ordine?: string | null
           org_id?: string
           ricambi?: string | null
@@ -3306,6 +3343,13 @@ export type Database = {
           veicolo_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "veicoli_manutenzione_straord_operaio_id_fkey"
+            columns: ["operaio_id"]
+            isOneToOne: false
+            referencedRelation: "operai"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "veicoli_manutenzione_straord_veicolo_id_fkey"
             columns: ["veicolo_id"]
@@ -3940,6 +3984,7 @@ export type Database = {
           data: string
           id: string
           manutenzione_ord_id: string | null
+          manutenzione_straord_id: string | null
           motivo: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
           note: string | null
           ordine_riga_id: string | null
@@ -3977,6 +4022,7 @@ export type Database = {
           data: string
           id: string
           manutenzione_ord_id: string | null
+          manutenzione_straord_id: string | null
           motivo: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
           note: string | null
           ordine_riga_id: string | null
@@ -4057,6 +4103,55 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "veicoli_manutenzione_ord"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      manutenzione_straord_salva: {
+        Args: {
+          _data: string
+          _fornitore: string
+          _forza?: boolean
+          _id: string
+          _intervento_tipo: string
+          _km: number
+          _note: string
+          _operaio_id: string
+          _ora_fine: string
+          _ora_inizio: string
+          _ordine: string
+          _ricambi: string
+          _righe?: Json
+          _tipo: string
+          _tipo_riparazione: string
+          _totale_esterno?: number
+          _veicolo_id: string
+        }
+        Returns: {
+          costo_manodopera: number
+          costo_materiale: number
+          created_at: string
+          data: string
+          fornitore: string | null
+          id: string
+          intervento_tipo: string
+          km_attuale: number | null
+          note: string | null
+          operaio_id: string | null
+          ora_fine: string | null
+          ora_inizio: string | null
+          ordine: string | null
+          org_id: string
+          ricambi: string | null
+          tipo: string | null
+          tipo_riparazione: string | null
+          totale: number | null
+          updated_at: string
+          veicolo_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "veicoli_manutenzione_straord"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -4496,7 +4591,12 @@ export type Database = {
         | "altro"
       magazzino_movimento_tipo: "carico" | "scarico"
       magazzino_ordine_stato: "bozza" | "convalidato" | "ricevuto" | "annullato"
-      magazzino_tipo_confezione: "singolo" | "scatola" | "set" | "fusto"
+      magazzino_tipo_confezione:
+        | "singolo"
+        | "scatola"
+        | "set"
+        | "fusto"
+        | "latta"
       magazzino_tipo_consumo: "macchine" | "consumo_interno"
       network_dispatch_stato:
         | "inviato"
@@ -4672,7 +4772,13 @@ export const Constants = {
       ],
       magazzino_movimento_tipo: ["carico", "scarico"],
       magazzino_ordine_stato: ["bozza", "convalidato", "ricevuto", "annullato"],
-      magazzino_tipo_confezione: ["singolo", "scatola", "set", "fusto"],
+      magazzino_tipo_confezione: [
+        "singolo",
+        "scatola",
+        "set",
+        "fusto",
+        "latta",
+      ],
       magazzino_tipo_consumo: ["macchine", "consumo_interno"],
       network_dispatch_stato: [
         "inviato",
