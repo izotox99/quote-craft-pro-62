@@ -38,6 +38,8 @@ type Row = {
 };
 
 type Articolo = { id: string; nome: string; unita_misura: string; prezzo_unitario: number | null };
+
+const CAT: Record<Mode, string> = { ord: "ordinaria", straord: "straordinaria" };
 type Riga = { articolo_id: string; quantita: string; prezzo_unitario: string };
 
 const NESSUNO = "__nessuno__";
@@ -68,7 +70,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
 
   const loadMagazzino = async () => {
     const [{ data: a }, { data: m }, { data: o }] = await Promise.all([
-      supabase.from("articoli").select("id, nome, unita_misura, prezzo_unitario").eq("attivo", true).order("nome"),
+      supabase.from("articoli").select("id, nome, unita_misura, prezzo_unitario").eq("attivo", true).contains("categorie", [CAT[mode]]).order("nome"),
       supabase.from("movimenti_magazzino").select("articolo_id, tipo, quantita"),
       supabase.from("operai").select("id, nome, cognome, mansione, costo_orario, attivo").eq("attivo", true).order("nome"),
     ]);
@@ -82,7 +84,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
   };
 
   useEffect(() => { load(); }, [veicoloId, mode]);
-  useEffect(() => { if (isOrd) loadMagazzino(); }, [isOrd]);
+  useEffect(() => { loadMagazzino(); }, [mode]);
 
   const giacenzaDisponibile = (articoloId: string) =>
     (giacenze[articoloId] ?? 0) + (righeOriginali[articoloId] ?? 0);
@@ -100,11 +102,11 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
     setForm({ ...r, ora_inizio: hhmm(r.ora_inizio), ora_fine: hhmm(r.ora_fine), intervento_tipo: r.intervento_tipo ?? "esterno" });
     setRighe([]);
     setRigheOriginali({});
-    if (isOrd) {
+    {
       const { data } = await supabase
         .from("movimenti_magazzino")
         .select("articolo_id, quantita, prezzo_unitario")
-        .eq("manutenzione_ord_id", r.id);
+        .eq(isOrd ? "manutenzione_ord_id" : "manutenzione_straord_id", r.id);
       const rr = (data ?? []).map((x: any) => ({
         articolo_id: x.articolo_id,
         quantita: String(x.quantita),
@@ -135,12 +137,17 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
   const operaioSel = operai.find((o) => o.id === form.operaio_id);
   const totaleManodopera = (operaioSel?.costo_orario ?? 0) * oreIntervento;
 
-  const salvaOrd = async (forza: boolean): Promise<boolean> => {
+  const salvaRpc = async (forza: boolean): Promise<boolean> => {
+    const righePayload = form.intervento_tipo === "interno"
+      ? righe
+          .filter((r) => r.articolo_id && Number(r.quantita) > 0)
+          .map((r) => ({ articolo_id: r.articolo_id, quantita: Number(r.quantita), prezzo_unitario: r.prezzo_unitario === "" ? null : Number(r.prezzo_unitario) }))
+      : [];
     const payload = {
       _id: editing?.id ?? null,
       _veicolo_id: veicoloId,
       _data: form.data || romeToday(),
-      _km: form.km ? Number(form.km) : null,
+      _km: form[kmField] ? Number(form[kmField]) : null,
       _intervento_tipo: form.intervento_tipo ?? "esterno",
       _tipo: form.tipo || null,
       _note: form.note || null,
@@ -149,19 +156,19 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
       _operaio_id: form.intervento_tipo === "interno" ? (form.operaio_id || null) : null,
       _ora_inizio: form.intervento_tipo === "interno" && form.ora_inizio ? form.ora_inizio : null,
       _ora_fine: form.intervento_tipo === "interno" && form.ora_fine ? form.ora_fine : null,
-      _righe: form.intervento_tipo === "interno"
-        ? righe
-            .filter((r) => r.articolo_id && Number(r.quantita) > 0)
-            .map((r) => ({ articolo_id: r.articolo_id, quantita: Number(r.quantita), prezzo_unitario: r.prezzo_unitario === "" ? null : Number(r.prezzo_unitario) }))
-        : [],
+      _righe: righePayload,
       _totale_esterno: form.intervento_tipo === "esterno" ? (form.totale ? Number(form.totale) : 0) : null,
       _forza: forza,
+      ...(isOrd ? {} : { _tipo_riparazione: form.tipo_riparazione || null, _ordine: form.ordine || null }),
     };
-    const { error } = await supabase.rpc("manutenzione_ord_salva" as any, payload as any);
+    const { error } = await supabase.rpc(
+      (isOrd ? "manutenzione_ord_salva" : "manutenzione_straord_salva") as any,
+      payload as any
+    );
     if (error) {
       if (/Giacenza insufficiente/.test(error.message) && !forza) {
         if (confirm(`${error.message}. Procedere comunque? Il movimento sarà marcato come anomalia.`)) {
-          return salvaOrd(true);
+          return salvaRpc(true);
         }
         return false;
       }
@@ -175,31 +182,12 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
     if (saving) return;
     setSaving(true);
     try {
-      if (isOrd) {
-        const ok = await salvaOrd(false);
-        if (!ok) return;
-      } else {
-        const payload: any = {
-          veicolo_id: veicoloId,
-          data: form.data,
-          [kmField]: form[kmField] ? Number(form[kmField]) : null,
-          tipo: form.tipo || null,
-          tipo_riparazione: form.tipo_riparazione || null,
-          ordine: form.ordine || null,
-          note: form.note || null,
-          ricambi: form.ricambi || null,
-          fornitore: form.fornitore || null,
-          totale: form.totale ? Number(form.totale) : 0,
-        };
-        const { error } = editing
-          ? await supabase.from(table as any).update(payload as any).eq("id", editing.id)
-          : await supabase.from(table as any).insert([payload] as any);
-        if (error) { toast.error(error.message); return; }
-      }
+      const ok = await salvaRpc(false);
+      if (!ok) return;
       toast.success(editing ? "Aggiornato" : "Aggiunto");
       setOpen(false);
       load();
-      if (isOrd) loadMagazzino();
+      loadMagazzino();
     } finally {
       setSaving(false);
     }
@@ -211,12 +199,12 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
     if (error) return toast.error(error.message);
     toast.success("Eliminato");
     load();
-    if (isOrd) loadMagazzino();
+    loadMagazzino();
   };
 
   const totale = rows.reduce((sum, r) => sum + (Number(r.totale) || 0), 0);
   const eur = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
-  const interno = isOrd && form.intervento_tipo === "interno";
+  const interno = form.intervento_tipo === "interno";
 
   return (
     <div className="space-y-4">
@@ -225,7 +213,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
           Totale: <span className="font-semibold text-foreground">{eur(totale)}</span>
         </div>
         <div className="flex gap-2">
-          {isOrd && (
+          {(
             <Button variant="outline" onClick={() => setOperaiOpen(true)} className="gap-2">
               <Users className="h-4 w-4" /> Operai
             </Button>
@@ -242,7 +230,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
               <TableHead className="text-right">Km</TableHead>
               {mode === "straord" && <TableHead>Tipo riparazione</TableHead>}
               <TableHead>Tipo</TableHead>
-              {isOrd && <TableHead className="hidden md:table-cell">Operaio</TableHead>}
+              <TableHead className="hidden md:table-cell">Operaio</TableHead>
               <TableHead className="hidden md:table-cell">Note</TableHead>
               <TableHead className="hidden lg:table-cell">Ricambi</TableHead>
               <TableHead className="hidden lg:table-cell">Fornitore</TableHead>
@@ -253,7 +241,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <TableRow><TableCell colSpan={mode === "straord" ? 10 : 9} className="text-center py-10 text-muted-foreground">
+              <TableRow><TableCell colSpan={mode === "straord" ? 11 : 10} className="text-center py-10 text-muted-foreground">
                 <Wrench className="h-8 w-8 mx-auto mb-2 opacity-40" />Nessun intervento registrato
               </TableCell></TableRow>
             )}
@@ -263,13 +251,11 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
                 <TableCell className="text-right tabular-nums">{(r.km ?? r.km_attuale)?.toLocaleString("it-IT") ?? "—"}</TableCell>
                 {mode === "straord" && <TableCell>{r.tipo_riparazione ?? "—"}</TableCell>}
                 <TableCell>
-                  {isOrd ? (
-                    <Badge variant={r.intervento_tipo === "interno" ? "default" : "secondary"}>
-                      {r.intervento_tipo === "interno" ? "Intervento interno" : "Intervento esterno"}
-                    </Badge>
-                  ) : (r.tipo ?? "—")}
+                  <Badge variant={r.intervento_tipo === "interno" ? "default" : "secondary"}>
+                    {r.intervento_tipo === "interno" ? "Intervento interno" : "Intervento esterno"}
+                  </Badge>
                 </TableCell>
-                {isOrd && (
+                {(
                   <TableCell className="hidden md:table-cell text-sm">
                     {operai.find((o) => o.id === r.operaio_id) ? nomeOperaio(operai.find((o) => o.id === r.operaio_id)!) : "—"}
                   </TableCell>
@@ -280,7 +266,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
                 {mode === "straord" && <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">{r.ordine ?? "—"}</TableCell>}
                 <TableCell className="text-right tabular-nums font-medium">
                   {eur(Number(r.totale) || 0)}
-                  {isOrd && r.intervento_tipo === "interno" && (
+                  {r.intervento_tipo === "interno" && (
                     <div className="text-[11px] font-normal text-muted-foreground">
                       mat. {eur(Number(r.costo_materiale) || 0)} · mdo {eur(Number(r.costo_manodopera) || 0)}
                     </div>
@@ -310,17 +296,13 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
             )}
             <div>
               <Label>Tipo</Label>
-              {isOrd ? (
-                <Select value={form.intervento_tipo ?? "esterno"} onValueChange={(v) => setForm({ ...form, intervento_tipo: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="interno">Intervento interno</SelectItem>
-                    <SelectItem value="esterno">Intervento esterno</SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input value={form.tipo ?? ""} onChange={(e) => setForm({ ...form, tipo: e.target.value })} placeholder="es. Intervento intero" />
-              )}
+              <Select value={form.intervento_tipo ?? "esterno"} onValueChange={(v) => setForm({ ...form, intervento_tipo: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="interno">Intervento interno</SelectItem>
+                  <SelectItem value="esterno">Intervento esterno</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="sm:col-span-2"><Label>Note</Label><Textarea value={form.note ?? ""} onChange={(e) => setForm({ ...form, note: e.target.value })} rows={2} /></div>
             <div className="sm:col-span-2"><Label>Ricambi</Label><Textarea value={form.ricambi ?? ""} onChange={(e) => setForm({ ...form, ricambi: e.target.value })} rows={2} placeholder="es. Filtro aria [1], Filtro olio [1]" /></div>
