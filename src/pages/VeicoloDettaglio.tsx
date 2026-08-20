@@ -10,6 +10,7 @@ import { SectionDocumenti } from "@/components/veicoli/SectionDocumenti";
 import { SectionManutenzione } from "@/components/veicoli/SectionManutenzione";
 import { SectionGasolio } from "@/components/veicoli/SectionGasolio";
 import { SectionSpese } from "@/components/veicoli/SectionSpese";
+import { SectionMateriali } from "@/components/veicoli/SectionMateriali";
 
 type V = { id: string; targa: string; tipo_macchina: string | null; modello: string | null; marca: string | null };
 
