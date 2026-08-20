@@ -14,11 +14,13 @@ import { Link } from "react-router-dom";
 import { Pencil, Plus, Power, Search, Truck } from "lucide-react";
 import { FornitoriMagazzinoDialog, fetchFornitoriMagazzino, type FornitoreMagazzino } from "@/components/magazzino/FornitoriMagazzinoDialog";
 import { UNITA } from "./InserisciArticolo";
+import { TIPI_CONFEZIONE, formatoConfezione } from "@/lib/magazzino";
 
 const NESSUNO = "__nessuno__";
 type Articolo = {
   id: string; nome: string; unita_misura: string; fornitore_default_id: string | null;
   prezzo_unitario: number | null; scorta_minima: number; note: string | null; attivo: boolean;
+  tipo_confezione: string | null; pezzi_per_confezione: number | null;
 };
 
 export default function ListaArticoli() {
@@ -28,7 +30,7 @@ export default function ListaArticoli() {
   const [q, setQ] = useState("");
   const [fornDialog, setFornDialog] = useState(false);
   const [editing, setEditing] = useState<Articolo | null>(null);
-  const [form, setForm] = useState({ nome: "", unita_misura: "pz", fornitore_default_id: NESSUNO, prezzo_unitario: "", scorta_minima: "0" });
+  const [form, setForm] = useState({ nome: "", unita_misura: "pz", tipo_confezione: "singolo", pezzi_per_confezione: "1", fornitore_default_id: NESSUNO, prezzo_unitario: "", scorta_minima: "0" });
 
   const load = async () => {
     const [{ data }, forn] = await Promise.all([
@@ -49,6 +51,8 @@ export default function ListaArticoli() {
     setEditing(a);
     setForm({
       nome: a.nome, unita_misura: a.unita_misura,
+      tipo_confezione: a.tipo_confezione ?? "singolo",
+      pezzi_per_confezione: String(a.pezzi_per_confezione ?? 1),
       fornitore_default_id: a.fornitore_default_id ?? NESSUNO,
       prezzo_unitario: a.prezzo_unitario != null ? String(a.prezzo_unitario) : "",
       scorta_minima: String(a.scorta_minima ?? 0),
@@ -60,6 +64,8 @@ export default function ListaArticoli() {
     const { error } = await supabase.from("articoli").update({
       nome: form.nome.trim(),
       unita_misura: form.unita_misura,
+      tipo_confezione: form.tipo_confezione as "singolo" | "scatola" | "set" | "fusto",
+      pezzi_per_confezione: Math.max(1, parseInt(form.pezzi_per_confezione || "1", 10)),
       fornitore_default_id: form.fornitore_default_id !== NESSUNO ? form.fornitore_default_id : null,
       prezzo_unitario: form.prezzo_unitario ? Number(form.prezzo_unitario.replace(",", ".")) : null,
       scorta_minima: Number((form.scorta_minima || "0").replace(",", ".")),
