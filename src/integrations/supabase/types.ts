@@ -151,8 +151,10 @@ export type Database = {
           nome: string
           note: string | null
           org_id: string
+          pezzi_per_confezione: number
           prezzo_unitario: number | null
           scorta_minima: number
+          tipo_confezione: Database["public"]["Enums"]["magazzino_tipo_confezione"]
           unita_misura: string
           updated_at: string
         }
@@ -164,8 +166,10 @@ export type Database = {
           nome: string
           note?: string | null
           org_id: string
+          pezzi_per_confezione?: number
           prezzo_unitario?: number | null
           scorta_minima?: number
+          tipo_confezione?: Database["public"]["Enums"]["magazzino_tipo_confezione"]
           unita_misura?: string
           updated_at?: string
         }
@@ -177,8 +181,10 @@ export type Database = {
           nome?: string
           note?: string | null
           org_id?: string
+          pezzi_per_confezione?: number
           prezzo_unitario?: number | null
           scorta_minima?: number
+          tipo_confezione?: Database["public"]["Enums"]["magazzino_tipo_confezione"]
           unita_misura?: string
           updated_at?: string
         }
@@ -1644,6 +1650,7 @@ export type Database = {
         Row: {
           anomalia: boolean
           articolo_id: string
+          confezioni: number | null
           consumo_interno: boolean
           created_at: string
           created_by: string | null
@@ -1653,6 +1660,7 @@ export type Database = {
           note: string | null
           ordine_riga_id: string | null
           org_id: string
+          pezzi_per_confezione: number
           quantita: number
           tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
           veicolo_id: string | null
@@ -1660,6 +1668,7 @@ export type Database = {
         Insert: {
           anomalia?: boolean
           articolo_id: string
+          confezioni?: number | null
           consumo_interno?: boolean
           created_at?: string
           created_by?: string | null
@@ -1669,6 +1678,7 @@ export type Database = {
           note?: string | null
           ordine_riga_id?: string | null
           org_id: string
+          pezzi_per_confezione?: number
           quantita: number
           tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
           veicolo_id?: string | null
@@ -1676,6 +1686,7 @@ export type Database = {
         Update: {
           anomalia?: boolean
           articolo_id?: string
+          confezioni?: number | null
           consumo_interno?: boolean
           created_at?: string
           created_by?: string | null
@@ -1685,6 +1696,7 @@ export type Database = {
           note?: string | null
           ordine_riga_id?: string | null
           org_id?: string
+          pezzi_per_confezione?: number
           quantita?: number
           tipo?: Database["public"]["Enums"]["magazzino_movimento_tipo"]
           veicolo_id?: string | null
@@ -1917,8 +1929,10 @@ export type Database = {
           note: string | null
           ordine_id: string
           org_id: string
+          pezzi_per_confezione: number
           prezzo_unitario: number | null
           quantita: number
+          tipo_confezione: Database["public"]["Enums"]["magazzino_tipo_confezione"]
           tipo_consumo: Database["public"]["Enums"]["magazzino_tipo_consumo"]
           unita: string | null
           updated_at: string
@@ -1933,8 +1947,10 @@ export type Database = {
           note?: string | null
           ordine_id: string
           org_id: string
+          pezzi_per_confezione?: number
           prezzo_unitario?: number | null
           quantita?: number
+          tipo_confezione?: Database["public"]["Enums"]["magazzino_tipo_confezione"]
           tipo_consumo?: Database["public"]["Enums"]["magazzino_tipo_consumo"]
           unita?: string | null
           updated_at?: string
@@ -1949,8 +1965,10 @@ export type Database = {
           note?: string | null
           ordine_id?: string
           org_id?: string
+          pezzi_per_confezione?: number
           prezzo_unitario?: number | null
           quantita?: number
+          tipo_confezione?: Database["public"]["Enums"]["magazzino_tipo_confezione"]
           tipo_consumo?: Database["public"]["Enums"]["magazzino_tipo_consumo"]
           unita?: string | null
           updated_at?: string
@@ -3841,6 +3859,7 @@ export type Database = {
         Returns: {
           anomalia: boolean
           articolo_id: string
+          confezioni: number | null
           consumo_interno: boolean
           created_at: string
           created_by: string | null
@@ -3850,6 +3869,7 @@ export type Database = {
           note: string | null
           ordine_riga_id: string | null
           org_id: string
+          pezzi_per_confezione: number
           quantita: number
           tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
           veicolo_id: string | null
@@ -3874,6 +3894,7 @@ export type Database = {
         Returns: {
           anomalia: boolean
           articolo_id: string
+          confezioni: number | null
           consumo_interno: boolean
           created_at: string
           created_by: string | null
@@ -3883,6 +3904,7 @@ export type Database = {
           note: string | null
           ordine_riga_id: string | null
           org_id: string
+          pezzi_per_confezione: number
           quantita: number
           tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
           veicolo_id: string | null
@@ -4351,6 +4373,7 @@ export type Database = {
         | "altro"
       magazzino_movimento_tipo: "carico" | "scarico"
       magazzino_ordine_stato: "bozza" | "convalidato" | "ricevuto" | "annullato"
+      magazzino_tipo_confezione: "singolo" | "scatola" | "set" | "fusto"
       magazzino_tipo_consumo: "macchine" | "consumo_interno"
       network_dispatch_stato:
         | "inviato"
@@ -4526,6 +4549,7 @@ export const Constants = {
       ],
       magazzino_movimento_tipo: ["carico", "scarico"],
       magazzino_ordine_stato: ["bozza", "convalidato", "ricevuto", "annullato"],
+      magazzino_tipo_confezione: ["singolo", "scatola", "set", "fusto"],
       magazzino_tipo_consumo: ["macchine", "consumo_interno"],
       network_dispatch_stato: [
         "inviato",
