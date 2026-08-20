@@ -20,7 +20,7 @@ import { formatoConfezione } from "@/lib/magazzino";
 const TUTTE = "__tutte__";
 const NESSUNO = "__nessuno__";
 
-type Articolo = { id: string; nome: string; unita_misura: string; fornitore_default_id: string | null; prezzo_unitario: number | null; tipo_confezione: string | null; pezzi_per_confezione: number | null };
+type Articolo = { id: string; nome: string; unita_misura: string; fornitore_default_id: string | null; prezzo_unitario: number | null; tipo_confezione: string | null; quantita_per_confezione: number | null; unita_base: string | null; mostra_in_ordini: boolean | null };
 type Veicolo = { id: string; targa: string; modello: string | null; marca: string | null; tipo_macchina: string | null };
 type Riga = {
   id: string;
@@ -63,11 +63,11 @@ export default function NuovoOrdine() {
 
   const loadBase = async () => {
     const [{ data: art }, forn, { data: vei }] = await Promise.all([
-      supabase.from("articoli").select("id, nome, unita_misura, fornitore_default_id, prezzo_unitario, tipo_confezione, pezzi_per_confezione").eq("attivo", true).order("nome"),
+      supabase.from("articoli").select("id, nome, unita_misura, fornitore_default_id, prezzo_unitario, tipo_confezione, quantita_per_confezione, unita_base, mostra_in_ordini").eq("attivo", true).eq("mostra_in_ordini", true).order("nome"),
       fetchFornitoriMagazzino(),
       supabase.from("veicoli").select("id, targa, modello, marca, tipo_macchina").eq("attivo", true).order("targa"),
     ]);
-    setArticoli((art ?? []) as Articolo[]);
+    setArticoli((art ?? []) as unknown as Articolo[]);
     setFornitori(forn.filter((f) => f.attivo));
     setVeicoli((vei ?? []) as Veicolo[]);
   };
@@ -140,7 +140,7 @@ export default function NuovoOrdine() {
       quantita: q,
       unita: articolo?.unita_misura ?? null,
       tipo_confezione: articolo?.tipo_confezione ?? "singolo",
-      pezzi_per_confezione: Math.max(1, Number(articolo?.pezzi_per_confezione ?? 1)),
+      pezzi_per_confezione: Math.max(1, Number(articolo?.quantita_per_confezione ?? 1)),
       prezzo_unitario: prezzo ? Number(prezzo.replace(",", ".")) : null,
       note: note || null,
     } as never);

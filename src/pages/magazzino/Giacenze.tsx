@@ -18,7 +18,7 @@ import { formatoConfezione, pezziEConfezioni } from "@/lib/magazzino";
 const INTERNO = "__interno__";
 type Giacenza = { articolo_id: string; nome: string; unita_misura: string; scorta_minima: number; giacenza: number; sotto_scorta: boolean; attivo: boolean };
 type Veicolo = { id: string; targa: string; marca: string | null; modello: string | null };
-type Confez = { tipo_confezione: string | null; pezzi_per_confezione: number | null };
+type Confez = { tipo_confezione: string | null; quantita_per_confezione: number | null; unita_base: string | null; categorie: string[] | null };
 
 const oggi = () => new Date().toISOString().slice(0, 10);
 
@@ -37,11 +37,11 @@ export default function Giacenze() {
     const [{ data: g }, { data: v }, { data: a }] = await Promise.all([
       supabase.from("magazzino_giacenze").select("*").order("nome"),
       supabase.from("veicoli").select("id, targa, marca, modello").eq("attivo", true).order("targa"),
-      supabase.from("articoli").select("id, tipo_confezione, pezzi_per_confezione"),
+      supabase.from("articoli").select("id, tipo_confezione, quantita_per_confezione, unita_base, categorie"),
     ]);
     setRows((g ?? []) as Giacenza[]);
     setVeicoli((v ?? []) as Veicolo[]);
-    setConfez(Object.fromEntries((a ?? []).map((x) => [x.id, { tipo_confezione: x.tipo_confezione, pezzi_per_confezione: x.pezzi_per_confezione }])));
+    setConfez(Object.fromEntries(((a ?? []) as any[]).map((x) => [x.id, { tipo_confezione: x.tipo_confezione, quantita_per_confezione: x.quantita_per_confezione, unita_base: x.unita_base, categorie: x.categorie }])));
   };
   useEffect(() => { load(); }, []);
 
@@ -94,6 +94,12 @@ export default function Giacenze() {
   };
 
   const opzioniArticoli = rows.filter((r) => r.attivo);
+  // Scarico: se il consumo è interno mostra solo gli articoli di categoria "Uso interno"
+  const opzioniScarico = opzioniArticoli.filter((r) =>
+    scarico.destinazione === INTERNO
+      ? (confez[r.articolo_id]?.categorie ?? []).includes("uso_interno")
+      : true
+  );
 
   return (
     <DashboardLayout>
@@ -129,10 +135,10 @@ export default function Giacenze() {
                   <TableRow key={r.articolo_id} className={r.sotto_scorta ? "bg-destructive/5" : ""}>
                     <TableCell className="font-medium">{r.nome}</TableCell>
                     <TableCell className={r.sotto_scorta ? "font-semibold text-destructive" : ""}>
-                      {pezziEConfezioni(Number(r.giacenza), confez[r.articolo_id]?.pezzi_per_confezione)}
+                      {pezziEConfezioni(Number(r.giacenza), confez[r.articolo_id]?.quantita_per_confezione)}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {formatoConfezione(confez[r.articolo_id]?.tipo_confezione, confez[r.articolo_id]?.pezzi_per_confezione)}
+                      {formatoConfezione(confez[r.articolo_id]?.tipo_confezione, confez[r.articolo_id]?.quantita_per_confezione, confez[r.articolo_id]?.unita_base)}
                     </TableCell>
                     <TableCell>{r.scorta_minima}</TableCell>
                     <TableCell>
@@ -158,8 +164,8 @@ export default function Giacenze() {
               <Select value={scarico.articolo_id} onValueChange={(v) => setScarico({ ...scarico, articolo_id: v })}>
                 <SelectTrigger><SelectValue placeholder="Seleziona articolo" /></SelectTrigger>
                 <SelectContent>
-                  {opzioniArticoli.map((a) => (
-                    <SelectItem key={a.articolo_id} value={a.articolo_id}>{a.nome} (disp. {a.giacenza} pz · {formatoConfezione(confez[a.articolo_id]?.tipo_confezione, confez[a.articolo_id]?.pezzi_per_confezione)})</SelectItem>
+                  {opzioniScarico.map((a) => (
+                    <SelectItem key={a.articolo_id} value={a.articolo_id}>{a.nome} (disp. {a.giacenza} pz · {formatoConfezione(confez[a.articolo_id]?.tipo_confezione, confez[a.articolo_id]?.quantita_per_confezione, confez[a.articolo_id]?.unita_base)})</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

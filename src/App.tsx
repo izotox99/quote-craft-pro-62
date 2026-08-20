@@ -32,7 +32,8 @@ import InserisciArticolo from "./pages/magazzino/InserisciArticolo";
 import ListaArticoli from "./pages/magazzino/ListaArticoli";
 import ListaUsato from "./pages/magazzino/ListaUsato";
 import VeicoloDettaglio from "./pages/VeicoloDettaglio";
-import { AllertMezzi, BilancioVettura, ManutenzioneStraordinaria, DettagliCarburante, DettagliAdBlue, AggiungiAdBlue } from "./pages/mezzi/Stub";
+import { AllertMezzi, BilancioVettura, DettagliCarburante, DettagliAdBlue, AggiungiAdBlue } from "./pages/mezzi/Stub";
+import ManutenzioneStraordPage from "./pages/mezzi/ManutenzioneStraord";
 import Autisti from "./pages/Autisti";
 import AutistiCollaboratori from "./pages/AutistiCollaboratori";
 import FornitoriCS from "./pages/FornitoriCS";
@@ -106,7 +107,7 @@ const App = () => (
             <Route path="/veicoli" element={<ProtectedRoute><Veicoli /></ProtectedRoute>} />
             <Route path="/veicoli/allert" element={<ProtectedRoute><AllertMezzi /></ProtectedRoute>} />
             <Route path="/veicoli/bilancio" element={<ProtectedRoute><BilancioVettura /></ProtectedRoute>} />
-            <Route path="/veicoli/manutenzione-straordinaria" element={<ProtectedRoute><ManutenzioneStraordinaria /></ProtectedRoute>} />
+            <Route path="/veicoli/manutenzione-straordinaria" element={<ProtectedRoute><ManutenzioneStraordPage /></ProtectedRoute>} />
             <Route path="/veicoli/carburante" element={<ProtectedRoute><DettagliCarburante /></ProtectedRoute>} />
             <Route path="/veicoli/adblue" element={<ProtectedRoute><DettagliAdBlue /></ProtectedRoute>} />
             <Route path="/veicoli/adblue/nuovo" element={<ProtectedRoute><AggiungiAdBlue /></ProtectedRoute>} />

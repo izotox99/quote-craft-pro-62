@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,7 +13,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { FornitoriMagazzinoDialog, fetchFornitoriMagazzino, type FornitoreMagazzino } from "@/components/magazzino/FornitoriMagazzinoDialog";
 import { Settings2 } from "lucide-react";
-import { TIPI_CONFEZIONE, formatoConfezione } from "@/lib/magazzino";
+import { TIPI_CONFEZIONE, UNITA_BASE, CATEGORIE_ARTICOLO, formatoConfezione } from "@/lib/magazzino";
 
 export const UNITA = ["pz", "litri", "kg", "set", "m", "conf"];
 const NESSUNO = "__nessuno__";
@@ -23,19 +24,37 @@ export default function InserisciArticolo() {
   const [fornitori, setFornitori] = useState<FornitoreMagazzino[]>([]);
   const [fornDialog, setFornDialog] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ nome: "", unita_misura: "pz", tipo_confezione: "singolo", pezzi_per_confezione: "1", fornitore_default_id: NESSUNO, prezzo_unitario: "", scorta_minima: "0", note: "" });
+  const [categorie, setCategorie] = useState<string[]>(["ordinaria"]);
+  const [form, setForm] = useState({
+    scorta_minima: "0",
+    nome: "",
+    tipo_confezione: "singolo",
+    quantita_per_confezione: "1",
+    unita_base: "pezzo",
+    mostra_in_ordini: "si",
+    fornitore_default_id: NESSUNO,
+    prezzo_unitario: "",
+    note: "",
+  });
 
   const load = async () => setFornitori((await fetchFornitoriMagazzino()).filter((f) => f.attivo));
   useEffect(() => { load(); }, []);
 
+  const toggleCat = (c: string) =>
+    setCategorie((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));
+
   const salva = async () => {
     if (!form.nome.trim()) return toast.error("Il nome dell'articolo è obbligatorio");
+    if (categorie.length === 0) return toast.error("Seleziona almeno una categoria in \"Articolo per\"");
     setSaving(true);
     const { error } = await supabase.from("articoli").insert({
       nome: form.nome.trim(),
-      unita_misura: form.unita_misura,
+      unita_misura: form.unita_base === "litro" ? "litri" : "pz",
+      unita_base: form.unita_base,
       tipo_confezione: form.tipo_confezione,
-      pezzi_per_confezione: Math.max(1, parseInt(form.pezzi_per_confezione || "1", 10)),
+      quantita_per_confezione: Math.max(1, parseInt(form.quantita_per_confezione || "1", 10)),
+      categorie,
+      mostra_in_ordini: form.mostra_in_ordini === "si",
       fornitore_default_id: form.fornitore_default_id !== NESSUNO ? form.fornitore_default_id : null,
       prezzo_unitario: form.prezzo_unitario ? Number(form.prezzo_unitario.replace(",", ".")) : null,
       scorta_minima: Number((form.scorta_minima || "0").replace(",", ".")),
@@ -55,28 +74,59 @@ export default function InserisciArticolo() {
           <CardHeader className="pb-3"><CardTitle className="text-base">Dati articolo</CardTitle></CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5 sm:col-span-2">
+              <Label>Quantità minima</Label>
+              <Input inputMode="decimal" value={form.scorta_minima} onChange={(e) => setForm({ ...form, scorta_minima: e.target.value })} />
+              <p className="text-xs text-muted-foreground">Scorta minima sotto la quale l'articolo viene segnalato.</p>
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2">
               <Label>Nome *</Label>
               <Input value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} placeholder="es. Filtro olio" />
             </div>
+
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Unità *</Label>
+              <div className="grid grid-cols-[1fr_auto_1fr_1fr] items-center gap-2">
+                <Select value={form.tipo_confezione} onValueChange={(v) => setForm({ ...form, tipo_confezione: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{TIPI_CONFEZIONE.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                </Select>
+                <span className="text-sm text-muted-foreground">da</span>
+                <Input inputMode="numeric" value={form.quantita_per_confezione} onChange={(e) => setForm({ ...form, quantita_per_confezione: e.target.value })} />
+                <Select value={form.unita_base} onValueChange={(v) => setForm({ ...form, unita_base: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{UNITA_BASE.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {formatoConfezione(form.tipo_confezione, Number(form.quantita_per_confezione) || 1, form.unita_base)}
+              </p>
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Articolo per *</Label>
+              <div className="flex flex-wrap gap-4 rounded-md border p-3">
+                {CATEGORIE_ARTICOLO.map((c) => (
+                  <label key={c.value} className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={categorie.includes(c.value)} onCheckedChange={() => toggleCat(c.value)} />
+                    {c.label}
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">L'articolo sarà selezionabile solo nelle sezioni corrispondenti.</p>
+            </div>
+
             <div className="space-y-1.5">
-              <Label>Unità di misura</Label>
-              <Select value={form.unita_misura} onValueChange={(v) => setForm({ ...form, unita_misura: v })}>
+              <Label>Mostra in ordini</Label>
+              <Select value={form.mostra_in_ordini} onValueChange={(v) => setForm({ ...form, mostra_in_ordini: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{UNITA.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
+                <SelectContent>
+                  <SelectItem value="si">Sì</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label>Tipo confezione</Label>
-              <Select value={form.tipo_confezione} onValueChange={(v) => setForm({ ...form, tipo_confezione: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{TIPI_CONFEZIONE.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Pezzi per confezione</Label>
-              <Input inputMode="numeric" value={form.pezzi_per_confezione} onChange={(e) => setForm({ ...form, pezzi_per_confezione: e.target.value })} />
-              <p className="text-xs text-muted-foreground">{formatoConfezione(form.tipo_confezione, Number(form.pezzi_per_confezione) || 1)}</p>
-            </div>
+
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label>Fornitore di default</Label>
@@ -92,14 +142,12 @@ export default function InserisciArticolo() {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="space-y-1.5">
               <Label>Prezzo unitario (€)</Label>
               <Input inputMode="decimal" value={form.prezzo_unitario} onChange={(e) => setForm({ ...form, prezzo_unitario: e.target.value })} />
             </div>
-            <div className="space-y-1.5">
-              <Label>Scorta minima (pezzi)</Label>
-              <Input inputMode="decimal" value={form.scorta_minima} onChange={(e) => setForm({ ...form, scorta_minima: e.target.value })} />
-            </div>
+
             <div className="space-y-1.5 sm:col-span-2">
               <Label>Note</Label>
               <Textarea rows={2} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />

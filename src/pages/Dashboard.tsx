@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { AlertManutenzioni } from "@/components/veicoli/AlertManutenzioni";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -261,6 +262,10 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+
+        <AlertManutenzioni />
+
+
 
         {/* Banner annullamenti recenti (ultimi 3 giorni) */}
         {annullatiRecenti.length > 0 && (
