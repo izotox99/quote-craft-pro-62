@@ -1656,11 +1656,13 @@ export type Database = {
           created_by: string | null
           data: string
           id: string
+          manutenzione_ord_id: string | null
           motivo: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
           note: string | null
           ordine_riga_id: string | null
           org_id: string
           pezzi_per_confezione: number
+          prezzo_unitario: number | null
           quantita: number
           tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
           veicolo_id: string | null
@@ -1674,11 +1676,13 @@ export type Database = {
           created_by?: string | null
           data?: string
           id?: string
+          manutenzione_ord_id?: string | null
           motivo?: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
           note?: string | null
           ordine_riga_id?: string | null
           org_id: string
           pezzi_per_confezione?: number
+          prezzo_unitario?: number | null
           quantita: number
           tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
           veicolo_id?: string | null
@@ -1692,11 +1696,13 @@ export type Database = {
           created_by?: string | null
           data?: string
           id?: string
+          manutenzione_ord_id?: string | null
           motivo?: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
           note?: string | null
           ordine_riga_id?: string | null
           org_id?: string
           pezzi_per_confezione?: number
+          prezzo_unitario?: number | null
           quantita?: number
           tipo?: Database["public"]["Enums"]["magazzino_movimento_tipo"]
           veicolo_id?: string | null
@@ -1715,6 +1721,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "magazzino_giacenze"
             referencedColumns: ["articolo_id"]
+          },
+          {
+            foreignKeyName: "movimenti_magazzino_manutenzione_ord_id_fkey"
+            columns: ["manutenzione_ord_id"]
+            isOneToOne: false
+            referencedRelation: "veicoli_manutenzione_ord"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "movimenti_magazzino_ordine_riga_id_fkey"
@@ -1862,6 +1875,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      operai: {
+        Row: {
+          attivo: boolean
+          cognome: string | null
+          costo_orario: number | null
+          created_at: string
+          id: string
+          mansione: string | null
+          nome: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          attivo?: boolean
+          cognome?: string | null
+          costo_orario?: number | null
+          created_at?: string
+          id?: string
+          mansione?: string | null
+          nome: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          attivo?: boolean
+          cognome?: string | null
+          costo_orario?: number | null
+          created_at?: string
+          id?: string
+          mansione?: string | null
+          nome?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       ordini: {
         Row: {
@@ -3131,12 +3180,18 @@ export type Database = {
       }
       veicoli_manutenzione_ord: {
         Row: {
+          costo_manodopera: number
+          costo_materiale: number
           created_at: string
           data: string
           fornitore: string | null
           id: string
+          intervento_tipo: string
           km: number | null
           note: string | null
+          operaio_id: string | null
+          ora_fine: string | null
+          ora_inizio: string | null
           org_id: string
           ricambi: string | null
           tipo: string | null
@@ -3145,12 +3200,18 @@ export type Database = {
           veicolo_id: string
         }
         Insert: {
+          costo_manodopera?: number
+          costo_materiale?: number
           created_at?: string
           data?: string
           fornitore?: string | null
           id?: string
+          intervento_tipo?: string
           km?: number | null
           note?: string | null
+          operaio_id?: string | null
+          ora_fine?: string | null
+          ora_inizio?: string | null
           org_id: string
           ricambi?: string | null
           tipo?: string | null
@@ -3159,12 +3220,18 @@ export type Database = {
           veicolo_id: string
         }
         Update: {
+          costo_manodopera?: number
+          costo_materiale?: number
           created_at?: string
           data?: string
           fornitore?: string | null
           id?: string
+          intervento_tipo?: string
           km?: number | null
           note?: string | null
+          operaio_id?: string | null
+          ora_fine?: string | null
+          ora_inizio?: string | null
           org_id?: string
           ricambi?: string | null
           tipo?: string | null
@@ -3173,6 +3240,13 @@ export type Database = {
           veicolo_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "veicoli_manutenzione_ord_operaio_id_fkey"
+            columns: ["operaio_id"]
+            isOneToOne: false
+            referencedRelation: "operai"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "veicoli_manutenzione_ord_veicolo_id_fkey"
             columns: ["veicolo_id"]
@@ -3865,11 +3939,13 @@ export type Database = {
           created_by: string | null
           data: string
           id: string
+          manutenzione_ord_id: string | null
           motivo: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
           note: string | null
           ordine_riga_id: string | null
           org_id: string
           pezzi_per_confezione: number
+          prezzo_unitario: number | null
           quantita: number
           tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
           veicolo_id: string | null
@@ -3900,11 +3976,13 @@ export type Database = {
           created_by: string | null
           data: string
           id: string
+          manutenzione_ord_id: string | null
           motivo: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
           note: string | null
           ordine_riga_id: string | null
           org_id: string
           pezzi_per_confezione: number
+          prezzo_unitario: number | null
           quantita: number
           tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
           veicolo_id: string | null
@@ -3934,6 +4012,51 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "ordini"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      manutenzione_ord_salva: {
+        Args: {
+          _data: string
+          _fornitore: string
+          _forza?: boolean
+          _id: string
+          _intervento_tipo: string
+          _km: number
+          _note: string
+          _operaio_id: string
+          _ora_fine: string
+          _ora_inizio: string
+          _ricambi: string
+          _righe?: Json
+          _tipo: string
+          _totale_esterno?: number
+          _veicolo_id: string
+        }
+        Returns: {
+          costo_manodopera: number
+          costo_materiale: number
+          created_at: string
+          data: string
+          fornitore: string | null
+          id: string
+          intervento_tipo: string
+          km: number | null
+          note: string | null
+          operaio_id: string | null
+          ora_fine: string | null
+          ora_inizio: string | null
+          org_id: string
+          ricambi: string | null
+          tipo: string | null
+          totale: number | null
+          updated_at: string
+          veicolo_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "veicoli_manutenzione_ord"
           isOneToOne: true
           isSetofReturn: false
         }
