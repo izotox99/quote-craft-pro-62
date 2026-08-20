@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, FileText, Wrench, Hammer, Fuel, Receipt, Car as CarIcon } from "lucide-react";
+import { ArrowLeft, FileText, Wrench, Hammer, Fuel, Receipt, Package, Car as CarIcon } from "lucide-react";
 import { SectionDocumenti } from "@/components/veicoli/SectionDocumenti";
 import { SectionManutenzione } from "@/components/veicoli/SectionManutenzione";
 import { SectionGasolio } from "@/components/veicoli/SectionGasolio";
