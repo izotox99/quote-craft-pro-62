@@ -55,6 +55,16 @@ const mezziSubItems = [
   { to: "/veicoli/adblue/nuovo", icon: PlusCircle, label: "Aggiungi AdBlue" },
 ];
 
+const magazzinoSubItems = [
+  { to: "/magazzino/ordini/nuovo", icon: FilePlus, label: "Nuovo ordine" },
+  { to: "/magazzino/ordini", icon: ClipboardList, label: "Lista ordine" },
+  { to: "/magazzino/articoli/nuovo", icon: PlusCircle, label: "Inserisci articolo" },
+  { to: "/magazzino/articoli", icon: List, label: "Lista articoli" },
+  { to: "/magazzino", icon: Package, label: "Magazzino" },
+  { to: "/magazzino/usato", icon: ClipboardCheck, label: "Lista ins. usato" },
+  { to: "/magazzino/consumo-interno", icon: Receipt, label: "Ord Consumo Interno" },
+];
+
 const mainNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
   { to: "/agenda", icon: Calendar, label: "Agenda" },
@@ -78,7 +88,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isClientActive = pathname.startsWith("/clients");
   const isAutistiActive = pathname.startsWith("/autisti");
   const isMezziActive = pathname.startsWith("/veicoli");
+  const isMagazzinoActive = pathname.startsWith("/magazzino");
   const [mezziExpanded, setMezziExpanded] = useState(false);
+  const [magazzinoExpanded, setMagazzinoExpanded] = useState(false);
 
   return (
     <div className="min-h-screen bg-background overflow-x-clip">
@@ -212,7 +224,38 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Magazzino dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "gap-2 rounded-lg font-medium transition-all",
+                    isMagazzinoActive && "bg-primary/10 text-primary hover:bg-primary/15"
+                  )}
+                >
+                  <Package className="h-4 w-4" />
+                  <span>Magazzino</span>
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-60">
+                {magazzinoSubItems.map((sub) => (
+                  <DropdownMenuItem
+                    key={sub.to}
+                    onClick={() => navigate(sub.to)}
+                    className={cn("gap-3 cursor-pointer", pathname === sub.to && "bg-accent")}
+                  >
+                    <sub.icon className="h-4 w-4 text-muted-foreground" />
+                    {sub.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </nav>
+
 
           <div className="flex items-center gap-2 ml-auto md:ml-0">
             <NotificheBell />
@@ -374,6 +417,44 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 ))}
               </CollapsibleContent>
             </Collapsible>
+
+            {/* Magazzino collapsible on mobile */}
+            <Collapsible open={magazzinoExpanded || isMagazzinoActive} onOpenChange={setMagazzinoExpanded}>
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-between gap-3 h-11 rounded-lg font-medium",
+                    isMagazzinoActive && "bg-primary/10 text-primary"
+                  )}
+                >
+                  <span className="flex items-center gap-3">
+                    <Package className="h-5 w-5" />
+                    Magazzino
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", (magazzinoExpanded || isMagazzinoActive) && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="ml-4 mt-0.5 space-y-0.5 border-l-2 border-border/30 pl-4">
+                {magazzinoSubItems.map((sub) => (
+                  <Link key={sub.to} to={sub.to} onClick={() => setMobileOpen(false)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "w-full justify-start gap-3 h-9 rounded-lg text-sm font-normal",
+                        pathname === sub.to && "bg-accent text-accent-foreground font-medium"
+                      )}
+                    >
+                      <sub.icon className="h-4 w-4" />
+                      {sub.label}
+                    </Button>
+                  </Link>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+
+
 
             <div className="my-3 border-t border-border/30" />
             <Button variant="ghost" className="w-full justify-start gap-3 h-11 rounded-lg font-medium" onClick={() => { setMobileOpen(false); navigate("/settings"); }}>

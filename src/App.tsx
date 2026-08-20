@@ -25,6 +25,12 @@ import ClientiNote from "./pages/ClientiNote";
 import ClientiInAttesa from "./pages/ClientiInAttesa";
 import Preventivi from "./pages/Preventivi";
 import Veicoli from "./pages/Veicoli";
+import Giacenze from "./pages/magazzino/Giacenze";
+import NuovoOrdine from "./pages/magazzino/NuovoOrdine";
+import ListaOrdini from "./pages/magazzino/ListaOrdini";
+import InserisciArticolo from "./pages/magazzino/InserisciArticolo";
+import ListaArticoli from "./pages/magazzino/ListaArticoli";
+import ListaUsato from "./pages/magazzino/ListaUsato";
 import VeicoloDettaglio from "./pages/VeicoloDettaglio";
 import { AllertMezzi, BilancioVettura, ManutenzioneStraordinaria, DettagliCarburante, DettagliAdBlue, AggiungiAdBlue } from "./pages/mezzi/Stub";
 import Autisti from "./pages/Autisti";
@@ -105,6 +111,13 @@ const App = () => (
             <Route path="/veicoli/adblue" element={<ProtectedRoute><DettagliAdBlue /></ProtectedRoute>} />
             <Route path="/veicoli/adblue/nuovo" element={<ProtectedRoute><AggiungiAdBlue /></ProtectedRoute>} />
             <Route path="/veicoli/:id" element={<ProtectedRoute><VeicoloDettaglio /></ProtectedRoute>} />
+            <Route path="/magazzino" element={<ProtectedRoute><Giacenze /></ProtectedRoute>} />
+            <Route path="/magazzino/ordini/nuovo" element={<ProtectedRoute><NuovoOrdine /></ProtectedRoute>} />
+            <Route path="/magazzino/ordini" element={<ProtectedRoute><ListaOrdini /></ProtectedRoute>} />
+            <Route path="/magazzino/consumo-interno" element={<ProtectedRoute><ListaOrdini soloConsumoInterno /></ProtectedRoute>} />
+            <Route path="/magazzino/articoli/nuovo" element={<ProtectedRoute><InserisciArticolo /></ProtectedRoute>} />
+            <Route path="/magazzino/articoli" element={<ProtectedRoute><ListaArticoli /></ProtectedRoute>} />
+            <Route path="/magazzino/usato" element={<ProtectedRoute><ListaUsato /></ProtectedRoute>} />
             <Route path="/autisti" element={<ProtectedRoute><Autisti /></ProtectedRoute>} />
             <Route path="/autisti/collaboratori" element={<ProtectedRoute><AutistiCollaboratori /></ProtectedRoute>} />
             <Route path="/autisti/ore" element={<ProtectedRoute><AutistiOre /></ProtectedRoute>} />

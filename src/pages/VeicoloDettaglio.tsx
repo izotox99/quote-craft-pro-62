@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, FileText, Wrench, Hammer, Fuel, Receipt, Car as CarIcon } from "lucide-react";
+import { ArrowLeft, FileText, Wrench, Hammer, Fuel, Receipt, Package, Car as CarIcon } from "lucide-react";
 import { SectionDocumenti } from "@/components/veicoli/SectionDocumenti";
 import { SectionManutenzione } from "@/components/veicoli/SectionManutenzione";
 import { SectionGasolio } from "@/components/veicoli/SectionGasolio";
 import { SectionSpese } from "@/components/veicoli/SectionSpese";
+import { SectionMateriali } from "@/components/veicoli/SectionMateriali";
 
 type V = { id: string; targa: string; tipo_macchina: string | null; modello: string | null; marca: string | null };
 
@@ -45,12 +46,13 @@ export default function VeicoloDettaglio() {
         </div>
 
         <Tabs value={tab} onValueChange={(t) => setParams({ tab: t })}>
-          <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full max-w-3xl">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-6 w-full max-w-4xl">
             <TabsTrigger value="documenti" className="gap-1.5"><FileText className="h-4 w-4" />Documenti</TabsTrigger>
             <TabsTrigger value="man-ord" className="gap-1.5"><Wrench className="h-4 w-4" />M. Ord</TabsTrigger>
             <TabsTrigger value="man-str" className="gap-1.5"><Hammer className="h-4 w-4" />M. Straord</TabsTrigger>
             <TabsTrigger value="gasolio" className="gap-1.5"><Fuel className="h-4 w-4" />Gasolio</TabsTrigger>
             <TabsTrigger value="spese" className="gap-1.5"><Receipt className="h-4 w-4" />Spese</TabsTrigger>
+            <TabsTrigger value="materiali" className="gap-1.5"><Package className="h-4 w-4" />Materiali</TabsTrigger>
           </TabsList>
 
           <TabsContent value="documenti" className="mt-6"><SectionDocumenti veicoloId={id} /></TabsContent>
@@ -58,6 +60,7 @@ export default function VeicoloDettaglio() {
           <TabsContent value="man-str" className="mt-6"><SectionManutenzione veicoloId={id} mode="straord" /></TabsContent>
           <TabsContent value="gasolio" className="mt-6"><SectionGasolio veicoloId={id} /></TabsContent>
           <TabsContent value="spese" className="mt-6"><SectionSpese veicoloId={id} /></TabsContent>
+          <TabsContent value="materiali" className="mt-6"><SectionMateriali veicoloId={id} /></TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>

@@ -142,6 +142,63 @@ export type Database = {
           },
         ]
       }
+      articoli: {
+        Row: {
+          attivo: boolean
+          created_at: string
+          fornitore_default_id: string | null
+          id: string
+          nome: string
+          note: string | null
+          org_id: string
+          prezzo_unitario: number | null
+          scorta_minima: number
+          unita_misura: string
+          updated_at: string
+        }
+        Insert: {
+          attivo?: boolean
+          created_at?: string
+          fornitore_default_id?: string | null
+          id?: string
+          nome: string
+          note?: string | null
+          org_id: string
+          prezzo_unitario?: number | null
+          scorta_minima?: number
+          unita_misura?: string
+          updated_at?: string
+        }
+        Update: {
+          attivo?: boolean
+          created_at?: string
+          fornitore_default_id?: string | null
+          id?: string
+          nome?: string
+          note?: string | null
+          org_id?: string
+          prezzo_unitario?: number | null
+          scorta_minima?: number
+          unita_misura?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articoli_fornitore_default_id_fkey"
+            columns: ["fornitore_default_id"]
+            isOneToOne: false
+            referencedRelation: "fornitori_magazzino"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articoli_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -1421,6 +1478,53 @@ export type Database = {
           },
         ]
       }
+      fornitori_magazzino: {
+        Row: {
+          attivo: boolean
+          created_at: string
+          email: string | null
+          id: string
+          indirizzo: string | null
+          nome: string
+          note: string | null
+          org_id: string
+          telefono: string | null
+          updated_at: string
+        }
+        Insert: {
+          attivo?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          indirizzo?: string | null
+          nome: string
+          note?: string | null
+          org_id: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attivo?: boolean
+          created_at?: string
+          email?: string | null
+          id?: string
+          indirizzo?: string | null
+          nome?: string
+          note?: string | null
+          org_id?: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fornitori_magazzino_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       line_items: {
         Row: {
           amount: number | null
@@ -1535,6 +1639,93 @@ export type Database = {
           success?: boolean
         }
         Relationships: []
+      }
+      movimenti_magazzino: {
+        Row: {
+          anomalia: boolean
+          articolo_id: string
+          consumo_interno: boolean
+          created_at: string
+          created_by: string | null
+          data: string
+          id: string
+          motivo: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
+          note: string | null
+          ordine_riga_id: string | null
+          org_id: string
+          quantita: number
+          tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
+          veicolo_id: string | null
+        }
+        Insert: {
+          anomalia?: boolean
+          articolo_id: string
+          consumo_interno?: boolean
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          id?: string
+          motivo?: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
+          note?: string | null
+          ordine_riga_id?: string | null
+          org_id: string
+          quantita: number
+          tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
+          veicolo_id?: string | null
+        }
+        Update: {
+          anomalia?: boolean
+          articolo_id?: string
+          consumo_interno?: boolean
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          id?: string
+          motivo?: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
+          note?: string | null
+          ordine_riga_id?: string | null
+          org_id?: string
+          quantita?: number
+          tipo?: Database["public"]["Enums"]["magazzino_movimento_tipo"]
+          veicolo_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movimenti_magazzino_articolo_id_fkey"
+            columns: ["articolo_id"]
+            isOneToOne: false
+            referencedRelation: "articoli"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimenti_magazzino_articolo_id_fkey"
+            columns: ["articolo_id"]
+            isOneToOne: false
+            referencedRelation: "magazzino_giacenze"
+            referencedColumns: ["articolo_id"]
+          },
+          {
+            foreignKeyName: "movimenti_magazzino_ordine_riga_id_fkey"
+            columns: ["ordine_riga_id"]
+            isOneToOne: false
+            referencedRelation: "ordini_righe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimenti_magazzino_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "movimenti_magazzino_veicolo_id_fkey"
+            columns: ["veicolo_id"]
+            isOneToOne: false
+            referencedRelation: "veicoli"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       network_partners: {
         Row: {
@@ -1656,6 +1847,157 @@ export type Database = {
             columns: ["utenza_id"]
             isOneToOne: false
             referencedRelation: "client_utenze"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordini: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data: string
+          fornitore_id: string | null
+          id: string
+          note: string | null
+          numero: number | null
+          org_id: string
+          ricevuto_at: string | null
+          stato: Database["public"]["Enums"]["magazzino_ordine_stato"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          fornitore_id?: string | null
+          id?: string
+          note?: string | null
+          numero?: number | null
+          org_id: string
+          ricevuto_at?: string | null
+          stato?: Database["public"]["Enums"]["magazzino_ordine_stato"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          fornitore_id?: string | null
+          id?: string
+          note?: string | null
+          numero?: number | null
+          org_id?: string
+          ricevuto_at?: string | null
+          stato?: Database["public"]["Enums"]["magazzino_ordine_stato"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordini_fornitore_id_fkey"
+            columns: ["fornitore_id"]
+            isOneToOne: false
+            referencedRelation: "fornitori_magazzino"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordini_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordini_righe: {
+        Row: {
+          articolo_id: string
+          created_at: string
+          fornitore_id: string | null
+          id: string
+          note: string | null
+          ordine_id: string
+          org_id: string
+          prezzo_unitario: number | null
+          quantita: number
+          tipo_consumo: Database["public"]["Enums"]["magazzino_tipo_consumo"]
+          unita: string | null
+          updated_at: string
+          veicolo_id: string | null
+          veicolo_tipo: string | null
+        }
+        Insert: {
+          articolo_id: string
+          created_at?: string
+          fornitore_id?: string | null
+          id?: string
+          note?: string | null
+          ordine_id: string
+          org_id: string
+          prezzo_unitario?: number | null
+          quantita?: number
+          tipo_consumo?: Database["public"]["Enums"]["magazzino_tipo_consumo"]
+          unita?: string | null
+          updated_at?: string
+          veicolo_id?: string | null
+          veicolo_tipo?: string | null
+        }
+        Update: {
+          articolo_id?: string
+          created_at?: string
+          fornitore_id?: string | null
+          id?: string
+          note?: string | null
+          ordine_id?: string
+          org_id?: string
+          prezzo_unitario?: number | null
+          quantita?: number
+          tipo_consumo?: Database["public"]["Enums"]["magazzino_tipo_consumo"]
+          unita?: string | null
+          updated_at?: string
+          veicolo_id?: string | null
+          veicolo_tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordini_righe_articolo_id_fkey"
+            columns: ["articolo_id"]
+            isOneToOne: false
+            referencedRelation: "articoli"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordini_righe_articolo_id_fkey"
+            columns: ["articolo_id"]
+            isOneToOne: false
+            referencedRelation: "magazzino_giacenze"
+            referencedColumns: ["articolo_id"]
+          },
+          {
+            foreignKeyName: "ordini_righe_fornitore_id_fkey"
+            columns: ["fornitore_id"]
+            isOneToOne: false
+            referencedRelation: "fornitori_magazzino"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordini_righe_ordine_id_fkey"
+            columns: ["ordine_id"]
+            isOneToOne: false
+            referencedRelation: "ordini"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordini_righe_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordini_righe_veicolo_id_fkey"
+            columns: ["veicolo_id"]
+            isOneToOne: false
+            referencedRelation: "veicoli"
             referencedColumns: ["id"]
           },
         ]
@@ -2933,6 +3275,28 @@ export type Database = {
       }
     }
     Views: {
+      magazzino_giacenze: {
+        Row: {
+          articolo_id: string | null
+          attivo: boolean | null
+          giacenza: number | null
+          nome: string | null
+          org_id: string | null
+          prezzo_unitario: number | null
+          scorta_minima: number | null
+          sotto_scorta: boolean | null
+          unita_misura: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articoli_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       servizi_autista_view: {
         Row: {
           accessori: string | null
@@ -3421,6 +3785,137 @@ export type Database = {
       is_autista_user: { Args: { _user_id: string }; Returns: boolean }
       is_client_user: { Args: { _user_id: string }; Returns: boolean }
       is_org_owner: { Args: { _user_id: string }; Returns: boolean }
+      magazzino_annulla_ordine: {
+        Args: { _ordine_id: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          data: string
+          fornitore_id: string | null
+          id: string
+          note: string | null
+          numero: number | null
+          org_id: string
+          ricevuto_at: string | null
+          stato: Database["public"]["Enums"]["magazzino_ordine_stato"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ordini"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      magazzino_convalida_righe: {
+        Args: { _ordine_id: string; _riga_ids: string[] }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          data: string
+          fornitore_id: string | null
+          id: string
+          note: string | null
+          numero: number | null
+          org_id: string
+          ricevuto_at: string | null
+          stato: Database["public"]["Enums"]["magazzino_ordine_stato"]
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ordini"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      magazzino_prossimo_numero: { Args: { _org: string }; Returns: number }
+      magazzino_registra_carico_manuale: {
+        Args: {
+          _articolo_id: string
+          _data: string
+          _motivo: Database["public"]["Enums"]["magazzino_carico_motivo"]
+          _note: string
+          _quantita: number
+        }
+        Returns: {
+          anomalia: boolean
+          articolo_id: string
+          consumo_interno: boolean
+          created_at: string
+          created_by: string | null
+          data: string
+          id: string
+          motivo: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
+          note: string | null
+          ordine_riga_id: string | null
+          org_id: string
+          quantita: number
+          tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
+          veicolo_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "movimenti_magazzino"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      magazzino_registra_scarico: {
+        Args: {
+          _articolo_id: string
+          _consumo_interno: boolean
+          _data: string
+          _forza?: boolean
+          _note: string
+          _quantita: number
+          _veicolo_id: string
+        }
+        Returns: {
+          anomalia: boolean
+          articolo_id: string
+          consumo_interno: boolean
+          created_at: string
+          created_by: string | null
+          data: string
+          id: string
+          motivo: Database["public"]["Enums"]["magazzino_carico_motivo"] | null
+          note: string | null
+          ordine_riga_id: string | null
+          org_id: string
+          quantita: number
+          tipo: Database["public"]["Enums"]["magazzino_movimento_tipo"]
+          veicolo_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "movimenti_magazzino"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      magazzino_ricevi_ordine: {
+        Args: { _ordine_id: string }
+        Returns: {
+          created_at: string
+          created_by: string | null
+          data: string
+          fornitore_id: string | null
+          id: string
+          note: string | null
+          numero: number | null
+          org_id: string
+          ricevuto_at: string | null
+          stato: Database["public"]["Enums"]["magazzino_ordine_stato"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "ordini"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       network_dispatch_servizio: {
         Args: {
           _partner_org_id: string
@@ -3848,6 +4343,15 @@ export type Database = {
       app_role: "admin" | "manager" | "agent" | "viewer"
       assenza_stato: "richiesta" | "approvata" | "rifiutata" | "annullata"
       assenza_tipo: "ferie" | "riposo" | "permesso" | "malattia"
+      magazzino_carico_motivo:
+        | "ordine"
+        | "inventario_iniziale"
+        | "rettifica"
+        | "reso"
+        | "altro"
+      magazzino_movimento_tipo: "carico" | "scarico"
+      magazzino_ordine_stato: "bozza" | "convalidato" | "ricevuto" | "annullato"
+      magazzino_tipo_consumo: "macchine" | "consumo_interno"
       network_dispatch_stato:
         | "inviato"
         | "accettato"
@@ -4013,6 +4517,16 @@ export const Constants = {
       app_role: ["admin", "manager", "agent", "viewer"],
       assenza_stato: ["richiesta", "approvata", "rifiutata", "annullata"],
       assenza_tipo: ["ferie", "riposo", "permesso", "malattia"],
+      magazzino_carico_motivo: [
+        "ordine",
+        "inventario_iniziale",
+        "rettifica",
+        "reso",
+        "altro",
+      ],
+      magazzino_movimento_tipo: ["carico", "scarico"],
+      magazzino_ordine_stato: ["bozza", "convalidato", "ricevuto", "annullato"],
+      magazzino_tipo_consumo: ["macchine", "consumo_interno"],
       network_dispatch_stato: [
         "inviato",
         "accettato",
