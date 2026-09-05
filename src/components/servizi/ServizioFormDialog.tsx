@@ -91,6 +91,8 @@ export type ServizioFormInitial = Partial<{
   com_cliente: number | null;
   costo_commissione: number | null;
   non_incassato: number | null;
+  fatturato: boolean;
+  last_minute: boolean;
   costo_cs: number | null;
   costo_autista: number | null;
   costo_centro: number | null;
@@ -152,6 +154,8 @@ const emptyForm = (): any => ({
   com_cliente: null,
   costo_commissione: null,
   non_incassato: null,
+  fatturato: false,
+  last_minute: false,
   costo_cs: null,
   costo_autista: null,
   costo_centro: null,
