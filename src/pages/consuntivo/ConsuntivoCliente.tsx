@@ -180,7 +180,7 @@ export default function ConsuntivoCliente() {
                         <td className="p-2 text-right" colSpan={5}>{eur2(num(s.prezzo_fattura) || num(s.prezzo))}</td>
                       </tr>
                     ))}
-                </>
+                </Fragment>
               ))}
             </tbody>
             <tfoot>

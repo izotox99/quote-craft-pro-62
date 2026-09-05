@@ -69,6 +69,11 @@ const amministrazioneSubItems = [
   { to: "/amministrazione/costi", icon: Wallet, label: "Inserisci Costi" },
 ];
 
+const consuntivoSubItems = [
+  { to: "/consuntivo/cliente", icon: Users, label: "Consuntivo Cliente" },
+  { to: "/consuntivo/collaboratore", icon: UserPlus, label: "Consuntivo Collaboratore" },
+];
+
 const mainNavItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Servizi" },
   { to: "/agenda", icon: Calendar, label: "Agenda" },
