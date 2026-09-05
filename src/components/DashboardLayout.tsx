@@ -99,9 +99,11 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const isMezziActive = pathname.startsWith("/veicoli");
   const isMagazzinoActive = pathname.startsWith("/magazzino");
   const isAmmActive = pathname.startsWith("/amministrazione");
+  const isConsuntivoActive = pathname.startsWith("/consuntivo");
   const [mezziExpanded, setMezziExpanded] = useState(false);
   const [magazzinoExpanded, setMagazzinoExpanded] = useState(false);
   const [ammExpanded, setAmmExpanded] = useState(false);
+  const [consuntivoExpanded, setConsuntivoExpanded] = useState(false);
 
   return (
     <div className="min-h-screen bg-background overflow-x-clip">
@@ -284,6 +286,36 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-60">
                 {amministrazioneSubItems.map((sub) => (
+                  <DropdownMenuItem
+                    key={sub.to}
+                    onClick={() => navigate(sub.to)}
+                    className={cn("gap-3 cursor-pointer", pathname === sub.to && "bg-accent")}
+                  >
+                    <sub.icon className="h-4 w-4 text-muted-foreground" />
+                    {sub.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Consuntivo dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "gap-2 rounded-lg font-medium transition-all",
+                    isConsuntivoActive && "bg-primary/10 text-primary hover:bg-primary/15"
+                  )}
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  <span>Consuntivo</span>
+                  <ChevronDown className="h-3 w-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-60">
+                {consuntivoSubItems.map((sub) => (
                   <DropdownMenuItem
                     key={sub.to}
                     onClick={() => navigate(sub.to)}
