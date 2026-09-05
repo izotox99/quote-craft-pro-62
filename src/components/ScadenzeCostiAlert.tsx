@@ -27,9 +27,8 @@ export function ScadenzeCostiAlert() {
   if (rows.length === 0) return null;
 
   const target = (r: ScadenzaCosto) =>
-    r.origine === "autista" ? "/amministrazione/costi?tab=autisti"
-    : r.origine === "veicolo" ? "/amministrazione/costi?tab=macchine"
-    : "/amministrazione/costi?tab=altri";
+    r.origine === "autista" ? "/amministrazione/costi?tab=autisti" : "/amministrazione/costi?tab=macchine";
+
 
   return (
     <div className="space-y-2">

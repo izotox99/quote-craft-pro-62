@@ -12,8 +12,8 @@ import type { AmbitoCosto, TipoCosto } from "@/lib/costi";
 const TITOLI: Record<AmbitoCosto, string> = {
   autista: "Tipi inserimento autisti",
   veicolo: "Tipi spese macchine",
-  generale: "Categorie altri costi",
 };
+
 
 export function TipiCostoDialog({
   open, onOpenChange, ambito, onChanged,
