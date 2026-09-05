@@ -57,7 +57,7 @@ export default function VeicoloDettaglio() {
 
           <TabsContent value="documenti" className="mt-6"><SectionDocumenti veicoloId={id} /></TabsContent>
           <TabsContent value="man-ord" className="mt-6"><SectionManutenzione veicoloId={id} mode="ord" /></TabsContent>
-          <TabsContent value="man-str" className="mt-6"><SectionManutenzione veicoloId={id} mode="straord" /></TabsContent>
+          <TabsContent value="man-str" className="mt-6"><SectionManutenzione veicoloId={id} mode="straord" targa={v?.targa} /></TabsContent>
           <TabsContent value="gasolio" className="mt-6"><SectionGasolio veicoloId={id} /></TabsContent>
           <TabsContent value="spese" className="mt-6"><SectionSpese veicoloId={id} /></TabsContent>
           <TabsContent value="materiali" className="mt-6"><SectionMateriali veicoloId={id} /></TabsContent>

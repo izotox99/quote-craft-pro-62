@@ -22,6 +22,8 @@ type Row = {
   data: string;
   km?: number | null;
   km_attuale?: number | null;
+  km_manutenzione?: number | null;
+  fornitore_id?: string | null;
   tipo?: string | null;
   tipo_riparazione?: string | null;
   note?: string | null;
@@ -240,6 +242,7 @@ export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: str
             <TableRow>
               <TableHead>Data</TableHead>
               <TableHead className="text-right">Km</TableHead>
+              {mode === "straord" && <TableHead className="text-right hidden lg:table-cell">Km manut.</TableHead>}
               {mode === "straord" && <TableHead>Tipo riparazione</TableHead>}
               <TableHead>Tipo</TableHead>
               <TableHead className="hidden md:table-cell">Operaio</TableHead>
@@ -253,7 +256,7 @@ export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: str
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <TableRow><TableCell colSpan={mode === "straord" ? 11 : 10} className="text-center py-10 text-muted-foreground">
+              <TableRow><TableCell colSpan={mode === "straord" ? 12 : 10} className="text-center py-10 text-muted-foreground">
                 <Wrench className="h-8 w-8 mx-auto mb-2 opacity-40" />Nessun intervento registrato
               </TableCell></TableRow>
             )}
@@ -261,10 +264,11 @@ export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: str
               <TableRow key={r.id}>
                 <TableCell>{new Date(r.data).toLocaleDateString("it-IT")}</TableCell>
                 <TableCell className="text-right tabular-nums">{(r.km ?? r.km_attuale)?.toLocaleString("it-IT") ?? "—"}</TableCell>
+                {mode === "straord" && <TableCell className="text-right tabular-nums hidden lg:table-cell">{r.km_manutenzione?.toLocaleString("it-IT") ?? "—"}</TableCell>}
                 {mode === "straord" && <TableCell>{r.tipo_riparazione ?? "—"}</TableCell>}
                 <TableCell>
                   <Badge variant={r.intervento_tipo === "interno" ? "default" : "secondary"}>
-                    {r.intervento_tipo === "interno" ? "Intervento interno" : "Intervento esterno"}
+                    {r.intervento_tipo === "interno" ? "Intervento interno" : "Officina esterna"}
                   </Badge>
                 </TableCell>
                 {(
