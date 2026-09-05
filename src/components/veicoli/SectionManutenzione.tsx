@@ -366,7 +366,7 @@ export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: str
               <>
                 <div>
                   <Label>Fornitore</Label>
-                  <Select value={form.fornitore_id ?? NESSUNO} onValueChange={(v) => {
+                  <Select value={form.fornitore_id ?? fornitori.find((x) => x.nome === form.fornitore)?.id ?? NESSUNO} onValueChange={(v) => {
                     const f = fornitori.find((x) => x.id === v);
                     setForm({ ...form, fornitore_id: v === NESSUNO ? null : v, fornitore: f?.nome ?? null });
                   }}>
