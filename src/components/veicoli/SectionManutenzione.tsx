@@ -166,7 +166,12 @@ export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: str
       _righe: righePayload,
       _totale_esterno: form.intervento_tipo === "esterno" ? (form.totale ? Number(form.totale) : 0) : null,
       _forza: forza,
-      ...(isOrd ? {} : { _tipo_riparazione: form.tipo_riparazione || null, _ordine: form.ordine || null }),
+      ...(isOrd ? {} : {
+        _tipo_riparazione: form.tipo_riparazione || null,
+        _ordine: form.ordine || null,
+        _km_manutenzione: form.km_manutenzione ? Number(form.km_manutenzione) : null,
+        _fornitore_id: form.intervento_tipo === "esterno" ? (form.fornitore_id || null) : null,
+      }),
     };
     const { error } = await supabase.rpc(
       (isOrd ? "manutenzione_ord_salva" : "manutenzione_straord_salva") as any,
