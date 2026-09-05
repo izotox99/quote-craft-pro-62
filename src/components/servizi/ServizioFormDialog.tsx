@@ -460,6 +460,8 @@ export function ServizioFormDialog({
         costo_autista: n(f.costo_autista),
         costo_centro: n(f.costo_centro),
         incasso: n(f.incasso),
+        fatturato: !!f.fatturato,
+        last_minute: !!f.last_minute,
       });
     }
 
@@ -775,6 +777,10 @@ export function ServizioFormDialog({
                   <MoneyField label="Costo CS €" value={f.costo_cs} onChange={v => set({ costo_cs: v })} />
                   <MoneyField label="Costo Autista €" value={f.costo_autista} onChange={v => set({ costo_autista: v })} />
                   <MoneyField label="Costo centro €" value={f.costo_centro} onChange={v => set({ costo_centro: v })} />
+                </div>
+                <div className="flex flex-wrap gap-6 pt-1">
+                  <CheckboxRow label="Fatturato" checked={f.fatturato} onChange={v => set({ fatturato: v })} />
+                  <CheckboxRow label="Last minute" checked={f.last_minute} onChange={v => set({ last_minute: v })} />
                 </div>
               </>
             )}
