@@ -2620,6 +2620,7 @@ export type Database = {
           dispo_nota_chiusura: string | null
           disposizione_oraria: string | null
           email_contatto: string | null
+          fatturato: boolean
           foglio: string | null
           fornitore_cs_id: string | null
           id: string
@@ -2631,6 +2632,7 @@ export type Database = {
           itinerario: string | null
           km_fine_servizio: number | null
           km_inizio_servizio: number | null
+          last_minute: boolean
           luogo_fine: string | null
           luogo_inizio: string | null
           modificato_at: string | null
@@ -2694,6 +2696,7 @@ export type Database = {
           dispo_nota_chiusura?: string | null
           disposizione_oraria?: string | null
           email_contatto?: string | null
+          fatturato?: boolean
           foglio?: string | null
           fornitore_cs_id?: string | null
           id?: string
@@ -2705,6 +2708,7 @@ export type Database = {
           itinerario?: string | null
           km_fine_servizio?: number | null
           km_inizio_servizio?: number | null
+          last_minute?: boolean
           luogo_fine?: string | null
           luogo_inizio?: string | null
           modificato_at?: string | null
@@ -2768,6 +2772,7 @@ export type Database = {
           dispo_nota_chiusura?: string | null
           disposizione_oraria?: string | null
           email_contatto?: string | null
+          fatturato?: boolean
           foglio?: string | null
           fornitore_cs_id?: string | null
           id?: string
@@ -2779,6 +2784,7 @@ export type Database = {
           itinerario?: string | null
           km_fine_servizio?: number | null
           km_inizio_servizio?: number | null
+          last_minute?: boolean
           luogo_fine?: string | null
           luogo_inizio?: string | null
           modificato_at?: string | null
@@ -3885,6 +3891,7 @@ export type Database = {
           dispo_nota_chiusura: string | null
           disposizione_oraria: string | null
           email_contatto: string | null
+          fatturato: boolean
           foglio: string | null
           fornitore_cs_id: string | null
           id: string
@@ -3896,6 +3903,7 @@ export type Database = {
           itinerario: string | null
           km_fine_servizio: number | null
           km_inizio_servizio: number | null
+          last_minute: boolean
           luogo_fine: string | null
           luogo_inizio: string | null
           modificato_at: string | null
@@ -4002,6 +4010,7 @@ export type Database = {
           dispo_nota_chiusura: string | null
           disposizione_oraria: string | null
           email_contatto: string | null
+          fatturato: boolean
           foglio: string | null
           fornitore_cs_id: string | null
           id: string
@@ -4013,6 +4022,7 @@ export type Database = {
           itinerario: string | null
           km_fine_servizio: number | null
           km_inizio_servizio: number | null
+          last_minute: boolean
           luogo_fine: string | null
           luogo_inizio: string | null
           modificato_at: string | null
@@ -4658,6 +4668,7 @@ export type Database = {
           dispo_nota_chiusura: string | null
           disposizione_oraria: string | null
           email_contatto: string | null
+          fatturato: boolean
           foglio: string | null
           fornitore_cs_id: string | null
           id: string
@@ -4669,6 +4680,7 @@ export type Database = {
           itinerario: string | null
           km_fine_servizio: number | null
           km_inizio_servizio: number | null
+          last_minute: boolean
           luogo_fine: string | null
           luogo_inizio: string | null
           modificato_at: string | null
