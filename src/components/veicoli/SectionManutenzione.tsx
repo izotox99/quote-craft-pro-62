@@ -45,7 +45,7 @@ type Riga = { articolo_id: string; quantita: string; prezzo_unitario: string };
 const NESSUNO = "__nessuno__";
 const hhmm = (t?: string | null) => (t ? t.slice(0, 5) : "");
 
-export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mode: Mode }) {
+export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: string; mode: Mode; targa?: string }) {
   const isOrd = mode === "ord";
   const table = isOrd ? "veicoli_manutenzione_ord" : "veicoli_manutenzione_straord";
   const kmField = isOrd ? "km" : "km_attuale";
@@ -62,6 +62,8 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
   const [giacenze, setGiacenze] = useState<Record<string, number>>({});
   const [righe, setRighe] = useState<Riga[]>([]);
   const [righeOriginali, setRigheOriginali] = useState<Record<string, number>>({});
+  const [fornitori, setFornitori] = useState<{ id: string; nome: string }[]>([]);
+  const [tipiRiparazione, setTipiRiparazione] = useState<string[]>([]);
 
   const load = async () => {
     const { data } = await supabase.from(table).select("*").eq("veicolo_id", veicoloId).order("data", { ascending: false });
@@ -69,10 +71,12 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
   };
 
   const loadMagazzino = async () => {
-    const [{ data: a }, { data: m }, { data: o }] = await Promise.all([
+    const [{ data: a }, { data: m }, { data: o }, { data: f }, { data: tr }] = await Promise.all([
       supabase.from("articoli").select("id, nome, unita_misura, prezzo_unitario").eq("attivo", true).contains("categorie", [CAT[mode]]).order("nome"),
       supabase.from("movimenti_magazzino").select("articolo_id, tipo, quantita"),
       supabase.from("operai").select("id, nome, cognome, mansione, costo_orario, attivo").eq("attivo", true).order("nome"),
+      supabase.from("fornitori_magazzino").select("id, nome").eq("attivo", true).order("nome"),
+      supabase.from("config_tipi_costo" as never).select("valore, attivo, ordine").eq("ambito", "riparazione").order("ordine"),
     ]);
     setArticoli((a ?? []) as Articolo[]);
     const g: Record<string, number> = {};
@@ -81,10 +85,13 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
     });
     setGiacenze(g);
     setOperai((o ?? []) as Operaio[]);
+    setFornitori((f ?? []) as { id: string; nome: string }[]);
+    setTipiRiparazione(((tr ?? []) as any[]).filter((t) => t.attivo).map((t) => t.valore as string));
   };
 
   useEffect(() => { load(); }, [veicoloId, mode]);
   useEffect(() => { loadMagazzino(); }, [mode]);
+
 
   const giacenzaDisponibile = (articoloId: string) =>
     (giacenze[articoloId] ?? 0) + (righeOriginali[articoloId] ?? 0);
