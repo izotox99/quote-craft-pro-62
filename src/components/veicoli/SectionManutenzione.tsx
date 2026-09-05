@@ -11,9 +11,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "sonner";
-import { PlusCircle, Pencil, Trash2, Wrench, X, Users } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Wrench, X, Users, Settings2 } from "lucide-react";
 import { romeToday } from "@/lib/romeDate";
 import { OperaiDialog, nomeOperaio, type Operaio } from "@/components/veicoli/OperaiDialog";
+import { TipiCostoDialog } from "@/components/amministrazione/TipiCostoDialog";
 
 type Mode = "ord" | "straord";
 
@@ -60,6 +61,7 @@ export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: str
   // magazzino / operai
   const [operai, setOperai] = useState<Operaio[]>([]);
   const [operaiOpen, setOperaiOpen] = useState(false);
+  const [tipiOpen, setTipiOpen] = useState(false);
   const [articoli, setArticoli] = useState<Articolo[]>([]);
   const [giacenze, setGiacenze] = useState<Record<string, number>>({});
   const [righe, setRighe] = useState<Riga[]>([]);
@@ -227,11 +229,14 @@ export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: str
           Totale: <span className="font-semibold text-foreground">{eur(totale)}</span>
         </div>
         <div className="flex gap-2">
-          {(
-            <Button variant="outline" onClick={() => setOperaiOpen(true)} className="gap-2">
-              <Users className="h-4 w-4" /> Operai
+          {mode === "straord" && (
+            <Button variant="outline" onClick={() => setTipiOpen(true)} className="gap-2">
+              <Settings2 className="h-4 w-4" /> Tipi riparazione
             </Button>
           )}
+          <Button variant="outline" onClick={() => setOperaiOpen(true)} className="gap-2">
+            <Users className="h-4 w-4" /> Operai
+          </Button>
           <Button onClick={openNew} className="gap-2"><PlusCircle className="h-4 w-4" /> Aggiungi intervento</Button>
         </div>
       </div>
@@ -503,6 +508,8 @@ export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: str
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <TipiCostoDialog open={tipiOpen} onOpenChange={setTipiOpen} ambito="riparazione" onChanged={loadMagazzino} />
 
       <OperaiDialog
         open={operaiOpen}
