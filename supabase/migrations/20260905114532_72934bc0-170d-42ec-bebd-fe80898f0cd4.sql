@@ -1,0 +1,1 @@
+ALTER VIEW public.scadenze_costi SET (security_invoker = on);
