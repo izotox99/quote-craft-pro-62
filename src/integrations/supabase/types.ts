@@ -214,6 +214,74 @@ export type Database = {
           },
         ]
       }
+      articoli_prezzi_storico: {
+        Row: {
+          articolo_id: string
+          created_at: string
+          created_by: string | null
+          data: string
+          fornitore_id: string | null
+          id: string
+          ordine_riga_id: string | null
+          org_id: string
+          prezzo_unitario: number
+          quantita: number | null
+        }
+        Insert: {
+          articolo_id: string
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          fornitore_id?: string | null
+          id?: string
+          ordine_riga_id?: string | null
+          org_id: string
+          prezzo_unitario: number
+          quantita?: number | null
+        }
+        Update: {
+          articolo_id?: string
+          created_at?: string
+          created_by?: string | null
+          data?: string
+          fornitore_id?: string | null
+          id?: string
+          ordine_riga_id?: string | null
+          org_id?: string
+          prezzo_unitario?: number
+          quantita?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "articoli_prezzi_storico_articolo_id_fkey"
+            columns: ["articolo_id"]
+            isOneToOne: false
+            referencedRelation: "articoli"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articoli_prezzi_storico_articolo_id_fkey"
+            columns: ["articolo_id"]
+            isOneToOne: false
+            referencedRelation: "magazzino_giacenze"
+            referencedColumns: ["articolo_id"]
+          },
+          {
+            foreignKeyName: "articoli_prezzi_storico_fornitore_id_fkey"
+            columns: ["fornitore_id"]
+            isOneToOne: false
+            referencedRelation: "fornitori_magazzino"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "articoli_prezzi_storico_ordine_riga_id_fkey"
+            columns: ["ordine_riga_id"]
+            isOneToOne: false
+            referencedRelation: "ordini_righe"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -2042,6 +2110,9 @@ export type Database = {
           pezzi_per_confezione: number
           prezzo_unitario: number | null
           quantita: number
+          quantita_ricevuta: number | null
+          ricevuta_at: string | null
+          stato_ricezione: string
           tipo_confezione: Database["public"]["Enums"]["magazzino_tipo_confezione"]
           tipo_consumo: Database["public"]["Enums"]["magazzino_tipo_consumo"]
           unita: string | null
@@ -2060,6 +2131,9 @@ export type Database = {
           pezzi_per_confezione?: number
           prezzo_unitario?: number | null
           quantita?: number
+          quantita_ricevuta?: number | null
+          ricevuta_at?: string | null
+          stato_ricezione?: string
           tipo_confezione?: Database["public"]["Enums"]["magazzino_tipo_confezione"]
           tipo_consumo?: Database["public"]["Enums"]["magazzino_tipo_consumo"]
           unita?: string | null
@@ -2078,6 +2152,9 @@ export type Database = {
           pezzi_per_confezione?: number
           prezzo_unitario?: number | null
           quantita?: number
+          quantita_ricevuta?: number | null
+          ricevuta_at?: string | null
+          stato_ricezione?: string
           tipo_confezione?: Database["public"]["Enums"]["magazzino_tipo_confezione"]
           tipo_consumo?: Database["public"]["Enums"]["magazzino_tipo_consumo"]
           unita?: string | null
@@ -3351,9 +3428,11 @@ export type Database = {
           created_at: string
           data: string
           fornitore: string | null
+          fornitore_id: string | null
           id: string
           intervento_tipo: string
           km_attuale: number | null
+          km_manutenzione: number | null
           note: string | null
           operaio_id: string | null
           ora_fine: string | null
@@ -3373,9 +3452,11 @@ export type Database = {
           created_at?: string
           data?: string
           fornitore?: string | null
+          fornitore_id?: string | null
           id?: string
           intervento_tipo?: string
           km_attuale?: number | null
+          km_manutenzione?: number | null
           note?: string | null
           operaio_id?: string | null
           ora_fine?: string | null
@@ -3395,9 +3476,11 @@ export type Database = {
           created_at?: string
           data?: string
           fornitore?: string | null
+          fornitore_id?: string | null
           id?: string
           intervento_tipo?: string
           km_attuale?: number | null
+          km_manutenzione?: number | null
           note?: string | null
           operaio_id?: string | null
           ora_fine?: string | null
@@ -3412,6 +3495,13 @@ export type Database = {
           veicolo_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "veicoli_manutenzione_straord_fornitore_id_fkey"
+            columns: ["fornitore_id"]
+            isOneToOne: false
+            referencedRelation: "fornitori_magazzino"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "veicoli_manutenzione_straord_operaio_id_fkey"
             columns: ["operaio_id"]
@@ -4233,9 +4323,11 @@ export type Database = {
           created_at: string
           data: string
           fornitore: string | null
+          fornitore_id: string | null
           id: string
           intervento_tipo: string
           km_attuale: number | null
+          km_manutenzione: number | null
           note: string | null
           operaio_id: string | null
           ora_fine: string | null
@@ -4692,7 +4784,12 @@ export type Database = {
         | "reso"
         | "altro"
       magazzino_movimento_tipo: "carico" | "scarico"
-      magazzino_ordine_stato: "bozza" | "convalidato" | "ricevuto" | "annullato"
+      magazzino_ordine_stato:
+        | "bozza"
+        | "convalidato"
+        | "ricevuto"
+        | "annullato"
+        | "parzialmente_ricevuto"
       magazzino_tipo_confezione:
         | "singolo"
         | "scatola"
@@ -4873,7 +4970,13 @@ export const Constants = {
         "altro",
       ],
       magazzino_movimento_tipo: ["carico", "scarico"],
-      magazzino_ordine_stato: ["bozza", "convalidato", "ricevuto", "annullato"],
+      magazzino_ordine_stato: [
+        "bozza",
+        "convalidato",
+        "ricevuto",
+        "annullato",
+        "parzialmente_ricevuto",
+      ],
       magazzino_tipo_confezione: [
         "singolo",
         "scatola",
