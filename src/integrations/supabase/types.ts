@@ -1418,57 +1418,6 @@ export type Database = {
         }
         Relationships: []
       }
-      costi_generali: {
-        Row: {
-          categoria: string | null
-          centro_costo: string
-          created_at: string
-          data: string | null
-          data_scadenza: string | null
-          descrizione: string
-          fornitore: string | null
-          giorni_preavviso: number
-          id: string
-          importo: number
-          note: string | null
-          org_id: string
-          tipo_pagamento: string | null
-          updated_at: string
-        }
-        Insert: {
-          categoria?: string | null
-          centro_costo?: string
-          created_at?: string
-          data?: string | null
-          data_scadenza?: string | null
-          descrizione: string
-          fornitore?: string | null
-          giorni_preavviso?: number
-          id?: string
-          importo?: number
-          note?: string | null
-          org_id: string
-          tipo_pagamento?: string | null
-          updated_at?: string
-        }
-        Update: {
-          categoria?: string | null
-          centro_costo?: string
-          created_at?: string
-          data?: string | null
-          data_scadenza?: string | null
-          descrizione?: string
-          fornitore?: string | null
-          giorni_preavviso?: number
-          id?: string
-          importo?: number
-          note?: string | null
-          org_id?: string
-          tipo_pagamento?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       dashboard_viste: {
         Row: {
           colonne: Json
