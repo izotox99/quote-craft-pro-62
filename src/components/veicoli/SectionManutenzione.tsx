@@ -299,33 +299,90 @@ export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: str
           <DialogHeader>
             <DialogTitle>{editing ? "Modifica intervento" : "Nuovo intervento"}</DialogTitle>
           </DialogHeader>
+          {mode === "straord" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div><Label>Targa</Label><Input value={targa ?? ""} readOnly disabled /></div>
+              <div><Label>Km Attuale</Label>
+                <Input inputMode="numeric" value={form.km_attuale ?? ""} onChange={(e) => setForm({ ...form, km_attuale: e.target.value })} /></div>
+              <div><Label>Data intervento</Label><Input type="date" value={form.data ?? ""} onChange={(e) => setForm({ ...form, data: e.target.value })} /></div>
+              <div>
+                <Label>Tipo riparazione</Label>
+                <Select value={form.tipo_riparazione || undefined} onValueChange={(v) => setForm({ ...form, tipo_riparazione: v })}>
+                  <SelectTrigger><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                  <SelectContent>
+                    {tipiRiparazione.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Km manutenzione</Label>
+                <Input inputMode="numeric" value={form.km_manutenzione ?? ""} onChange={(e) => setForm({ ...form, km_manutenzione: e.target.value })} /></div>
+              <div>
+                <Label>Tipo</Label>
+                <Select value={form.intervento_tipo ?? "esterno"} onValueChange={(v) => setForm({ ...form, intervento_tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="interno">Intervento interno</SelectItem>
+                    <SelectItem value="esterno">Officina esterna</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="sm:col-span-2"><Label>Note / Acquisto</Label>
+                <Textarea value={form.note ?? ""} onChange={(e) => setForm({ ...form, note: e.target.value })} rows={2} /></div>
+              {!interno && (
+                <>
+                  <div>
+                    <Label>Fornitore</Label>
+                    <Select value={form.fornitore_id ?? NESSUNO} onValueChange={(v) => setForm({ ...form, fornitore_id: v === NESSUNO ? null : v })}>
+                      <SelectTrigger><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NESSUNO}>Nessuno</SelectItem>
+                        {fornitori.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Costo (€)</Label>
+                    <Input inputMode="decimal" value={form.totale ?? ""} onChange={(e) => setForm({ ...form, totale: e.target.value })} /></div>
+                </>
+              )}
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Data</Label><Input type="date" value={form.data ?? ""} onChange={(e) => setForm({ ...form, data: e.target.value })} /></div>
-            <div><Label>Km {isOrd ? "manutenzione" : "attuale"}</Label>
-              <Input inputMode="numeric" value={form[kmField] ?? ""} onChange={(e) => setForm({ ...form, [kmField]: e.target.value })} /></div>
-            {mode === "straord" && (
-              <div><Label>Tipo riparazione</Label><Input value={form.tipo_riparazione ?? ""} onChange={(e) => setForm({ ...form, tipo_riparazione: e.target.value })} placeholder="es. Reparazione meccanica" /></div>
-            )}
+            <div><Label>Km manutenzione</Label>
+              <Input inputMode="numeric" value={form.km ?? ""} onChange={(e) => setForm({ ...form, km: e.target.value })} /></div>
             <div>
               <Label>Tipo</Label>
               <Select value={form.intervento_tipo ?? "esterno"} onValueChange={(v) => setForm({ ...form, intervento_tipo: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="interno">Intervento interno</SelectItem>
-                  <SelectItem value="esterno">Intervento esterno</SelectItem>
+                  <SelectItem value="esterno">Officina esterna</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="sm:col-span-2"><Label>Note</Label><Textarea value={form.note ?? ""} onChange={(e) => setForm({ ...form, note: e.target.value })} rows={2} /></div>
             <div className="sm:col-span-2"><Label>Ricambi</Label><Textarea value={form.ricambi ?? ""} onChange={(e) => setForm({ ...form, ricambi: e.target.value })} rows={2} placeholder="es. Filtro aria [1], Filtro olio [1]" /></div>
-            <div><Label>Fornitore</Label><Input value={form.fornitore ?? ""} onChange={(e) => setForm({ ...form, fornitore: e.target.value })} /></div>
-            {mode === "straord" && (
-              <div><Label>Ordine</Label><Input value={form.ordine ?? ""} onChange={(e) => setForm({ ...form, ordine: e.target.value })} placeholder="es. ORD-595" /></div>
-            )}
             {!interno && (
-              <div><Label>Totale (€)</Label><Input inputMode="decimal" value={form.totale ?? ""} onChange={(e) => setForm({ ...form, totale: e.target.value })} /></div>
+              <>
+                <div>
+                  <Label>Fornitore</Label>
+                  <Select value={form.fornitore_id ?? NESSUNO} onValueChange={(v) => {
+                    const f = fornitori.find((x) => x.id === v);
+                    setForm({ ...form, fornitore_id: v === NESSUNO ? null : v, fornitore: f?.nome ?? null });
+                  }}>
+                    <SelectTrigger><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NESSUNO}>Nessuno</SelectItem>
+                      {fornitori.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Costo (€)</Label><Input inputMode="decimal" value={form.totale ?? ""} onChange={(e) => setForm({ ...form, totale: e.target.value })} /></div>
+              </>
             )}
           </div>
+          )}
+
 
           {interno && (
             <div className="space-y-3 rounded-lg border p-3">
