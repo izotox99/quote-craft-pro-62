@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type AmbitoCosto = "autista" | "veicolo";
+export type AmbitoCosto = "autista" | "veicolo" | "riparazione";
 
 export type TipoCosto = {
   id: string;

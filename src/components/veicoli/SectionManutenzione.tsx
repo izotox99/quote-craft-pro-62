@@ -11,9 +11,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TimePicker } from "@/components/ui/time-picker";
 import { toast } from "sonner";
-import { PlusCircle, Pencil, Trash2, Wrench, X, Users } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Wrench, X, Users, Settings2 } from "lucide-react";
 import { romeToday } from "@/lib/romeDate";
 import { OperaiDialog, nomeOperaio, type Operaio } from "@/components/veicoli/OperaiDialog";
+import { TipiCostoDialog } from "@/components/amministrazione/TipiCostoDialog";
 
 type Mode = "ord" | "straord";
 
@@ -22,6 +23,8 @@ type Row = {
   data: string;
   km?: number | null;
   km_attuale?: number | null;
+  km_manutenzione?: number | null;
+  fornitore_id?: string | null;
   tipo?: string | null;
   tipo_riparazione?: string | null;
   note?: string | null;
@@ -45,7 +48,7 @@ type Riga = { articolo_id: string; quantita: string; prezzo_unitario: string };
 const NESSUNO = "__nessuno__";
 const hhmm = (t?: string | null) => (t ? t.slice(0, 5) : "");
 
-export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mode: Mode }) {
+export function SectionManutenzione({ veicoloId, mode, targa }: { veicoloId: string; mode: Mode; targa?: string }) {
   const isOrd = mode === "ord";
   const table = isOrd ? "veicoli_manutenzione_ord" : "veicoli_manutenzione_straord";
   const kmField = isOrd ? "km" : "km_attuale";
@@ -58,10 +61,13 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
   // magazzino / operai
   const [operai, setOperai] = useState<Operaio[]>([]);
   const [operaiOpen, setOperaiOpen] = useState(false);
+  const [tipiOpen, setTipiOpen] = useState(false);
   const [articoli, setArticoli] = useState<Articolo[]>([]);
   const [giacenze, setGiacenze] = useState<Record<string, number>>({});
   const [righe, setRighe] = useState<Riga[]>([]);
   const [righeOriginali, setRigheOriginali] = useState<Record<string, number>>({});
+  const [fornitori, setFornitori] = useState<{ id: string; nome: string }[]>([]);
+  const [tipiRiparazione, setTipiRiparazione] = useState<string[]>([]);
 
   const load = async () => {
     const { data } = await supabase.from(table).select("*").eq("veicolo_id", veicoloId).order("data", { ascending: false });
@@ -69,10 +75,12 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
   };
 
   const loadMagazzino = async () => {
-    const [{ data: a }, { data: m }, { data: o }] = await Promise.all([
+    const [{ data: a }, { data: m }, { data: o }, { data: f }, { data: tr }] = await Promise.all([
       supabase.from("articoli").select("id, nome, unita_misura, prezzo_unitario").eq("attivo", true).contains("categorie", [CAT[mode]]).order("nome"),
       supabase.from("movimenti_magazzino").select("articolo_id, tipo, quantita"),
       supabase.from("operai").select("id, nome, cognome, mansione, costo_orario, attivo").eq("attivo", true).order("nome"),
+      supabase.from("fornitori_magazzino").select("id, nome").eq("attivo", true).order("nome"),
+      supabase.from("config_tipi_costo" as never).select("valore, attivo, ordine").eq("ambito", "riparazione").order("ordine"),
     ]);
     setArticoli((a ?? []) as Articolo[]);
     const g: Record<string, number> = {};
@@ -81,10 +89,13 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
     });
     setGiacenze(g);
     setOperai((o ?? []) as Operaio[]);
+    setFornitori((f ?? []) as { id: string; nome: string }[]);
+    setTipiRiparazione(((tr ?? []) as any[]).filter((t) => t.attivo).map((t) => t.valore as string));
   };
 
   useEffect(() => { load(); }, [veicoloId, mode]);
   useEffect(() => { loadMagazzino(); }, [mode]);
+
 
   const giacenzaDisponibile = (articoloId: string) =>
     (giacenze[articoloId] ?? 0) + (righeOriginali[articoloId] ?? 0);
@@ -159,7 +170,12 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
       _righe: righePayload,
       _totale_esterno: form.intervento_tipo === "esterno" ? (form.totale ? Number(form.totale) : 0) : null,
       _forza: forza,
-      ...(isOrd ? {} : { _tipo_riparazione: form.tipo_riparazione || null, _ordine: form.ordine || null }),
+      ...(isOrd ? {} : {
+        _tipo_riparazione: form.tipo_riparazione || null,
+        _ordine: form.ordine || null,
+        _km_manutenzione: form.km_manutenzione ? Number(form.km_manutenzione) : null,
+        _fornitore_id: form.intervento_tipo === "esterno" ? (form.fornitore_id || null) : null,
+      }),
     };
     const { error } = await supabase.rpc(
       (isOrd ? "manutenzione_ord_salva" : "manutenzione_straord_salva") as any,
@@ -213,11 +229,14 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
           Totale: <span className="font-semibold text-foreground">{eur(totale)}</span>
         </div>
         <div className="flex gap-2">
-          {(
-            <Button variant="outline" onClick={() => setOperaiOpen(true)} className="gap-2">
-              <Users className="h-4 w-4" /> Operai
+          {mode === "straord" && (
+            <Button variant="outline" onClick={() => setTipiOpen(true)} className="gap-2">
+              <Settings2 className="h-4 w-4" /> Tipi riparazione
             </Button>
           )}
+          <Button variant="outline" onClick={() => setOperaiOpen(true)} className="gap-2">
+            <Users className="h-4 w-4" /> Operai
+          </Button>
           <Button onClick={openNew} className="gap-2"><PlusCircle className="h-4 w-4" /> Aggiungi intervento</Button>
         </div>
       </div>
@@ -228,6 +247,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
             <TableRow>
               <TableHead>Data</TableHead>
               <TableHead className="text-right">Km</TableHead>
+              {mode === "straord" && <TableHead className="text-right hidden lg:table-cell">Km manut.</TableHead>}
               {mode === "straord" && <TableHead>Tipo riparazione</TableHead>}
               <TableHead>Tipo</TableHead>
               <TableHead className="hidden md:table-cell">Operaio</TableHead>
@@ -241,7 +261,7 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
-              <TableRow><TableCell colSpan={mode === "straord" ? 11 : 10} className="text-center py-10 text-muted-foreground">
+              <TableRow><TableCell colSpan={mode === "straord" ? 12 : 10} className="text-center py-10 text-muted-foreground">
                 <Wrench className="h-8 w-8 mx-auto mb-2 opacity-40" />Nessun intervento registrato
               </TableCell></TableRow>
             )}
@@ -249,10 +269,11 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
               <TableRow key={r.id}>
                 <TableCell>{new Date(r.data).toLocaleDateString("it-IT")}</TableCell>
                 <TableCell className="text-right tabular-nums">{(r.km ?? r.km_attuale)?.toLocaleString("it-IT") ?? "—"}</TableCell>
+                {mode === "straord" && <TableCell className="text-right tabular-nums hidden lg:table-cell">{r.km_manutenzione?.toLocaleString("it-IT") ?? "—"}</TableCell>}
                 {mode === "straord" && <TableCell>{r.tipo_riparazione ?? "—"}</TableCell>}
                 <TableCell>
                   <Badge variant={r.intervento_tipo === "interno" ? "default" : "secondary"}>
-                    {r.intervento_tipo === "interno" ? "Intervento interno" : "Intervento esterno"}
+                    {r.intervento_tipo === "interno" ? "Intervento interno" : "Officina esterna"}
                   </Badge>
                 </TableCell>
                 {(
@@ -287,33 +308,90 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
           <DialogHeader>
             <DialogTitle>{editing ? "Modifica intervento" : "Nuovo intervento"}</DialogTitle>
           </DialogHeader>
+          {mode === "straord" ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div><Label>Targa</Label><Input value={targa ?? ""} readOnly disabled /></div>
+              <div><Label>Km Attuale</Label>
+                <Input inputMode="numeric" value={form.km_attuale ?? ""} onChange={(e) => setForm({ ...form, km_attuale: e.target.value })} /></div>
+              <div><Label>Data intervento</Label><Input type="date" value={form.data ?? ""} onChange={(e) => setForm({ ...form, data: e.target.value })} /></div>
+              <div>
+                <Label>Tipo riparazione</Label>
+                <Select value={form.tipo_riparazione || undefined} onValueChange={(v) => setForm({ ...form, tipo_riparazione: v })}>
+                  <SelectTrigger><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                  <SelectContent>
+                    {tipiRiparazione.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Km manutenzione</Label>
+                <Input inputMode="numeric" value={form.km_manutenzione ?? ""} onChange={(e) => setForm({ ...form, km_manutenzione: e.target.value })} /></div>
+              <div>
+                <Label>Tipo</Label>
+                <Select value={form.intervento_tipo ?? "esterno"} onValueChange={(v) => setForm({ ...form, intervento_tipo: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="interno">Intervento interno</SelectItem>
+                    <SelectItem value="esterno">Officina esterna</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="sm:col-span-2"><Label>Note / Acquisto</Label>
+                <Textarea value={form.note ?? ""} onChange={(e) => setForm({ ...form, note: e.target.value })} rows={2} /></div>
+              {!interno && (
+                <>
+                  <div>
+                    <Label>Fornitore</Label>
+                    <Select value={form.fornitore_id ?? NESSUNO} onValueChange={(v) => setForm({ ...form, fornitore_id: v === NESSUNO ? null : v })}>
+                      <SelectTrigger><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NESSUNO}>Nessuno</SelectItem>
+                        {fornitori.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Costo (€)</Label>
+                    <Input inputMode="decimal" value={form.totale ?? ""} onChange={(e) => setForm({ ...form, totale: e.target.value })} /></div>
+                </>
+              )}
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label>Data</Label><Input type="date" value={form.data ?? ""} onChange={(e) => setForm({ ...form, data: e.target.value })} /></div>
-            <div><Label>Km {isOrd ? "manutenzione" : "attuale"}</Label>
-              <Input inputMode="numeric" value={form[kmField] ?? ""} onChange={(e) => setForm({ ...form, [kmField]: e.target.value })} /></div>
-            {mode === "straord" && (
-              <div><Label>Tipo riparazione</Label><Input value={form.tipo_riparazione ?? ""} onChange={(e) => setForm({ ...form, tipo_riparazione: e.target.value })} placeholder="es. Reparazione meccanica" /></div>
-            )}
+            <div><Label>Km manutenzione</Label>
+              <Input inputMode="numeric" value={form.km ?? ""} onChange={(e) => setForm({ ...form, km: e.target.value })} /></div>
             <div>
               <Label>Tipo</Label>
               <Select value={form.intervento_tipo ?? "esterno"} onValueChange={(v) => setForm({ ...form, intervento_tipo: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="interno">Intervento interno</SelectItem>
-                  <SelectItem value="esterno">Intervento esterno</SelectItem>
+                  <SelectItem value="esterno">Officina esterna</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="sm:col-span-2"><Label>Note</Label><Textarea value={form.note ?? ""} onChange={(e) => setForm({ ...form, note: e.target.value })} rows={2} /></div>
             <div className="sm:col-span-2"><Label>Ricambi</Label><Textarea value={form.ricambi ?? ""} onChange={(e) => setForm({ ...form, ricambi: e.target.value })} rows={2} placeholder="es. Filtro aria [1], Filtro olio [1]" /></div>
-            <div><Label>Fornitore</Label><Input value={form.fornitore ?? ""} onChange={(e) => setForm({ ...form, fornitore: e.target.value })} /></div>
-            {mode === "straord" && (
-              <div><Label>Ordine</Label><Input value={form.ordine ?? ""} onChange={(e) => setForm({ ...form, ordine: e.target.value })} placeholder="es. ORD-595" /></div>
-            )}
             {!interno && (
-              <div><Label>Totale (€)</Label><Input inputMode="decimal" value={form.totale ?? ""} onChange={(e) => setForm({ ...form, totale: e.target.value })} /></div>
+              <>
+                <div>
+                  <Label>Fornitore</Label>
+                  <Select value={form.fornitore_id ?? fornitori.find((x) => x.nome === form.fornitore)?.id ?? NESSUNO} onValueChange={(v) => {
+                    const f = fornitori.find((x) => x.id === v);
+                    setForm({ ...form, fornitore_id: v === NESSUNO ? null : v, fornitore: f?.nome ?? null });
+                  }}>
+                    <SelectTrigger><SelectValue placeholder="Seleziona" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NESSUNO}>Nessuno</SelectItem>
+                      {fornitori.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Costo (€)</Label><Input inputMode="decimal" value={form.totale ?? ""} onChange={(e) => setForm({ ...form, totale: e.target.value })} /></div>
+              </>
             )}
           </div>
+          )}
+
 
           {interno && (
             <div className="space-y-3 rounded-lg border p-3">
@@ -430,6 +508,8 @@ export function SectionManutenzione({ veicoloId, mode }: { veicoloId: string; mo
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <TipiCostoDialog open={tipiOpen} onOpenChange={setTipiOpen} ambito="riparazione" onChanged={loadMagazzino} />
 
       <OperaiDialog
         open={operaiOpen}

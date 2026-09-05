@@ -10,7 +10,7 @@ import { Hammer } from "lucide-react";
 type Veicolo = { id: string; targa: string; marca: string | null; modello: string | null; tipo_macchina: string | null };
 
 const etichetta = (v: Veicolo) =>
-  `${[v.marca, v.modello ?? v.tipo_macchina].filter(Boolean).join(" ") || "Mezzo"} — ${v.targa}`;
+  `${v.tipo_macchina || [v.marca, v.modello].filter(Boolean).join(" ") || "Mezzo"} - ${v.targa}`;
 
 export default function ManutenzioneStraordPage() {
   const [veicoli, setVeicoli] = useState<Veicolo[]>([]);
@@ -48,7 +48,7 @@ export default function ManutenzioneStraordPage() {
         </Card>
 
         {veicoloId ? (
-          <SectionManutenzione key={veicoloId} veicoloId={veicoloId} mode="straord" />
+          <SectionManutenzione key={veicoloId} veicoloId={veicoloId} mode="straord" targa={veicoli.find((v) => v.id === veicoloId)?.targa} />
         ) : (
           <p className="text-sm text-muted-foreground">Seleziona un mezzo per vedere e registrare gli interventi straordinari.</p>
         )}

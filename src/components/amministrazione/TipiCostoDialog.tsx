@@ -12,6 +12,7 @@ import type { AmbitoCosto, TipoCosto } from "@/lib/costi";
 const TITOLI: Record<AmbitoCosto, string> = {
   autista: "Tipi inserimento autisti",
   veicolo: "Tipi spese macchine",
+  riparazione: "Tipi di riparazione",
 };
 
 
@@ -59,10 +60,12 @@ export function TipiCostoDialog({
           {rows.map((r) => (
             <div key={r.id} className="flex items-center gap-2 rounded-lg border px-3 py-2">
               <span className={`flex-1 text-sm ${r.attivo ? "" : "line-through text-muted-foreground"}`}>{r.valore}</span>
-              <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Switch checked={r.ricorrente} onCheckedChange={(v) => patch(r, { ricorrente: v })} />
-                ricorrente
-              </label>
+              {ambito !== "riparazione" && (
+                <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Switch checked={r.ricorrente} onCheckedChange={(v) => patch(r, { ricorrente: v })} />
+                  ricorrente
+                </label>
+              )}
               <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <Switch checked={r.attivo} onCheckedChange={(v) => patch(r, { attivo: v })} />
                 attivo
@@ -77,12 +80,14 @@ export function TipiCostoDialog({
           <Label>Nuova voce</Label>
           <div className="flex items-center gap-2">
             <Input value={nuovo} onChange={(e) => setNuovo(e.target.value)} placeholder="es. Permesso ZTL" onKeyDown={(e) => e.key === "Enter" && aggiungi()} />
-            <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
-              <Switch checked={nuovoRic} onCheckedChange={setNuovoRic} /> ricorrente
-            </label>
+            {ambito !== "riparazione" && (
+              <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+                <Switch checked={nuovoRic} onCheckedChange={setNuovoRic} /> ricorrente
+              </label>
+            )}
             <Button onClick={aggiungi} className="gap-1"><Plus className="h-4 w-4" /> Aggiungi</Button>
           </div>
-          <p className="text-xs text-muted-foreground">Le voci “ricorrenti” mostrano il blocco Scadenze con il calcolo automatico della data.</p>
+          {ambito !== "riparazione" && <p className="text-xs text-muted-foreground">Le voci “ricorrenti” mostrano il blocco Scadenze con il calcolo automatico della data.</p>}
         </div>
       </DialogContent>
     </Dialog>
