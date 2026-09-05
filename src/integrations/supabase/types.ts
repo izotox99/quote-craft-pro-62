@@ -4111,6 +4111,10 @@ export type Database = {
       is_autista_user: { Args: { _user_id: string }; Returns: boolean }
       is_client_user: { Args: { _user_id: string }; Returns: boolean }
       is_org_owner: { Args: { _user_id: string }; Returns: boolean }
+      magazzino_aggiorna_stato_ordine: {
+        Args: { _ordine_id: string }
+        Returns: undefined
+      }
       magazzino_annulla_ordine: {
         Args: { _ordine_id: string }
         Returns: {
@@ -4132,6 +4136,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      magazzino_conferma_riga: {
+        Args: { _prezzo_unitario: number; _quantita: number; _riga_id: string }
+        Returns: undefined
       }
       magazzino_convalida_righe: {
         Args: { _ordine_id: string; _riga_ids: string[] }
@@ -4252,6 +4260,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      magazzino_rimuovi_riga: { Args: { _riga_id: string }; Returns: undefined }
       manutenzione_ord_salva: {
         Args: {
           _data: string
@@ -4301,10 +4310,12 @@ export type Database = {
         Args: {
           _data: string
           _fornitore: string
+          _fornitore_id?: string
           _forza?: boolean
           _id: string
           _intervento_tipo: string
           _km: number
+          _km_manutenzione?: number
           _note: string
           _operaio_id: string
           _ora_fine: string
