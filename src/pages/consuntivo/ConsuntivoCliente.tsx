@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -154,9 +154,8 @@ export default function ConsuntivoCliente() {
                 <tr><td colSpan={10} className="p-6 text-center text-muted-foreground">Nessun servizio nel periodo</td></tr>
               )}
               {gruppi.map((g) => (
-                <>
+                <Fragment key={g.id}>
                   <tr
-                    key={g.id}
                     className="cursor-pointer border-t border-border/50 hover:bg-muted/30"
                     onClick={() => setAperti((p) => ({ ...p, [g.id]: !p[g.id] }))}
                   >
