@@ -42,14 +42,13 @@ export default function InserisciCosti() {
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid w-full max-w-2xl grid-cols-3">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="autisti">Autisti interni</TabsTrigger>
             <TabsTrigger value="macchine">Spese Macchine</TabsTrigger>
-            <TabsTrigger value="altri">Altri Costi</TabsTrigger>
           </TabsList>
           <TabsContent value="autisti" className="mt-4"><SpeseAutisti /></TabsContent>
           <TabsContent value="macchine" className="mt-4"><SpeseMacchine /></TabsContent>
-          <TabsContent value="altri" className="mt-4"><AltriCosti /></TabsContent>
+
         </Tabs>
       </div>
     </DashboardLayout>
@@ -70,7 +69,41 @@ function GestisciTipi({ ambito, onChanged }: { ambito: AmbitoCosto; onChanged: (
   );
 }
 
+/** Blocco "Scadenze": compare solo per i tipi ricorrenti, subito sotto il campo Tipo. */
+function BloccoScadenze({
+  idPrefix, ricorrenza, onRicorrenza, dataScadenza, onDataScadenza, preavviso, onPreavviso,
+}: {
+  idPrefix: string; ricorrenza: string; onRicorrenza: (v: string) => void;
+  dataScadenza: string; onDataScadenza: (v: string) => void;
+  preavviso: string; onPreavviso: (v: string) => void;
+}) {
+  return (
+    <div className="space-y-2 rounded-lg border bg-muted/30 p-3 sm:col-span-3">
+      <Label className="text-sm font-semibold">Scadenze</Label>
+      <RadioGroup value={ricorrenza} onValueChange={onRicorrenza} className="flex flex-wrap gap-4">
+        {RICORRENZE.map((r) => (
+          <label key={r.value} className="flex cursor-pointer items-center gap-2 text-sm">
+            <RadioGroupItem value={r.value} id={`${idPrefix}-ric-${r.value}`} /> {r.label}
+          </label>
+        ))}
+      </RadioGroup>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label>Data scadenza</Label>
+          <Input type="date" value={dataScadenza} onChange={(e) => onDataScadenza(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Preavviso scadenza (giorni)</Label>
+          <Input inputMode="numeric" value={preavviso} onChange={(e) => onPreavviso(e.target.value)} />
+        </div>
+      </div>
+      <p className="text-xs text-muted-foreground">La data scadenza è calcolata dalla data intervento e resta modificabile a mano.</p>
+    </div>
+  );
+}
+
 function ScadenzaCell({ data, preavviso }: { data: string | null; preavviso: number }) {
+
   const stato = statoScadenza(data, preavviso);
   return <span className={classeScadenza(stato)}>{dataIt(data)}</span>;
 }
@@ -91,7 +124,7 @@ type RigaAutista = {
   importo_spese: number | null; totale_fattura: number | null; tipo_pagamento: string | null; giorni_preavviso: number;
 };
 
-const emptyAutista = { autista_id: "", tipo: "", data_intervento: "", data_scadenza: "", importo_spese: "", tipo_pagamento: NESSUNO, giorni_preavviso: "30" };
+const emptyAutista = { autista_id: "", tipo: "", data_intervento: "", data_scadenza: "", importo_spese: "", tipo_pagamento: NESSUNO, giorni_preavviso: "30", ricorrenza: "nessuno" };
 
 function SpeseAutisti() {
   const { canWrite } = useAuth();
@@ -103,6 +136,19 @@ function SpeseAutisti() {
   const [q, setQ] = useState("");
 
   const loadTipi = async () => setTipi(await fetchTipiCosto("autista"));
+
+  const tipoRicorrente = tipi.find((t) => t.valore === form.tipo)?.ricorrente ?? false;
+
+  const setRicorrenza = (v: string) => {
+    const mesi = RICORRENZE.find((r) => r.value === v)?.mesi ?? 0;
+    setForm((f) => ({ ...f, ricorrenza: v, data_scadenza: mesi > 0 && f.data_intervento ? addMesi(f.data_intervento, mesi) : f.data_scadenza }));
+  };
+
+  const setDataIntervento = (v: string) => {
+    const mesi = RICORRENZE.find((r) => r.value === form.ricorrenza)?.mesi ?? 0;
+    setForm((f) => ({ ...f, data_intervento: v, data_scadenza: mesi > 0 && v ? addMesi(v, mesi) : f.data_scadenza }));
+  };
+
 
   const load = async () => {
     const [{ data: aut }, { data: sp }] = await Promise.all([
@@ -145,6 +191,8 @@ function SpeseAutisti() {
       importo_spese: r.importo_spese != null ? String(r.importo_spese) : "",
       tipo_pagamento: r.tipo_pagamento ?? NESSUNO,
       giorni_preavviso: String(r.giorni_preavviso ?? 30),
+      ricorrenza: "nessuno",
+
     });
   };
 
@@ -182,12 +230,21 @@ function SpeseAutisti() {
           </div>
           <div className="space-y-1.5">
             <Label>Data intervento</Label>
-            <Input type="date" value={form.data_intervento} onChange={(e) => setForm({ ...form, data_intervento: e.target.value })} />
+            <Input type="date" value={form.data_intervento} onChange={(e) => setDataIntervento(e.target.value)} />
           </div>
-          <div className="space-y-1.5">
-            <Label>Data scadenza</Label>
-            <Input type="date" value={form.data_scadenza} onChange={(e) => setForm({ ...form, data_scadenza: e.target.value })} />
-          </div>
+
+          {tipoRicorrente && (
+            <BloccoScadenze
+              idPrefix="aut"
+              ricorrenza={form.ricorrenza}
+              onRicorrenza={setRicorrenza}
+              dataScadenza={form.data_scadenza}
+              onDataScadenza={(v) => setForm((f) => ({ ...f, data_scadenza: v }))}
+              preavviso={form.giorni_preavviso}
+              onPreavviso={(v) => setForm((f) => ({ ...f, giorni_preavviso: v }))}
+            />
+          )}
+
           <div className="space-y-1.5">
             <Label>Importo spese (€)</Label>
             <Input inputMode="decimal" value={form.importo_spese} onChange={(e) => setForm({ ...form, importo_spese: e.target.value })} />
@@ -202,10 +259,7 @@ function SpeseAutisti() {
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1.5">
-            <Label>Preavviso scadenza (giorni)</Label>
-            <Input inputMode="numeric" value={form.giorni_preavviso} onChange={(e) => setForm({ ...form, giorni_preavviso: e.target.value })} />
-          </div>
+
           <div className="flex items-end gap-2 sm:col-span-2">
             <Button onClick={salva} disabled={!canWrite} className="gap-2">
               <Plus className="h-4 w-4" /> {editing ? "Salva modifiche" : "Registra costo"}
@@ -374,6 +428,19 @@ function SpeseMacchine() {
               <SelectContent>{tipi.map((t) => <SelectItem key={t.id} value={t.valore}>{t.valore}</SelectItem>)}</SelectContent>
             </Select>
           </div>
+
+          {tipoRicorrente && (
+            <BloccoScadenze
+              idPrefix="vei"
+              ricorrenza={form.ricorrenza}
+              onRicorrenza={setRicorrenza}
+              dataScadenza={form.data_scadenza}
+              onDataScadenza={(v) => setForm((f) => ({ ...f, data_scadenza: v }))}
+              preavviso={form.giorni_preavviso}
+              onPreavviso={(v) => setForm((f) => ({ ...f, giorni_preavviso: v }))}
+            />
+          )}
+
           <div className="space-y-1.5">
             <Label>Data intervento</Label>
             <Input type="date" value={form.data_intervento} onChange={(e) => setDataIntervento(e.target.value)} />
@@ -401,29 +468,6 @@ function SpeseMacchine() {
             <Textarea rows={2} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
           </div>
 
-          {tipoRicorrente && (
-            <div className="space-y-2 rounded-lg border bg-muted/30 p-3 sm:col-span-3">
-              <Label className="text-sm font-semibold">Scadenze</Label>
-              <RadioGroup value={form.ricorrenza} onValueChange={setRicorrenza} className="flex flex-wrap gap-4">
-                {RICORRENZE.map((r) => (
-                  <label key={r.value} className="flex cursor-pointer items-center gap-2 text-sm">
-                    <RadioGroupItem value={r.value} id={`ric-${r.value}`} /> {r.label}
-                  </label>
-                ))}
-              </RadioGroup>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label>Data scadenza</Label>
-                  <Input type="date" value={form.data_scadenza} onChange={(e) => setForm({ ...form, data_scadenza: e.target.value })} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Preavviso scadenza (giorni)</Label>
-                  <Input inputMode="numeric" value={form.giorni_preavviso} onChange={(e) => setForm({ ...form, giorni_preavviso: e.target.value })} />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">La data scadenza è calcolata dalla data intervento e resta modificabile a mano.</p>
-            </div>
-          )}
 
           <div className="flex items-end gap-2 sm:col-span-3">
             <Button onClick={salva} disabled={!canWrite} className="gap-2">
@@ -478,173 +522,3 @@ function SpeseMacchine() {
   );
 }
 
-/* ---------- Tab 3: altri costi ---------- */
-
-type RigaGenerale = {
-  id: string; descrizione: string; categoria: string | null; data: string | null; data_scadenza: string | null;
-  importo: number | null; tipo_pagamento: string | null; fornitore: string | null; note: string | null; giorni_preavviso: number;
-};
-
-const emptyGenerale = {
-  descrizione: "", categoria: "", data: "", data_scadenza: "", importo: "",
-  tipo_pagamento: NESSUNO, fornitore: "", note: "", giorni_preavviso: "30",
-};
-
-function AltriCosti() {
-  const { canWrite } = useAuth();
-  const [tipi, setTipi] = useState<TipoCosto[]>([]);
-  const [rows, setRows] = useState<RigaGenerale[]>([]);
-  const [form, setForm] = useState({ ...emptyGenerale });
-  const [editing, setEditing] = useState<RigaGenerale | null>(null);
-  const [q, setQ] = useState("");
-
-  const loadTipi = async () => setTipi(await fetchTipiCosto("generale"));
-  const load = async () => {
-    const { data } = await supabase.from("costi_generali" as never).select("*").order("data", { ascending: false, nullsFirst: false });
-    setRows((data ?? []) as unknown as RigaGenerale[]);
-  };
-  useEffect(() => { load(); loadTipi(); }, []);
-
-  const salva = async () => {
-    if (!form.descrizione.trim()) return toast.error("La descrizione è obbligatoria");
-    const payload = {
-      descrizione: form.descrizione.trim(),
-      categoria: form.categoria || null,
-      data: form.data || null,
-      data_scadenza: form.data_scadenza || null,
-      importo: form.importo ? Number(form.importo.replace(",", ".")) : 0,
-      tipo_pagamento: form.tipo_pagamento !== NESSUNO ? form.tipo_pagamento : null,
-      fornitore: form.fornitore || null,
-      note: form.note || null,
-      giorni_preavviso: Number(form.giorni_preavviso || "30"),
-      centro_costo: "generale",
-    };
-    const { error } = editing
-      ? await supabase.from("costi_generali" as never).update(payload as never).eq("id", editing.id)
-      : await supabase.from("costi_generali" as never).insert([payload] as never);
-    if (error) return toast.error(error.message);
-    toast.success(editing ? "Costo aggiornato" : "Costo registrato");
-    setForm({ ...emptyGenerale }); setEditing(null); load();
-  };
-
-  const modifica = (r: RigaGenerale) => {
-    setEditing(r);
-    setForm({
-      descrizione: r.descrizione, categoria: r.categoria ?? "", data: r.data ?? "", data_scadenza: r.data_scadenza ?? "",
-      importo: r.importo != null ? String(r.importo) : "", tipo_pagamento: r.tipo_pagamento ?? NESSUNO,
-      fornitore: r.fornitore ?? "", note: r.note ?? "", giorni_preavviso: String(r.giorni_preavviso ?? 30),
-    });
-  };
-
-  const elimina = async (r: RigaGenerale) => {
-    if (!confirm("Eliminare questa riga?")) return;
-    const { error } = await supabase.from("costi_generali" as never).delete().eq("id", r.id);
-    if (error) return toast.error(error.message);
-    load();
-  };
-
-  const filtrati = useMemo(() => {
-    const s = q.toLowerCase();
-    return rows.filter((r) => !s || r.descrizione.toLowerCase().includes(s) || (r.categoria ?? "").toLowerCase().includes(s) || (r.fornitore ?? "").toLowerCase().includes(s));
-  }, [rows, q]);
-
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="grid gap-4 pt-6 sm:grid-cols-3">
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label>Descrizione *</Label>
-            <Input value={form.descrizione} onChange={(e) => setForm({ ...form, descrizione: e.target.value })} placeholder="es. Canone gestionale" />
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between"><Label>Categoria</Label><GestisciTipi ambito="generale" onChanged={loadTipi} /></div>
-            <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v })}>
-              <SelectTrigger><SelectValue placeholder="Seleziona categoria" /></SelectTrigger>
-              <SelectContent>{tipi.map((t) => <SelectItem key={t.id} value={t.valore}>{t.valore}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Data</Label>
-            <Input type="date" value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Data scadenza</Label>
-            <Input type="date" value={form.data_scadenza} onChange={(e) => setForm({ ...form, data_scadenza: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Importo (€)</Label>
-            <Input inputMode="decimal" value={form.importo} onChange={(e) => setForm({ ...form, importo: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Tipo di pagamento</Label>
-            <Select value={form.tipo_pagamento} onValueChange={(v) => setForm({ ...form, tipo_pagamento: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NESSUNO}>Non specificato</SelectItem>
-                {TIPI_PAGAMENTO.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Fornitore</Label>
-            <Input value={form.fornitore} onChange={(e) => setForm({ ...form, fornitore: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Preavviso scadenza (giorni)</Label>
-            <Input inputMode="numeric" value={form.giorni_preavviso} onChange={(e) => setForm({ ...form, giorni_preavviso: e.target.value })} />
-          </div>
-          <div className="space-y-1.5 sm:col-span-3">
-            <Label>Note</Label>
-            <Textarea rows={2} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} />
-          </div>
-          <div className="flex items-end gap-2 sm:col-span-3">
-            <Button onClick={salva} disabled={!canWrite} className="gap-2">
-              <Plus className="h-4 w-4" /> {editing ? "Salva modifiche" : "Registra costo"}
-            </Button>
-            {editing && <Button variant="ghost" onClick={() => { setEditing(null); setForm({ ...emptyGenerale }); }} className="gap-1"><X className="h-4 w-4" /> Annulla</Button>}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Ricerca value={q} onChange={setQ} />
-
-      <Card>
-        <CardContent className="overflow-x-auto p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrizione</TableHead><TableHead>Categoria</TableHead>
-                <TableHead>Data</TableHead><TableHead>Data scadenza</TableHead>
-                <TableHead className="text-right">Importo</TableHead>
-                <TableHead>Pagamento</TableHead><TableHead>Fornitore</TableHead><TableHead>Note</TableHead><TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtrati.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.descrizione}</TableCell>
-                  <TableCell>{r.categoria ?? "—"}</TableCell>
-                  <TableCell>{dataIt(r.data)}</TableCell>
-                  <TableCell><ScadenzaCell data={r.data_scadenza} preavviso={r.giorni_preavviso ?? 30} /></TableCell>
-                  <TableCell className="text-right tabular-nums">{eur(r.importo)}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.tipo_pagamento ?? "—"}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{r.fornitore ?? "—"}</TableCell>
-                  <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">{r.note ?? "—"}</TableCell>
-                  <TableCell className="text-right">
-                    {canWrite && (
-                      <div className="flex justify-end gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => modifica(r)}><Pencil className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="ghost" onClick={() => elimina(r)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {filtrati.length === 0 && <TableRow><TableCell colSpan={9} className="py-8 text-center text-muted-foreground">Nessun costo registrato</TableCell></TableRow>}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
